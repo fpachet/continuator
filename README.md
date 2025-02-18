@@ -1,6 +1,12 @@
 # Maximum Entropy Melody Generator
 
-A sophisticated melody generation system implementing an efficient Maximum Entropy model using PyTorch and transformers. This project provides a novel approach to musical composition by leveraging statistical modeling and deep learning techniques for creating coherent and diverse melodies.
+A melody generation system implementing an efficient Maximum Entropy model using PyTorch and transformers. This project provides a novel approach to musical composition by leveraging statistical modeling and deep learning techniques for creating coherent and diverse melodies.
+
+It is based on the paper:
+Sakellariou, J., Tria, F., Loreto, V. et al. Maximum entropy models capture melodic styles. Sci Rep 7, 9172 (2017). https://doi.org/10.1038/s41598-017-08028-4
+
+which is available at: https://www.nature.com/articles/s41598-017-08028-4
+
 
 ## Features
 
