@@ -19,14 +19,6 @@ class Continuator2:
             self.notes = all_notes
         else:
             self.notes = self.notes_original
-        # the vocabulary
-        self.unique_notes = list(set(self.notes))
-        self.voc_size = len(self.unique_notes)
-        # transform real notes to indices in the set of unique notes and vice versa
-        self.note_to_idx = {note: i for i, note in enumerate(self.unique_notes)}
-        self.idx_to_note = {i: note for note, i in self.note_to_idx.items()}
-        # sequence of indices to unique notes
-        self.seq = np.array([self.note_to_idx[note] for note in self.notes])
         self.prefixes_to_continuations = []
         self.build_vo_markov_model()
 
@@ -55,7 +47,7 @@ class Continuator2:
                 if current_ctx not in prefixes_to_cont_k:
                     prefixes_to_cont_k[current_ctx] = []
                 prefixes_to_cont_k[current_ctx].append(i)
-                self.prefixes_to_continuations[k] = prefixes_to_cont_k
+            self.prefixes_to_continuations[k] = prefixes_to_cont_k
     def get_viewpoint(self, index):
         return self.notes[index]
 
@@ -88,14 +80,15 @@ class Continuator2:
                 if len(all_cont_vp) == 1 and k > 0:
                     # print(f"best continuation is singleton for {k=}: {all_cont_vp}")
                     # probab to take it anyway os proportional to the number of realizations
-                    print(f"best continuation is singleton for {k=}: {all_cont_vp}")
-                    if random.random() >= self.prob_to_keep_singletons:
+                    # print(f"best continuation is singleton for {k=}: {all_cont_vp}")
+                    if random.random() > (1/(k+1)):
                         print(f"skipping continuation for {k=}")
+                        # print(1/(k+1))
                         continue
                     else:
                         print(f"not skipping continuation for {k=}")
                 next_continuation = random.choice(all_conts)
-                print(f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])}")
+                print(f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])} and cont vp size {len(all_cont_vp)}")
                 return next_continuation
         print("no continuation found")
 
@@ -104,7 +97,7 @@ class Continuator2:
         track = mido.MidiTrack()
         mid.tracks.append(track)
         for note in sequence:
-            track.append(mido.Message('note_on', note=note, velocity=64, time=200))
+            track.append(mido.Message('note_on', note=note, velocity=64, time=000))
             track.append(mido.Message('note_off', note=note, velocity=64, time=200))
         mid.save(output_file)
         # plays the file approximatively, can be heard of Logic is open
@@ -117,7 +110,7 @@ class Continuator2:
 # Example usage:
 midi_file_path = "../data/prelude_c.mid"
 t0 = time.perf_counter_ns()
-generator = Continuator2(midi_file_path, 8, transposition=True)
+generator = Continuator2(midi_file_path, 8, transposition=False)
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
