@@ -3,16 +3,17 @@ import mido
 import random
 from collections import defaultdict
 import time
+from difflib import SequenceMatcher
 
 
 class Note:
-    def __init__(self, pitch, velocity, duration):
+    def __init__(self, pitch, velocity, duration, start_time=0):
         self.pitch = pitch
         self.velocity = velocity
         # the duration in the original sequence
         self.duration = duration
         # the start time in the original sequence
-        self.start_time = 0
+        self.start_time = start_time
 
     def set_duration(self, d):
         self.duration = d
@@ -41,7 +42,7 @@ class Continuator2:
         self.build_vo_markov_model()
 
     def transpose_notes(self, notes, t):
-        return [n + t for n in notes]
+        return [Note(n.pitch + t, n.velocity, n.duration, start_time = n.start_time) for n in notes]
 
     def extract_notes(self):
         """Extracts the sequence of note-on events from a MIDI file."""
@@ -77,7 +78,6 @@ class Continuator2:
             for i in range(len(self.notes) - k):
                 if i < k + 1:
                     continue
-                current_ctx = tuple(self.notes[i - k - 1:i])
                 current_ctx = self.get_viewpoint_tuple(tuple(range(i - k - 1, i)))
                 if current_ctx not in prefixes_to_cont_k:
                     prefixes_to_cont_k[current_ctx] = []
@@ -104,6 +104,7 @@ class Continuator2:
         return current_seq
 
     def get_continuation(self, current_seq):
+        vp_to_skip = None
         for k in range(self.kmax, 0, -1):
             if k > len(current_seq):
                 continue
@@ -118,21 +119,27 @@ class Continuator2:
                 all_cont_vp = {self.get_viewpoint(i) for i in all_conts}
                 if len(all_cont_vp) == 1 and k > 0:
                     # print(f"best continuation is singleton for {k=}: {all_cont_vp}")
-                    # proba to take it anyway os proportional to the number of realizations
                     # proba to skip is proportional to order
-                    # if random.random() > (1 / (k + 1)):
-                    if random.random() > 1:
+                    if random.random() > (1 / (k + 1)):
                         print(f"skipping continuation for {k=}")
-                        # print(1/(k+1))
+                        vp_to_skip = all_cont_vp.pop()
                         continue
                     else:
+                        vp_to_skip = None
                         print(f"not skipping singleton continuation for {k=}")
-                next_continuation = random.choice(all_conts)
+                if vp_to_skip is not None:
+                    all_conts_tu_use = [c for c in all_conts if self.get_viewpoint(c) != vp_to_skip]
+                else:
+                    all_conts_tu_use = all_conts
+                next_continuation = random.choice(all_conts_tu_use)
                 print(
                     f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])} and cont vp size {len(all_cont_vp)}")
                 return next_continuation
         return -1
         print("no continuation found")
+
+    def get_pitch_string(self, sequence_of_notes):
+        return ''.join([str(note.pitch) + ' ' for note in sequence_of_notes])
 
     def save_midi(self, idx_sequence, output_file):
         mid = mido.MidiFile()
@@ -171,15 +178,25 @@ class Continuator2:
         #         time.sleep(0.2)
         #         output.send(mido.Message('note_off', note=note, velocity=64))
 
+    def get_longest_subsequence_with_train(self, sequence_of_idx):
+        train_string = generator.get_pitch_string(generator.notes)
+        sequence_of_notes = [generator.notes[id] for id in sequence_of_idx]
+        sequence_string = generator.get_pitch_string(sequence_of_notes)
+        match = SequenceMatcher(None, train_string, sequence_string, autojunk=False).find_longest_match()
+        nb_notes_common = train_string[match.a:match.a + match.size].count(' ')
+        return nb_notes_common
 
 # midi_file_path = "../data/prelude_c.mid"
 midi_file_path = "../data/bach_partita_mono.midi"
+# midi_file_path = "../data/test_sequence_3notes.mid"
 t0 = time.perf_counter_ns()
-generator = Continuator2(midi_file_path, 3, transposition=False)
+generator = Continuator2(midi_file_path, 4, transposition=False)
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
 start_note = 0  # Pick the INDEX of the first note of the original sequence
-generated_sequence = generator.sample_sequence(start_note, length=50)
+generated_sequence = generator.sample_sequence(start_note, length=200)
 generator.save_midi(generated_sequence, "../data/ctor2_output.mid")
 print("Generated Sequence:", generated_sequence)
+
+print(f"{generator.get_longest_subsequence_with_train(generated_sequence)} notes in commun with train")
