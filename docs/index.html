@@ -3,12 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Continuator V2, first steps, F. Pachet</title>
+    <title>Continuator V2</title>
+    <script defer src="midi.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Continuator V2, first steps</h1>
-    <h1>Features planned: Variable-order Constrained Markov models for immediate interaction, pre-trained model with common sense popular music, Max Entropy model for chords and Transformers for long-term learning</h1>
-    <p>Ouvre la console (F12 > Console) pour voir les messages MIDI.</p>
-    <script src="midi.js"></script>
+
+    <h1>Continuator V2</h1>
+    <h2>Génération de phrases musicales interactives/h2>
+
+    <p>
+        Ce programme écoute une entrée MIDI, détecte la fin d'une phrase musicale lorsque plus d'une seconde de silence est détectée,
+        stocke la mélodie jouée et la rejoue transposée d'un ton.
+    </p>
+
+    <p>
+        Connectez votre clavier MIDI et ouvrez la console du navigateur (F12 > Console) pour voir les messages MIDI capturés.
+    </p>
+
+    <p>
+        Features planned: Variable-order Constrained Markov models for immediate interaction, pre-trained model with common sense popular music, Max Entropy model for chords and Transformers for long-term learning</p>
+    </p>
+
+    <p>
+        Ouvre la console (F12 > Console) pour voir les messages MIDI
+    </p>
+
+    <button onclick="alert('Hello')">Cliquez-moi</button>
+
 </body>
 </html>
