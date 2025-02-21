@@ -1,9 +1,8 @@
 import numpy as np
 import mido
 import random
-from collections import defaultdict
 import time
-from difflib import SequenceMatcher
+# from difflib import SequenceMatcher
 
 
 class Note:
@@ -85,7 +84,9 @@ class Continuator2:
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
 
     def get_viewpoint(self, index):
-        return self.notes[index].pitch
+        # return self.notes[index].pitch
+        note = self.notes[index]
+        return tuple([note.pitch, note.duration / 100])
 
     def get_viewpoint_tuple(self, indices_tuple):
         vparray = [self.get_viewpoint(id) for id in indices_tuple]
@@ -121,19 +122,19 @@ class Continuator2:
                     # print(f"best continuation is singleton for {k=}: {all_cont_vp}")
                     # proba to skip is proportional to order
                     if random.random() > (1 / (k + 1)):
-                        print(f"skipping continuation for {k=}")
+                        # print(f"skipping continuation for {k=}")
                         vp_to_skip = all_cont_vp.pop()
                         continue
                     else:
                         vp_to_skip = None
-                        print(f"not skipping singleton continuation for {k=}")
+                        # print(f"not skipping singleton continuation for {k=}")
                 if vp_to_skip is not None:
                     all_conts_tu_use = [c for c in all_conts if self.get_viewpoint(c) != vp_to_skip]
                 else:
                     all_conts_tu_use = all_conts
                 next_continuation = random.choice(all_conts_tu_use)
-                print(
-                    f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])} and cont vp size {len(all_cont_vp)}")
+                # print(
+                #     f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])} and cont vp size {len(all_cont_vp)}")
                 return next_continuation
         return -1
         print("no continuation found")
@@ -186,11 +187,11 @@ class Continuator2:
         nb_notes_common = train_string[match.a:match.a + match.size].count(' ')
         return nb_notes_common
 
-# midi_file_path = "../data/prelude_c.mid"
-midi_file_path = "../data/bach_partita_mono.midi"
+midi_file_path = "../data/prelude_c.mid"
+# midi_file_path = "../data/bach_partita_mono.midi"
 # midi_file_path = "../data/test_sequence_3notes.mid"
 t0 = time.perf_counter_ns()
-generator = Continuator2(midi_file_path, 4, transposition=False)
+generator = Continuator2(midi_file_path, 4, transposition=True)
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
