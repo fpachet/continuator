@@ -1,24 +1,45 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    if (!navigator.requestMIDIAccess) {
-        console.log("Web MIDI API non supportée");
-        return;
-    }
-
+            if (!navigator.requestMIDIAccess) {
+                console.log("Web MIDI API non supportée");
+                return;
+            }
     try {
         const midiAccess = await navigator.requestMIDIAccess();
-        const inputs = Array.from(midiAccess.inputs.values());
-        const outputs = Array.from(midiAccess.outputs.values());
+        let inputs = Array.from(midiAccess.inputs.values());
+        let outputs = Array.from(midiAccess.outputs.values());
 
         if (inputs.length === 0 || outputs.length === 0) {
             console.log("Aucune entrée ou sortie MIDI détectée");
             return;
         }
 
-        const input = inputs[1]; // Première entrée MIDI
-        const output = outputs[0]; // Première sortie MIDI
+        let input = inputs[0]; // Première entrée MIDI par défaut
+        let output = outputs[0]; // Première sortie MIDI par défaut
 
-        console.log(`Utilisation de l'entrée: ${input.name}`);
-        console.log(`Utilisation de la sortie: ${output.name}`);
+       function updateMidiDevices() {
+            inputs = Array.from(midiAccess.inputs.values());
+            outputs = Array.from(midiAccess.outputs.values());
+        }
+
+        function updateMidiInput(selectedIndex) {
+            updateMidiDevices();
+            if (inputs[selectedIndex]) {
+                if (input) {
+                    input.onmidimessage = null; // Supprimer l'ancien écouteur
+                }
+                input = inputs[selectedIndex];
+                console.log(`Nouvelle entrée MIDI sélectionnée: ${input.name}`);
+                input.onmidimessage = handleMidiMessage;
+            }
+        }
+
+        function updateMidiOutput(selectedIndex) {
+            updateMidiDevices();
+            if (outputs[selectedIndex]) {
+                output = outputs[selectedIndex];
+                console.log(`Nouvelle sortie MIDI sélectionnée: ${output.name}`);
+            }
+        }
 
         let melody = [];
         let activeNotes = new Set();
@@ -29,7 +50,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         let playbackActive = false;
         let playbackTimers = [];
 
-        input.onmidimessage = (event) => {
+        function handleMidiMessage(event) {
+            console.log("MIDI reçu :", event.data); // Debugging
+            if (!output) {
+                console.warn("Aucune sortie MIDI sélectionnée");
+                return;
+            }
             const [status, note, velocity] = event.data;
             const currentTime = performance.now();
 
@@ -53,6 +79,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             playbackTimeout = setTimeout(checkAndPlayMelody, silenceThreshold);
         };
+
+        input.onmidimessage = handleMidiMessage;
 
         function checkAndPlayMelody() {
             if (melody.length === 0 || activeNotes.size > 0) return;
@@ -96,7 +124,32 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
             playedNotes.clear();
         }
+   function updateMidiInput(selectedIndex) {
+            console.log("updateMidiInput");
+
+            if (inputs[selectedIndex]) {
+                if (input) {
+                    input.onmidimessage = null; // Supprimer l'ancien écouteur
+                }
+                input = inputs[selectedIndex];
+                console.log(`Nouvelle entrée MIDI sélectionnée: ${input.name}`);
+                input.onmidimessage = handleMidiMessage;
+            }
+        }
+
+        function updateMidiOutput(selectedIndex) {
+            if (outputs[selectedIndex]) {
+                output = outputs[selectedIndex];
+                console.log(`Nouvelle sortie MIDI sélectionnée: ${output.name}`);
+            }
+        }
     } catch (error) {
         console.error("Erreur d'accès au MIDI: ", error);
     }
+
+      // Rendre ces fonctions accessibles globalement pour l'appel depuis index.html
+        window.handleMidiMessage = handleMidiMessage;
+        window.updateMidiInput = updateMidiInput;
+        window.updateMidiOutput = updateMidiOutput;
+
 });
