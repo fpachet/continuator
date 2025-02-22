@@ -60,8 +60,7 @@ def compute_context_indices(contexts, kmax=0):
         J[2, A, D], J[2, D, G] // the potentials at distance 3 from the center
 
     Therefore J[R[µ]].sum() will give the total interaction potential for the context
-    µ, as computer in the formula TODO reference to formula
-    in the paper
+    µ, as computed in the Sum-Energy in Formula 5 in the paper
     https://static-content.springer.com/esm/art%3A10.1038%2Fs41598-017-08028-4/MediaObjects/41598_2017_8028_MOESM49_ESM.pdf
 
     Args:
@@ -120,7 +119,7 @@ def compute_context_indices_naive(contexts, kmax=0):
 
 
 @timeit
-def compute_normalization_context_indices(contexts, q: int, kmax: int = 0):
+def compute_partition_context_indices(contexts, /, *, q: int, kmax: int = 0):
     """
     Compute the indices of each context in J with respect to each 0 ≤ sigma < q.
 
@@ -140,8 +139,8 @@ def compute_normalization_context_indices(contexts, q: int, kmax: int = 0):
         J[2, A, σ], J[2, σ, G]
 
     Therefore J[R[µ, σ]].sum() will give the total interaction potential for the context
-    µ and elements index σ, as computer in the formula TODO reference to formula
-    in the paper https://static-content.springer.com/esm/art%3A10.1038%2Fs41598-017-08028-4/MediaObjects/41598_2017_8028_MOESM49_ESM.pdf.
+    µ and elements index σ, as computer in the Partition-Function, Formula (6) in the paper
+    https://static-content.springer.com/esm/art%3A10.1038%2Fs41598-017-08028-4/MediaObjects/41598_2017_8028_MOESM49_ESM.pdf.
 
     Args:
         contexts: the 2D-array of contexts
@@ -170,4 +169,4 @@ if __name__ == '__main__':
     seq = g.integers(0, q, 10)
     ctx = compute_contexts(seq, kmax=kmax)
     j_idx = compute_context_indices(ctx, kmax=kmax)
-    z_idx = compute_normalization_context_indices(ctx, q=q, kmax=kmax)
+    z_idx = compute_partition_context_indices(ctx, q=q, kmax=kmax)
