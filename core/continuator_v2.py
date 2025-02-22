@@ -2,7 +2,7 @@ import numpy as np
 import mido
 import random
 import time
-# from difflib import SequenceMatcher
+from difflib import SequenceMatcher
 
 
 class Note:
@@ -20,6 +20,25 @@ class Note:
     def set_start_time(self, t):
         self.start_time = t
 
+    def is_start_note(self):
+        return False
+    def is_end_note(self):
+        return False
+
+class Start_Note(Note):
+    def __init__(self):
+        Note.__init__(self, -1, 0, 0)
+
+    def is_start_note(self):
+
+        return True
+class End_Note(Note):
+    def __init__(self):
+        Note.__init__(self, -1, 0, 0)
+
+    def is_end_note(self):
+
+        return True
 
 class Continuator2:
 
@@ -29,6 +48,10 @@ class Continuator2:
         self.prob_to_keep_singletons = 1 / 3
         # the original sequence
         self.notes_original = self.extract_notes()
+        self.notes_original.insert(0, Start_Note())
+        self.notes_original.append(End_Note())
+        self.viewpoints_realizations = {}
+        self.terminal_indices = []
         all_notes = []
         # transpose in 12 tones
         if transposition:
@@ -41,7 +64,10 @@ class Continuator2:
         self.build_vo_markov_model()
 
     def transpose_notes(self, notes, t):
-        return [Note(n.pitch + t, n.velocity, n.duration, start_time = n.start_time) for n in notes]
+        return [Note(n.pitch + t, n.velocity, n.duration, start_time=n.start_time) for n in notes]
+
+    def is_terminal(self, cont):
+        return cont in self.terminal_indices
 
     def extract_notes(self):
         """Extracts the sequence of note-on events from a MIDI file."""
@@ -82,26 +108,59 @@ class Continuator2:
                     prefixes_to_cont_k[current_ctx] = []
                 prefixes_to_cont_k[current_ctx].append(i)
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
+        # rajoute les terminaux
+        self.terminal_indices.append(len(self.notes) - 1)
 
     def get_viewpoint(self, index):
-        # return self.notes[index].pitch
         note = self.notes[index]
-        return tuple([note.pitch, note.duration / 100])
+        vp = tuple([note.pitch, (int)(note.duration / 100)])
+        # add the realization to the viewpoint's realizations
+        if vp not in self.viewpoints_realizations:
+            self.viewpoints_realizations[vp] = []
+        if index not in self.viewpoints_realizations[vp]:
+            self.viewpoints_realizations[vp].append(index)
+        return vp
 
     def get_viewpoint_tuple(self, indices_tuple):
         vparray = [self.get_viewpoint(id) for id in indices_tuple]
         return tuple(vparray)
 
-    def sample_sequence(self, start_note, length=50):
+    def get_realizations_for_vp(self, vp):
+
+        return self.viewpoints_realizations[vp]
+
+    def random_starting_note(self):
+        starting_vp = (-1, 0)
+        starting_conts = self.get_realizations_for_vp(starting_vp)
+        start = random.choice(starting_conts)
+        return start
+
+    def sample_sequence(self, start_note_vp, length=50):
         """Generates a new sequence of notes from the Markov model."""
         # current_seq is a sequence of indices in the original sequence
+        starting_conts = self.get_realizations_for_vp(start_note_vp)
+        start_note = random.choice(starting_conts)
         current_seq = [start_note]
+        if length < 0:
+            while True:
+                cont = self.get_continuation(current_seq)
+                if cont == -1:
+                    print("restarting from scratch")
+                    cont = self.random_starting_note()
+                if self.is_terminal(cont):
+                    print("found the end")
+                    print(cont)
+                    return current_seq
+                current_seq.append(cont)
+            return current_seq
+
         for _ in range(length):
             cont = self.get_continuation(current_seq)
             if cont == -1:
                 print("restarting from scratch")
-                cont = random.choice(range(len(self.notes)))
+                cont = self.random_starting_note()
             current_seq.append(cont)
+            print(current_seq)
         return current_seq
 
     def get_continuation(self, current_seq):
@@ -118,7 +177,7 @@ class Continuator2:
                 all_conts = continuations_dict[viewpoint_ctx]
                 # considers the number of different viewpoints, not the number of continuations
                 all_cont_vp = {self.get_viewpoint(i) for i in all_conts}
-                if len(all_cont_vp) == 1 and k > 0:
+                if len(all_cont_vp) == 1 and k > 1:
                     # print(f"best continuation is singleton for {k=}: {all_cont_vp}")
                     # proba to skip is proportional to order
                     if random.random() > (1 / (k + 1)):
@@ -128,10 +187,12 @@ class Continuator2:
                     else:
                         vp_to_skip = None
                         # print(f"not skipping singleton continuation for {k=}")
-                if vp_to_skip is not None:
+                if vp_to_skip is not None and k > 1:
                     all_conts_tu_use = [c for c in all_conts if self.get_viewpoint(c) != vp_to_skip]
                 else:
                     all_conts_tu_use = all_conts
+                if len(all_conts_tu_use) == 0:
+                    print("problem")
                 next_continuation = random.choice(all_conts_tu_use)
                 # print(
                 #     f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])} and cont vp size {len(all_cont_vp)}")
@@ -157,10 +218,17 @@ class Continuator2:
                 start_time += delta
             note_copy.set_start_time(start_time)
             sequence.append(note_copy)
+        # shift the whole sequence to t=0
+        first_note_time = sequence[0].start_time
+        for note in sequence:
+            note.start_time = note.start_time - first_note_time
         # create all mido messages and sort them
         mido_sequence = []
         for note in sequence:
-            mido_sequence.append(mido.Message('note_on', note=note.pitch, velocity=note.velocity, time=note.start_time))
+            try:
+                mido_sequence.append(mido.Message('note_on', note=note.pitch, velocity=note.velocity, time=note.start_time))
+            except:
+                print("Something went wrong")
             mido_sequence.append(
                 mido.Message('note_off', note=note.pitch, velocity=0, time=(note.start_time + (int)(note.duration))))
         mido_sequence.sort(key=lambda msg: msg.time)
@@ -187,6 +255,7 @@ class Continuator2:
         nb_notes_common = train_string[match.a:match.a + match.size].count(' ')
         return nb_notes_common
 
+
 midi_file_path = "../data/prelude_c.mid"
 # midi_file_path = "../data/bach_partita_mono.midi"
 # midi_file_path = "../data/test_sequence_3notes.mid"
@@ -195,8 +264,9 @@ generator = Continuator2(midi_file_path, 4, transposition=True)
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
-start_note = 0  # Pick the INDEX of the first note of the original sequence
-generated_sequence = generator.sample_sequence(start_note, length=200)
+start_note = (-1, 0)  # Pick the INDEX of the first note of the original sequence
+generated_sequence = generator.sample_sequence(start_note, length=-1)
+generated_sequence = generated_sequence[1:]
 generator.save_midi(generated_sequence, "../data/ctor2_output.mid")
 print("Generated Sequence:", generated_sequence)
 

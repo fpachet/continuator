@@ -7,6 +7,8 @@ import random
 import pickle
 from line_profiler_pycharm import profile
 
+from utils.profiler import timeit
+
 """
 A more efficient version of the Max Entropy paper.
 Implementation follows the paper quite closely.
@@ -40,7 +42,7 @@ class MaxEntropyMelodyGenerator:
         self.elapsed_ns_in_compute_partition = 0
         self.elapsed_ns_in_negative_log_likelihood_and_gradient = 0
 
-    def extract_notes(self):
+    def extract_notes(self) -> list[int]:
         """ Extracts MIDI note sequence from a MIDI file. """
         mid = mido.MidiFile(self.midi_file)
         notes = []
@@ -68,7 +70,6 @@ class MaxEntropyMelodyGenerator:
         self.elapsed_ns_in_sum_energy_in_context += (time.perf_counter_ns() - t0)
         return energy
 
-    @profile
     def compute_partition_function(self, h, J, context):
         # return np.exp([h[sigma] + self.sum_energy_in_context(J, context, sigma) for sigma in range(self.vocabulary_size())]).sum()
         t0 = time.perf_counter_ns()
@@ -99,11 +100,16 @@ class MaxEntropyMelodyGenerator:
             for k in range(self.Kmax)}
         # compute all partition functions for all mu to be used by obj function and gradient
         self.all_partitions = np.zeros(len(self.seq))
-        for mu, s_0 in enumerate(self.seq):
-            self.all_partitions[mu] = self.compute_partition_function(h, J, self.all_contexts[mu])
+        self.compute_all_Z(J, h)
         result = self.negative_log_likelihood(h, J), self.gradient(h, J)
         self.elapsed_ns_in_negative_log_likelihood_and_gradient += (time.perf_counter_ns() - t0)
         return result
+
+    @timeit
+    def compute_all_Z(self, J, h):
+        for mu, s_0 in enumerate(self.seq):
+            self.all_partitions[mu] = self.compute_partition_function(h, J, self.all_contexts[mu])
+
     @profile
     def negative_log_likelihood(self, h, J):
         self.cpt_compute_likelihood += 1
@@ -201,30 +207,32 @@ class MaxEntropyMelodyGenerator:
                 time.sleep(0.3)
                 output.send(mido.Message('note_off', note=note, velocity=64))
 
+if __name__ == '__main__':
 
-# Utilisation
-# generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=3)
-# generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
-# generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=10)
-# generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
-generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
-# [generator, h_opt, J_opt] = pickle.load(open("../data/bach_partita_short_generator.p", "rb"))
-t0 = time.perf_counter_ns()
-h_opt, J_opt = generator.train(max_iter=10)
-print(f"{h_opt=}")
-print(f"{J_opt=}")
-t1 = time.perf_counter_ns()
 
-pickle.dump([generator, h_opt, J_opt], open("../data/bach_prelude_c.p", "wb"))
+    # Utilisation
+    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=3)
+    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
+    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=10)
+    generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    # generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
+    # [generator, h_opt, J_opt] = pickle.load(open("../data/bach_partita_short_generator.p", "rb"))
+    t0 = time.perf_counter_ns()
+    h_opt, J_opt = generator.train(max_iter=10)
+    print(f"{h_opt=}")
+    print(f"{J_opt=}")
+    t1 = time.perf_counter_ns()
 
-print(f"total time: {(t1 - t0) / 1000000}")
-print(f"time in sum_energy_in_context: {generator.elapsed_ns_in_sum_energy_in_context / 1000000}ms")
-print(f"time in compute_partition: {generator.elapsed_ns_in_compute_partition / 1000000}ms")
-print(f"time in log_likelihood_and_gradient: {generator.elapsed_ns_in_negative_log_likelihood_and_gradient / 1000000}ms")
-print(f"{generator.cpt_sum_energy=}")
-print(f"{generator.cpt_compute_partition=}")
-print(f"{generator.cpt_compute_gradient=}")
-print(f"{generator.cpt_compute_likelihood=}")
+    # pickle.dump([generator, h_opt, J_opt], open("../data/bach_prelude_c.p", "wb"))
 
-generated_sequence = generator.generate_sequence_metropolis(h_opt, J_opt, burn_in=2000, length=50)
-generator.save_midi(generated_sequence, "../data/generated_melody.mid")
+    print(f"total time: {(t1 - t0) / 1000000}")
+    print(f"time in sum_energy_in_context: {generator.elapsed_ns_in_sum_energy_in_context / 1000000}ms")
+    print(f"time in compute_partition: {generator.elapsed_ns_in_compute_partition / 1000000}ms")
+    print(f"time in log_likelihood_and_gradient: {generator.elapsed_ns_in_negative_log_likelihood_and_gradient / 1000000}ms")
+    print(f"{generator.cpt_sum_energy=}")
+    print(f"{generator.cpt_compute_partition=}")
+    print(f"{generator.cpt_compute_gradient=}")
+    print(f"{generator.cpt_compute_likelihood=}")
+
+    generated_sequence = generator.generate_sequence_metropolis(h_opt, J_opt, burn_in=2000, length=50)
+    generator.save_midi(generated_sequence, "../data/generated_melody.mid")
