@@ -1,3 +1,5 @@
+from collections import Counter
+
 import numpy as np
 import mido
 import random
@@ -156,8 +158,33 @@ class Continuator2:
                 prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
 
+    def get_first_order_matrix(self):
+        # returns the matrix for first order Markov transitions
+        # all states
+        keys = sorted(self.prefixes_to_continuations[0])
+        result = np.zeros((len(keys), len(keys)))
+        for i_vp, vp in enumerate(keys):
+            conts = self.prefixes_to_continuations[0][vp]
+            occurrences = Counter(conts)
+            for i_vp2, vp2 in enumerate(occurrences):
+                result [i_vp, i_vp2] = occurrences[vp2]
+            result[i_vp] /= result[i_vp].sum()
+        return result
+    def get_first_order_matrix_named(self):
+        # returns the matrix for first order Markov transitions
+        # all states
+        keys = sorted(self.prefixes_to_continuations[0])
+        result = {}
+        for vp in enumerate(keys):
+            conts = self.prefixes_to_continuations[0][vp]
+            occurrences = Counter(conts)
+            for i_vp2, vp2 in enumerate(occurrences):
+                result [i_vp, i_vp2] = occurrences[vp2]
+            result[i_vp] /= result[i_vp].sum()
+        return result
+
     def get_viewpoint(self, note):
-        vp = tuple([note.pitch, (int)(note.duration / 1000)])
+        vp = tuple([note.pitch, (int)(note.duration / 10000)])
         return vp
 
     def get_realizations_for_vp(self, vp):
@@ -172,6 +199,8 @@ class Continuator2:
     def sample_sequence(self, start_vp, length=50):
         vp_seq = self.sample_vp_sequence(start_vp, length)
         seq = self.realize_vp_sequence(vp_seq)
+        print(vp_seq)
+        print(seq)
         return seq
 
     def sample_vp_sequence(self, start_vp, length=50):
@@ -295,7 +324,8 @@ class Continuator2:
 midi_file_path = "../../data/prelude_c.mid"
 # midi_file_path = "../../data/bach_partita_mono.midi"
 t0 = time.perf_counter_ns()
-generator = Continuator2(midi_file_path, 5, transposition=False)
+generator = Continuator2(midi_file_path, 5, transposition=True)
+generator.get_first_order_matrix()
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
