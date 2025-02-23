@@ -47,7 +47,7 @@ class Start_Note(Note):
 
 class End_Note(Note):
     def __init__(self):
-        Note.__init__(self, -1, 0, 0)
+        Note.__init__(self, -2, 0, 0)
 
     def is_end_note(self):
         return True
@@ -59,38 +59,55 @@ class End_Note(Note):
 class Continuator2:
 
     def __init__(self, midi_file, kmax=5, transposition=False):
+        # the input sequences
         self.input_sequences = []
+
         self.kmax = kmax
-        self.prob_to_keep_singletons = 1 / 3
+        # the list of realizations for a given viewpoint
         self.viewpoints_realizations = {}
-        self.terminal_indices = []
         self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
 
-        self.notes = np.array([], dtype=int)
         # the original sequence
-        self.notes_original = self.extract_notes(midi_file)
+        notes_original = self.extract_notes(midi_file)
         # adds start and end notes
-        self.notes_original = np.concatenate(([Start_Note()], self.notes_original, [End_Note()]))
-        self.input_sequences.append(self.notes_original)
-        self.notes = np.concatenate((self.notes, self.notes_original))
-        # transpose in 12 tones
+        notes_original = np.concatenate(([Start_Note()], notes_original, [End_Note()]))
+
+        # learns, possibly in 12 transpositions
         trange = range(0,1)
         if transposition:
             trange = range(-6, 6, 1)
         for t in trange:
-            transposed = self.transpose_notes(self.notes_original, t)
-            self.notes = np.concatenate((self.notes, transposed))
+            transposed = self.transpose_notes(notes_original, t)
+            # store sequence in list of input sequences
+            self.input_sequences.append(transposed)
+            # learns one more sequence
             self.build_vo_markov_model(transposed)
 
+    def get_input_note(self, note_address):
+        # note_address is a tuple (melody index, index in melody)
+        return self.input_sequences[note_address[0]][note_address[1]]
+
+    def is_starting_address(self, note_address):
+        return note_address[1] == 1
+    def is_ending_address(self, note_address):
+        return note_address[1] == len(self.input_sequences[note_address[0]]) - 1
 
     def transpose_notes(self, notes, t):
         return [n.transpose(t) for n in notes]
 
-    def is_terminal(self, cont):
-        return cont in self.terminal_indices
+    def is_terminal(self, cont_vp):
+        return cont_vp == self.get_end_vp()
 
+    def get_start_vp(self):
+        return self.get_viewpoint(Start_Note())
+    def get_end_vp(self):
+        return self.get_viewpoint(End_Note())
+
+    def random_initial_vp(self):
+        # returns a random initial vp
+        return self.prefixes_to_continuations[0][tuple(self.get_start_vp())]
     def extract_notes(self, midi_file):
         """Extracts the sequence of note-on events from a MIDI file."""
         mid = mido.MidiFile(midi_file)
@@ -119,37 +136,31 @@ class Continuator2:
     def build_vo_markov_model(self, sequence):
         """Builds a variable-order Markov model for max K order
         accumulates with existing model """
-
+        # builds the vp sequence first
+        vp_sequence = [self.get_viewpoint(note) for note in sequence]
+        # add the realization to the viewpoint's realizations
+        sequence_index  = len(self.input_sequences) - 1
+        for i, vp in enumerate(vp_sequence):
+            if vp not in self.viewpoints_realizations:
+                self.viewpoints_realizations[vp] = []
+            self.viewpoints_realizations[vp].append(tuple([sequence_index, i]))
+        # populte the prefixes_to_continuations with vp contexts to vps
         for k in range(self.kmax):
             prefixes_to_cont_k = self.prefixes_to_continuations[k]
-            # TODO indices start at the end of preceding sequences
-            for i in range(len(sequence) - k):
+            for i in range(len(vp_sequence) - k):
                 if i < k + 1:
                     continue
-                current_ctx = self.get_viewpoint_tuple(tuple(range(i - k - 1, i)))
+                current_ctx = tuple(vp_sequence[i - k - 1: i])
                 if current_ctx not in prefixes_to_cont_k:
                     prefixes_to_cont_k[current_ctx] = []
-                prefixes_to_cont_k[current_ctx].append(i)
+                prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
-        # rajoute les terminaux
-        self.terminal_indices.append(len(sequence) - 1)
 
-    def get_viewpoint(self, index):
-        note = self.notes[index]
-        vp = tuple([note.pitch, (int)(note.duration / 100)])
-        # add the realization to the viewpoint's realizations
-        if vp not in self.viewpoints_realizations:
-            self.viewpoints_realizations[vp] = []
-        if index not in self.viewpoints_realizations[vp]:
-            self.viewpoints_realizations[vp].append(index)
+    def get_viewpoint(self, note):
+        vp = tuple([note.pitch, (int)(note.duration / 1000)])
         return vp
 
-    def get_viewpoint_tuple(self, indices_tuple):
-        vparray = [self.get_viewpoint(id) for id in indices_tuple]
-        return tuple(vparray)
-
     def get_realizations_for_vp(self, vp):
-
         return self.viewpoints_realizations[vp]
 
     def random_starting_note(self):
@@ -158,32 +169,33 @@ class Continuator2:
         start = random.choice(starting_conts)
         return start
 
-    def sample_sequence(self, start_note_vp, length=50):
-        """Generates a new sequence of notes from the Markov model."""
-        # current_seq is a sequence of indices in the original sequence
-        starting_conts = self.get_realizations_for_vp(start_note_vp)
-        start_note = random.choice(starting_conts)
-        current_seq = [start_note]
-        if length < 0:
-            while True:
+    def sample_sequence(self, start_vp, length=50):
+        vp_seq = self.sample_vp_sequence(start_vp, length)
+        seq = self.realize_vp_sequence(vp_seq)
+        return seq
+
+    def sample_vp_sequence(self, start_vp, length=50):
+        # Generates a new sequence of vps from the Markov model.
+        current_seq = [start_vp]
+        if length >= 0:
+            # generate fixed length sequence
+            for _ in range(length):
                 cont = self.get_continuation(current_seq)
                 if cont == -1:
                     print("restarting from scratch")
-                    cont = self.random_starting_note()
-                if self.is_terminal(cont):
-                    print("found the end")
-                    print(cont)
-                    return current_seq
+                    cont = self.random_initial_vp()
                 current_seq.append(cont)
             return current_seq
-
-        for _ in range(length):
+        while True:
             cont = self.get_continuation(current_seq)
             if cont == -1:
                 print("restarting from scratch")
-                cont = self.random_starting_note()
+                cont = self.random_initial_vp()
+            if self.is_terminal(cont):
+                print("found the end")
+                # returns seq without end viewpoint
+                return current_seq
             current_seq.append(cont)
-            print(current_seq)
         return current_seq
 
     def get_continuation(self, current_seq):
@@ -192,39 +204,35 @@ class Continuator2:
             if k > len(current_seq):
                 continue
             continuations_dict = self.prefixes_to_continuations[k - 1]
-            # subsequence of indices
-            ctx = tuple(current_seq[-k:])
-            # get the sequence of viewpoint to lookup the prefix dict
-            viewpoint_ctx = self.get_viewpoint_tuple(ctx)
+            viewpoint_ctx = tuple(current_seq[-k:])
             if viewpoint_ctx in continuations_dict:
-                all_conts = continuations_dict[viewpoint_ctx]
-                # considers the number of different viewpoints, not the number of continuations
-                all_cont_vp = {self.get_viewpoint(i) for i in all_conts}
-                if len(all_cont_vp) == 1 and k > 1:
-                    # print(f"best continuation is singleton for {k=}: {all_cont_vp}")
+                all_cont_vps = continuations_dict[viewpoint_ctx]
+                # considers the number of different viewpoints, not the number of continuations as they are repeated
+                if len(set(all_cont_vps)) == 1 and k > 1:
                     # proba to skip is proportional to order
                     if random.random() > (1 / (k + 1)):
                         # print(f"skipping continuation for {k=}")
-                        vp_to_skip = all_cont_vp.pop()
+                        vp_to_skip = all_cont_vps[0]
                         continue
                     else:
                         vp_to_skip = None
                         # print(f"not skipping singleton continuation for {k=}")
-                if vp_to_skip is not None and k > 1:
-                    all_conts_tu_use = [c for c in all_conts if self.get_viewpoint(c) != vp_to_skip]
+                if vp_to_skip is not None and k > 1 :
+                    conts_tu_use = [c for c in all_cont_vps if c != vp_to_skip]
                 else:
-                    all_conts_tu_use = all_conts
-                if len(all_conts_tu_use) == 0:
-                    print("problem")
-                next_continuation = random.choice(all_conts_tu_use)
-                # print(
-                #     f"found continuation for k {k} with cont size {len(continuations_dict[viewpoint_ctx])} and cont vp size {len(all_cont_vp)}")
+                    conts_tu_use = all_cont_vps
+                next_continuation = random.choice(conts_tu_use)
+                print(
+                    f"found continuation for k {k} with cont size {len(all_cont_vps)}")
                 return next_continuation
         return -1
         print("no continuation found")
 
-    def get_pitch_string(self, sequence_of_notes):
-        return ''.join([str(note.pitch) + ' ' for note in sequence_of_notes])
+    def realize_vp_sequence(self, vp_seq):
+        return [random.choice(self.viewpoints_realizations[vp]) for vp in vp_seq]
+
+    def get_pitch_string(self, note_sequence):
+        return ''.join([str(note.pitch) + ' ' for note in note_sequence])
 
     def save_midi(self, idx_sequence, output_file):
         mid = mido.MidiFile()
@@ -233,12 +241,12 @@ class Continuator2:
         # create a new sequence with the right start_times
         sequence = []
         start_time = 0
-        for i in idx_sequence:
-            note = self.notes[i]
+        for note_address in idx_sequence:
+            note = self.get_input_note(note_address)
             note_copy = Note(note.pitch, note.velocity, note.duration)
             # keeps the inter note time to be the same as in the original sequence
-            if i != 0:
-                delta = note.start_time - self.notes[i - 1].start_time
+            if not self.is_starting_address(note_address):
+                delta = note.start_time - self.get_input_note(tuple([note_address[0], note_address[1] - 1])).start_time
                 start_time += delta
             note_copy.set_start_time(start_time)
             sequence.append(note_copy)
@@ -271,27 +279,31 @@ class Continuator2:
         #         time.sleep(0.2)
         #         output.send(mido.Message('note_off', note=note, velocity=64))
 
-    def get_longest_subsequence_with_train(self, sequence_of_idx):
-        train_string = generator.get_pitch_string(generator.notes)
-        sequence_of_notes = [generator.notes[id] for id in sequence_of_idx]
-        sequence_string = generator.get_pitch_string(sequence_of_notes)
-        match = SequenceMatcher(None, train_string, sequence_string, autojunk=False).find_longest_match()
-        nb_notes_common = train_string[match.a:match.a + match.size].count(' ')
-        return nb_notes_common
+    def get_longest_subsequence_with_train(self, address_sequence):
+        note_sequence = [self.get_input_note(address) for address in address_sequence]
+        sequence_string = generator.get_pitch_string(note_sequence)
+        best = 0
+        for input_seq in self.input_sequences:
+            train_string = generator.get_pitch_string(input_seq)
+            match = SequenceMatcher(None, train_string, sequence_string, autojunk=False).find_longest_match()
+            nb_notes_common = train_string[match.a:match.a + match.size].count(' ')
+            if nb_notes_common > best:
+                best = nb_notes_common
+        return best
 
 
 midi_file_path = "../../data/prelude_c.mid"
-# midi_file_path = "../data/bach_partita_mono.midi"
-# midi_file_path = "../data/test_sequence_3notes.mid"
+# midi_file_path = "../../data/bach_partita_mono.midi"
 t0 = time.perf_counter_ns()
-generator = Continuator2(midi_file_path, 4, transposition=False)
+generator = Continuator2(midi_file_path, 5, transposition=False)
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
-start_note = (-1, 0)  # Pick the INDEX of the first note of the original sequence
-generated_sequence = generator.sample_sequence(start_note, length=-1)
+generated_sequence = generator.sample_sequence(generator.get_start_vp(), length=-1)
 generated_sequence = generated_sequence[1:]
-generator.save_midi(generated_sequence, "../data/ctor2_output.mid")
-print("Generated Sequence:", generated_sequence)
-
-print(f"{generator.get_longest_subsequence_with_train(generated_sequence)} notes in commun with train")
+generator.save_midi(generated_sequence, "../../data/ctor2_output.mid")
+# print("Generated Sequence:", generated_sequence)
+print(f"{generator.get_longest_subsequence_with_train(generated_sequence)} successive notes in commun with train")
+print(f"size of contexts of size 1: {len(generator.prefixes_to_continuations[0])}")
+print(f"size of contexts of size 2: {len(generator.prefixes_to_continuations[1])}")
+print(f"size of contexts of size 3: {len(generator.prefixes_to_continuations[2])}")
