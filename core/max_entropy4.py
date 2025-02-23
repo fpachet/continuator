@@ -120,7 +120,7 @@ class MaxEntropyMelodyGenerator:
                                                                           mu])
         print(self.all_partitions)
 
-    # @profile
+    @timeit
     def negative_log_likelihood(self, h, J):
         self.cpt_compute_likelihood += 1
         loss = 0
@@ -137,7 +137,7 @@ class MaxEntropyMelodyGenerator:
         print(f"{loss=}")
         return loss
 
-    # @profile
+    @timeit
     def gradient(self, h, J):
         self.cpt_compute_gradient += 1
         grad_h = np.zeros_like(h)
