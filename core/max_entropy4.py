@@ -5,7 +5,7 @@ import mido
 from scipy.optimize import minimize
 import random
 import pickle
-from line_profiler_pycharm import profile
+# from line_profiler_pycharm import profile
 
 from utils.profiler import timeit
 
@@ -55,7 +55,7 @@ class MaxEntropyMelodyGenerator:
                 notes.append(msg.note)
         return notes
 
-    @profile
+    # @profile
     def sum_energy_in_context(self, J, context, center):
         self.cpt_sum_energy += 1
         t0 = time.perf_counter_ns()
@@ -81,7 +81,7 @@ class MaxEntropyMelodyGenerator:
         self.elapsed_ns_in_compute_partition += (time.perf_counter_ns() - t0)
         return z
 
-    @profile
+    # @profile
     def build_context(self, seq, i):
         M = len(seq)
         context = {k: seq[i + k] for k in range(self.Kmax + 1) if i + k < M}
@@ -110,7 +110,7 @@ class MaxEntropyMelodyGenerator:
         for mu, s_0 in enumerate(self.seq):
             self.all_partitions[mu] = self.compute_partition_function(h, J, self.all_contexts[mu])
 
-    @profile
+    # @profile
     def negative_log_likelihood(self, h, J):
         self.cpt_compute_likelihood += 1
         loss = 0
@@ -127,7 +127,7 @@ class MaxEntropyMelodyGenerator:
         print(f"{loss=}")
         return loss
 
-    @profile
+    # @profile
     def gradient(self, h, J):
         self.cpt_compute_gradient += 1
         grad_h = np.zeros_like(h)

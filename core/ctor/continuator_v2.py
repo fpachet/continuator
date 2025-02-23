@@ -4,7 +4,15 @@ import random
 import time
 from difflib import SequenceMatcher
 
-
+"""
+Implementation of Continuator more or less as original.
+Build a representation for all contexts of size 1 to K and their continuations
+Like in the original, continuations are actual realizations in the concrete input sequences.
+Contexts are contexts of viewpoints.
+Sampling function is quite smart and attempts to avoid too long repetition (max order)
+by avoiding singletons when it can
+Sequences are considered as monophonic but durations are handled smartly by looking at actual durations in realizations
+"""
 class Note:
     def __init__(self, pitch, velocity, duration, start_time=0):
         self.pitch = pitch
@@ -25,53 +33,68 @@ class Note:
     def is_end_note(self):
         return False
 
+    def transpose(self, t):
+        return Note(self.pitch + t, self.velocity, self.duration, start_time=self.start_time)
+
 class Start_Note(Note):
     def __init__(self):
         Note.__init__(self, -1, 0, 0)
 
     def is_start_note(self):
-
         return True
+
+    def transpose(self, t):
+        return self
+
 class End_Note(Note):
     def __init__(self):
         Note.__init__(self, -1, 0, 0)
 
     def is_end_note(self):
-
         return True
+
+    def transpose(self, t):
+        return self
+
 
 class Continuator2:
 
     def __init__(self, midi_file, kmax=5, transposition=False):
-        self.midi_file = midi_file
+        self.input_sequences = []
         self.kmax = kmax
         self.prob_to_keep_singletons = 1 / 3
-        # the original sequence
-        self.notes_original = self.extract_notes()
-        self.notes_original.insert(0, Start_Note())
-        self.notes_original.append(End_Note())
         self.viewpoints_realizations = {}
         self.terminal_indices = []
-        all_notes = []
+        self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
+        for k in range(self.kmax):
+            self.prefixes_to_continuations[k] = {}
+
+        self.notes = np.array([], dtype=int)
+        # the original sequence
+        self.notes_original = self.extract_notes(midi_file)
+        # adds start and end notes
+        self.notes_original = np.concatenate(([Start_Note()], self.notes_original, [End_Note()]))
+        self.input_sequences.append(self.notes_original)
+        self.notes = np.concatenate((self.notes, self.notes_original))
         # transpose in 12 tones
+        trange = range(0,1)
         if transposition:
-            for t in range(-6, 6, 1):
-                all_notes = all_notes + self.transpose_notes(self.notes_original, t)
-            self.notes = all_notes
-        else:
-            self.notes = self.notes_original
-        self.prefixes_to_continuations = []
-        self.build_vo_markov_model()
+            trange = range(-6, 6, 1)
+        for t in trange:
+            transposed = self.transpose_notes(self.notes_original, t)
+            self.notes = np.concatenate((self.notes, transposed))
+            self.build_vo_markov_model(transposed)
+
 
     def transpose_notes(self, notes, t):
-        return [Note(n.pitch + t, n.velocity, n.duration, start_time=n.start_time) for n in notes]
+        return [n.transpose(t) for n in notes]
 
     def is_terminal(self, cont):
         return cont in self.terminal_indices
 
-    def extract_notes(self):
+    def extract_notes(self, midi_file):
         """Extracts the sequence of note-on events from a MIDI file."""
-        mid = mido.MidiFile(self.midi_file)
+        mid = mido.MidiFile(midi_file)
         notes = []
         pending_notes = np.empty(128, dtype=object)
         pending_start_times = np.zeros(128)
@@ -92,15 +115,16 @@ class Continuator2:
                     pending_note.set_duration(duration)
                     pending_notes[msg.note] = None
                     pending_start_times[msg.note] = 0
-        return notes
+        return np.array(notes)
 
-    def build_vo_markov_model(self):
-        """Builds a variable-order Markov model for max K order"""
+    def build_vo_markov_model(self, sequence):
+        """Builds a variable-order Markov model for max K order
+        accumulates with existing model """
 
-        self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
         for k in range(self.kmax):
-            prefixes_to_cont_k = {}
-            for i in range(len(self.notes) - k):
+            prefixes_to_cont_k = self.prefixes_to_continuations[k]
+            # TODO indices start at the end of preceding sequences
+            for i in range(len(sequence) - k):
                 if i < k + 1:
                     continue
                 current_ctx = self.get_viewpoint_tuple(tuple(range(i - k - 1, i)))
@@ -109,7 +133,7 @@ class Continuator2:
                 prefixes_to_cont_k[current_ctx].append(i)
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
         # rajoute les terminaux
-        self.terminal_indices.append(len(self.notes) - 1)
+        self.terminal_indices.append(len(sequence) - 1)
 
     def get_viewpoint(self, index):
         note = self.notes[index]
@@ -213,6 +237,7 @@ class Continuator2:
         for i in idx_sequence:
             note = self.notes[i]
             note_copy = Note(note.pitch, note.velocity, note.duration)
+            # keeps the inter note time to be the same as in the original sequence
             if i != 0:
                 delta = note.start_time - self.notes[i - 1].start_time
                 start_time += delta
@@ -256,11 +281,11 @@ class Continuator2:
         return nb_notes_common
 
 
-midi_file_path = "../data/prelude_c.mid"
+midi_file_path = "../../data/prelude_c.mid"
 # midi_file_path = "../data/bach_partita_mono.midi"
 # midi_file_path = "../data/test_sequence_3notes.mid"
 t0 = time.perf_counter_ns()
-generator = Continuator2(midi_file_path, 4, transposition=True)
+generator = Continuator2(midi_file_path, 4, transposition=False)
 t1 = time.perf_counter_ns()
 print(f"total time: {(t1 - t0) / 1000000}")
 # Sampling a new sequence from the  model
