@@ -5,7 +5,7 @@ import mido
 from scipy.optimize import minimize
 import random
 import pickle
-# from line_profiler_pycharm import profile
+
 
 from utils.profiler import timeit
 
@@ -44,7 +44,7 @@ class MaxEntropyMelodyGenerator:
         self.elapsed_ns_in_negative_log_likelihood_and_gradient = 0
 
     def extract_notes(self) -> list[int]:
-        """ Extracts MIDI note sequence from a MIDI file. """
+        """Extracts MIDI note sequence from a MIDI file."""
         mid = mido.MidiFile(self.midi_file)
         notes = []
         if (len(mid.tracks)) == 1:
@@ -52,7 +52,7 @@ class MaxEntropyMelodyGenerator:
         else:
             track = mid.tracks[1]
         for msg in track:
-            if msg.type == 'note_on' and msg.velocity > 0:
+            if msg.type == "note_on" and msg.velocity > 0:
                 notes.append(msg.note)
         return notes
 
@@ -68,7 +68,7 @@ class MaxEntropyMelodyGenerator:
                 energy += j_k[context.get(-k - 1), center]
             if k + 1 in context:
                 energy += j_k[center, context.get(k + 1)]
-        self.elapsed_ns_in_sum_energy_in_context += (time.perf_counter_ns() - t0)
+        self.elapsed_ns_in_sum_energy_in_context += time.perf_counter_ns() - t0
         return energy
 
     def compute_partition_function(self, h, J, context):
@@ -79,7 +79,7 @@ class MaxEntropyMelodyGenerator:
         for sigma in range(self.voc_size):
             energy = h[sigma] + self.sum_energy_in_context(J, context, sigma)
             z += np.exp(energy)
-        self.elapsed_ns_in_compute_partition += (time.perf_counter_ns() - t0)
+        self.elapsed_ns_in_compute_partition += time.perf_counter_ns() - t0
         return z
 
     # @profile
@@ -96,29 +96,27 @@ class MaxEntropyMelodyGenerator:
         # unflatten h and J parameters
         h = params[:voc_size]
         J_flat = params[voc_size:]
-        J = {k: J_flat[k * voc_size ** 2:(k + 1) * voc_size ** 2].reshape(
-            (voc_size, voc_size))
-            for k in range(self.Kmax)}
+        J = {
+            k: J_flat[k * voc_size**2 : (k + 1) * voc_size**2].reshape(
+                (voc_size, voc_size)
+            )
+            for k in range(self.Kmax)
+        }
         # compute all partition functions for all mu to be used by obj function and gradient
         self.all_partitions = np.zeros(len(self.seq))
         self.compute_all_Z(J, h)
         result = self.negative_log_likelihood(h, J), self.gradient(h, J)
         self.elapsed_ns_in_negative_log_likelihood_and_gradient += (
-                time.perf_counter_ns() - t0)
+            time.perf_counter_ns() - t0
+        )
         return result
 
     @timeit
     def compute_all_Z(self, J, h):
-        h = np.linspace(0, 1, self.voc_size)
-        J = {k: np.linspace(0, 1, self.voc_size ** 2).reshape((
-            self.voc_size, self.voc_size))
-            for k in
-            range(self.Kmax)}
         for mu, s_0 in enumerate(self.seq):
-            self.all_partitions[mu] = self.compute_partition_function(h, J,
-                                                                      self.all_contexts[
-                                                                          mu])
-        print(self.all_partitions)
+            self.all_partitions[mu] = self.compute_partition_function(
+                h, J, self.all_contexts[mu]
+            )
 
     @timeit
     def negative_log_likelihood(self, h, J):
@@ -165,27 +163,41 @@ class MaxEntropyMelodyGenerator:
                         if mu - k - 1 >= 0 and r == self.seq[mu - k - 1]:
                             if r2 == s_0:
                                 prob += 1
-                            prob -= np.exp(
-                                h[r2] + self.sum_energy_in_context(J, context, r2)) / Z
+                            prob -= (
+                                np.exp(
+                                    h[r2] + self.sum_energy_in_context(J, context, r2)
+                                )
+                                / Z
+                            )
                         if mu + k + 1 < M and r2 == self.seq[mu + k + 1]:
                             if r == s_0:
                                 prob += 1
-                            prob -= np.exp(
-                                h[r] + self.sum_energy_in_context(J, context, r)) / Z
+                            prob -= (
+                                np.exp(h[r] + self.sum_energy_in_context(J, context, r))
+                                / Z
+                            )
                     grad_J[k][r][r2] = -prob / M + (self.lambda_reg / M) * np.abs(
-                        J[k][r][r2])
+                        J[k][r][r2]
+                    )
         grad_J_flat = np.concatenate([grad_J[k].flatten() for k in range(self.Kmax)])
         return np.concatenate([grad_h, grad_J_flat])
 
     def train(self, max_iter=1000):
-        voc_2 = self.voc_size ** 2
+        voc_2 = self.voc_size**2
         params_init = np.zeros(self.voc_size + self.Kmax * voc_2)
-        res = minimize(self.negative_log_likelihood_and_gradient, params_init,
-                       method='L-BFGS-B', jac=True,
-                       options={'maxiter': max_iter})
-        return res.x[:self.voc_size], {
-            k: res.x[self.voc_size + k * voc_2:self.voc_size + (k + 1) * voc_2].reshape(
-                (self.voc_size, self.voc_size)) for k in range(self.Kmax)}
+        res = minimize(
+            self.negative_log_likelihood_and_gradient,
+            params_init,
+            method="L-BFGS-B",
+            jac=True,
+            options={"maxiter": max_iter},
+        )
+        return res.x[: self.voc_size], {
+            k: res.x[
+                self.voc_size + k * voc_2 : self.voc_size + (k + 1) * voc_2
+            ].reshape((self.voc_size, self.voc_size))
+            for k in range(self.Kmax)
+        }
 
     def generate_sequence_metropolis(self, h, J, length=20, burn_in=1000):
         # generate sequence of note indexes
@@ -194,12 +206,15 @@ class MaxEntropyMelodyGenerator:
             idx = random.randint(0, length - 1)
             current_note = sequence[idx]
             context = self.build_context(sequence, idx)
-            current_energy = h[current_note] + self.sum_energy_in_context(J, context,
-                                                                          current_note)
+            current_energy = h[current_note] + self.sum_energy_in_context(
+                J, context, current_note
+            )
             proposed_note = random.choice(
-                [elt for elt in range(self.voc_size) if elt != current_note])
-            proposed_energy = h[proposed_note] + self.sum_energy_in_context(J, context,
-                                                                            proposed_note)
+                [elt for elt in range(self.voc_size) if elt != current_note]
+            )
+            proposed_energy = h[proposed_note] + self.sum_energy_in_context(
+                J, context, proposed_note
+            )
             acceptance_ratio = min(1, np.exp(proposed_energy - current_energy))
             if random.random() < acceptance_ratio:
                 sequence[idx] = proposed_note
@@ -213,24 +228,24 @@ class MaxEntropyMelodyGenerator:
         track = mido.MidiTrack()
         mid.tracks.append(track)
         for note in sequence:
-            track.append(mido.Message('note_on', note=note, velocity=64, time=200))
-            track.append(mido.Message('note_off', note=note, velocity=64, time=200))
+            track.append(mido.Message("note_on", note=note, velocity=64, time=200))
+            track.append(mido.Message("note_off", note=note, velocity=64, time=200))
         mid.save(output_file)
         # plays the file approximatively, can be heard of Logic is open
         with mido.open_output() as output:
             for note in sequence:
-                output.send(mido.Message('note_on', note=note, velocity=64))
+                output.send(mido.Message("note_on", note=note, velocity=64))
                 time.sleep(0.3)
-                output.send(mido.Message('note_off', note=note, velocity=64))
+                output.send(mido.Message("note_off", note=note, velocity=64))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Utilisation
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=3)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=10)
-    generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
-    # generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
+    # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
     # [generator, h_opt, J_opt] = pickle.load(open("../data/bach_partita_short_generator.p", "rb"))
     t0 = time.perf_counter_ns()
     h_opt, J_opt = generator.train(max_iter=10)
@@ -242,16 +257,20 @@ if __name__ == '__main__':
 
     print(f"total time: {(t1 - t0) / 1000000}")
     print(
-        f"time in sum_energy_in_context: {generator.elapsed_ns_in_sum_energy_in_context / 1000000}ms")
+        f"time in sum_energy_in_context: {generator.elapsed_ns_in_sum_energy_in_context / 1000000}ms"
+    )
     print(
-        f"time in compute_partition: {generator.elapsed_ns_in_compute_partition / 1000000}ms")
+        f"time in compute_partition: {generator.elapsed_ns_in_compute_partition / 1000000}ms"
+    )
     print(
-        f"time in log_likelihood_and_gradient: {generator.elapsed_ns_in_negative_log_likelihood_and_gradient / 1000000}ms")
+        f"time in log_likelihood_and_gradient: {generator.elapsed_ns_in_negative_log_likelihood_and_gradient / 1000000}ms"
+    )
     print(f"{generator.cpt_sum_energy=}")
     print(f"{generator.cpt_compute_partition=}")
     print(f"{generator.cpt_compute_gradient=}")
     print(f"{generator.cpt_compute_likelihood=}")
 
-    generated_sequence = generator.generate_sequence_metropolis(h_opt, J_opt,
-                                                                burn_in=2000, length=50)
+    generated_sequence = generator.generate_sequence_metropolis(
+        h_opt, J_opt, burn_in=2000, length=50
+    )
     generator.save_midi(generated_sequence, "../data/generated_melody.mid")
