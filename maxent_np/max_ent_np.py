@@ -74,8 +74,6 @@ class MaxEnt:
         self.l = l
 
         self.Z = np.zeros(self.M, dtype=float)
-        # self.h = np.random.random(self.q)
-        # self.J = np.random.random((self.kmax, self.q, self.q))
         self.h = np.linspace(0, 1, self.q)
         self.J = np.zeros((self.Kmax, self.q * self.q))
         self.J[:] = np.linspace(0, 1, self.q**2)
@@ -212,7 +210,9 @@ class MaxEnt:
 
 
 if __name__ == "__main__":
-    g = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    g = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=10)
 
-    me = MaxEnt(g.seq, q=g.voc_size, kmax=10)
-    print(me.grad_loc_field())
+    me = MaxEnt(g.seq, q=g.voc_size, kmax=5)
+    print(f"Z = {me.Z}")
+    print(f"NLL = {me.nll()}")
+    print(f"Loc. grad. = {me.grad_loc_field()}")
