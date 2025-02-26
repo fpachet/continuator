@@ -133,6 +133,8 @@ class MaxEnt:
 
         Does it without using for loops by using numpy matrix indexing. See how
         self.Z_ix is laid out in the __init__ method for more details.
+
+        Formula (5) in the referenced paper.
         """
 
         # all_j is essentially J[self.Z_ix] for all mu < self.M and all sigma < self.q
@@ -153,6 +155,7 @@ class MaxEnt:
 
     @timeit
     def compute_z_slow(self):
+        """DO NOT USE — ONLY HERE FOR TESTING PURPOSES"""
         for mu in range(self.M):
             self.Z[mu] = 0.0
             for sigma in range(self.q):
@@ -161,15 +164,55 @@ class MaxEnt:
 
     @timeit
     def nll(self):
+        """
+        Compute the negative log-likelihood of the model given the training sequence.
+
+        Formula (6) in the referenced paper.
+
+        Returns:
+            a float (the NLL)
+        """
         sum_h = self.h[self.ix_seq].sum()
         sum_j = self.J[self.L_ix].sum()
         log_z = np.log(self.Z).sum()
         norm1_j = np.sum(np.abs(self.J))
         return (-(sum_h + sum_j - log_z) + self.l * norm1_j) / self.M
 
+    @timeit
+    def grad_loc_field(self):
+        """
+        Formula (7) in the referenced paper.
+        Returns:
+            a 1D-numpy array of shape (q)
+        """
+        dg_dh = np.zeros(self.q)
+        for r in range(self.q):
+            dg_dh[r] = 0
+            for mu in range(self.M):
+                if self.ix_seq[mu] == r:
+                    dg_dh[r] += 1
+                dg_dh[r] -= (1 / self.Z[mu]) * np.exp(
+                    self.h[r] + self.J[tuple(self.L_ix1[mu])].sum()
+                )
+        return -dg_dh / self.M
+
+    @timeit
+    def grad_inter_pot(self):
+        """
+        Formula (8) in the referenced paper.
+        Returns:
+            a 1D-numpy array of shape (q)
+        """
+        dg_dJ = np.zeros((self.Kmax, self.q, self.q))
+        for k in range(self.Kmax):
+            for r in range(self.q):
+                for r2 in range(self.q):
+                    ...
+        return dg_dJ / self.M
+
 
 if __name__ == "__main__":
     g = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
 
     me = MaxEnt(g.seq, q=g.voc_size, kmax=10)
-    # print(me.Z)
+    print(me.grad_loc_field())
