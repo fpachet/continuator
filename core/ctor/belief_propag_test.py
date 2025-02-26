@@ -1,10 +1,12 @@
 import time
 from random import random
 from collections import Counter
+from utils.profiler import timeit
 
 import numpy as np
 from collections import namedtuple
-from line_profiler_pycharm import profile
+import scipy.sparse as sp
+# from line_profiler_pycharm import profile
 
 LabeledArray = namedtuple(
     "LabeledArray",
@@ -65,7 +67,6 @@ def is_joint_prob(labeled_array):
 # assert not is_joint_prob(p_v1_given_many)
 
 
-@profile
 def tile_to_shape_along_axis(arr, target_shape, target_axis):
     # get a list of all axes
     raw_axes = list(range(len(target_shape)))
@@ -90,7 +91,6 @@ def tile_to_shape_along_axis(arr, target_shape, target_axis):
     return transposed
 
 
-@profile
 def tile_to_other_dist_along_axis_name(tiling_labeled_array, target_array):
     assert len(tiling_labeled_array.axes_labels) == 1
     target_axis_label = tiling_labeled_array.axes_labels[0]
@@ -264,50 +264,13 @@ class PGM(object):
         return None
 
 
-#
-# p_h1 = LabeledArray(np.array([[0.2], [0.8]]), ["h1"])
-# p_h2_given_h1 = LabeledArray(np.array([[0.5, 0.2], [0.5, 0.8]]), ["h2", "h1"])
-# p_v1_given_h1 = LabeledArray(np.array([[0.6, 0.1], [0.4, 0.9]]), ["v1", "h1"])
-# p_v2_given_h2 = LabeledArray(p_v1_given_h1.array, ["v2", "h2"])
-#
-# assert is_joint_prob(p_h1)
-# assert is_conditional_prob(p_h2_given_h1, "h2")
-# assert is_conditional_prob(p_v1_given_h1, "v1")
-# assert is_conditional_prob(p_v2_given_h2, "v2")
-# pgm = PGM.from_string("p(h1)p(h2|h1)p(v1|h1)p(v2|h2)")
-#
-# pgm.set_data(
-#     {
-#         "p(h1)": p_h1,
-#         "p(h2|h1)": p_h2_given_h1,
-#         "p(v1|h1)": p_v1_given_h1,
-#         "p(v2|h2)": p_v2_given_h2,
-#     }
-# )
-#
-# assert is_joint_prob(p_h1)
-# assert is_conditional_prob(p_h2_given_h1, "h2")
-# assert is_conditional_prob(p_v1_given_h1, "v1")
-# assert is_conditional_prob(p_v2_given_h2, "v2")
-# pgm = PGM.from_string("p(h1)p(h2|h1)p(v1|h1)p(v2|h2)")
-#
-# pgm.set_data(
-#     {
-#         "p(h1)": p_h1,
-#         "p(h2|h1)": p_h2_given_h1,
-#         "p(v1|h1)": p_v1_given_h1,
-#         "p(v2|h2)": p_v2_given_h2,
-#     }
-# )
-
-
 class Messages(object):
     def __init__(self):
         self.messages = {}
 
-    @profile
+    @timeit
     def _variable_to_factor_messages(self, variable, factor):
-        print (f"_variable_to_factor_messages: {variable} to {factor}")        # Take the product over all incoming factors into this variable except the variable
+        # Take the product over all incoming factors into this variable except the variable
         incoming_messages = [
             self.factor_to_variable_message(neighbor_factor, variable)
             for neighbor_factor in variable.neighbors
@@ -317,9 +280,8 @@ class Messages(object):
         # If there are no incoming messages, this is 1
         return np.prod(incoming_messages, axis=0)
 
-    @profile
+    @timeit
     def _factor_to_variable_messages(self, factor, variable):
-        print (f"_factor_to_variable_message: {factor} to {variable}")
         # Compute the product
         factor_dist = np.copy(factor.data.array)
         for neighbor_variable in factor.neighbors:
@@ -335,7 +297,7 @@ class Messages(object):
         other_axes = other_axes_from_labeled_axes(factor.data, variable.name)
         return np.squeeze(np.sum(factor_dist, axis=other_axes))
 
-    @profile
+    @timeit
     def marginal(self, variable):
         # p(variable) is proportional to the product of incoming messages to variable.
         unnorm_p = np.prod(
@@ -349,9 +311,8 @@ class Messages(object):
         # At this point, we can normalize this distribution
         return unnorm_p / np.sum(unnorm_p)
 
-    @profile
+    @timeit
     def variable_to_factor_messages(self, variable, factor):
-        print (f"variable_to_factor_messages: {variable} to {factor}")
         message_name = (variable.name, factor.name)
         if message_name not in self.messages:
             self.messages[message_name] = self._variable_to_factor_messages(
@@ -359,9 +320,8 @@ class Messages(object):
             )
         return self.messages[message_name]
 
-    @profile
+    @timeit
     def factor_to_variable_message(self, factor, variable):
-        print (f"factor_to_variable_message: {factor} to {variable}")
         message_name = (factor.name, variable.name)
         if message_name not in self.messages:
             self.messages[message_name] = self._factor_to_variable_messages(
@@ -369,174 +329,57 @@ class Messages(object):
             )
         return self.messages[message_name]
 
-    #
 
+# ijcai's paper extended
+# N variables with markov
+N = 50
+# vocabulary size = Q
+Q = 500
 
-# pgm = PGM.from_string("p(h1)p(h2|h1)p(v1|h1)p(v2|h2)")
-#
-# pgm.set_data(
-#     {
-#         "p(h1)": p_h1,
-#         "p(h2|h1)": p_h2_given_h1,
-#         "p(v1|h1)": p_v1_given_h1,
-#         "p(v2|h2)": p_v2_given_h2,
-#     }
-# )
-#
-# m = Messages()
-# m.marginal(pgm.variable_from_name("v2"))
-#
-# pgm = PGM.from_string("p(x5|x4)p(x4|x3)p(x3|x2)p(x2|x1)p(x1)")
-#
-# p_x5_given_x4 = LabeledArray(
-#     np.array([[0.7, 0.5, 0], [0.3, 0.3, 0.5], [0, 0.2, 0.5]]), ["x5", "x4"]
-# )
-# assert is_conditional_prob(p_x5_given_x4, "x5")
-# p_x4_given_x3 = LabeledArray(p_x5_given_x4.array, ["x4", "x3"])
-# p_x3_given_x2 = LabeledArray(p_x5_given_x4.array, ["x3", "x2"])
-# p_x2_given_x1 = LabeledArray(p_x5_given_x4.array, ["x2", "x1"])
-# p_x1 = LabeledArray(np.array([1, 0, 0]), ["x1"])
-#
-# pgm.set_data(
-#     {
-#         "p(x5|x4)": p_x5_given_x4,
-#         "p(x4|x3)": p_x4_given_x3,
-#         "p(x3|x2)": p_x3_given_x2,
-#         "p(x2|x1)": p_x2_given_x1,
-#         "p(x1)": p_x1,
-#     }
-# )
-#
-# Messages().marginal(pgm.variable_from_name("x5"))
-def one_hot(size, index):
-    data = np.zeros(size, dtype=float)
-    data[index] = 1
-    return data
+string = ""
+for i in range(1, N + 1):
+    string = string + "p(x" + str(i) + ")"
+for i in range(2, N + 1):
+    string = string + "p(x" + str(i) + "|x" + str(i - 1) + ")"
 
+pgm = PGM.from_string(string)
 
-# ijcai's paper
-pgm = PGM.from_string("p(x1)p(x2|x1)p(x3|x2)p(x4|x3)p(x2)p(x3)p(x4)")
+# Generate a random sparse matrix with 20% nonzero elements
+sparse_matrix = sp.random(Q, Q, density=0.6, format="csr")
+# Compute row sums
+row_sums = np.array(sparse_matrix.sum(axis=1)).flatten()
+# Avoid division by zero (for rows that are entirely zero)
+row_sums[row_sums == 0] = 1
+# Normalize each row to make it stochastic
+stochastic_matrix = sparse_matrix.multiply(1 / row_sums[:, np.newaxis])
+# Verify row sums (should be approximately 1)
+# print(stochastic_matrix.sum(axis=1))
+stochastic_array = stochastic_matrix.toarray().transpose()
 markov_initial = LabeledArray(
-    np.array([[0.5, 0.5, 0.5], [0.25, 0, 0.25], [0.25, 0.5, 0.25]]),
+    stochastic_array,
     ["x2", "x1"],
 )
 assert is_conditional_prob(markov_initial, "x2")
-p_x1 = LabeledArray(np.array([1 / 2, 1 / 6, 1 / 3]), ["x1"])
-p_x2 = LabeledArray(np.array([1 / 3, 1 / 3, 1 / 3]), ["x2"])
-p_x3 = LabeledArray(np.array([1 / 3, 1 / 3, 1 / 3]), ["x3"])
-p_x4 = LabeledArray(np.array([0, 1, 0]), ["x4"])
-p_x2_given_x1 = LabeledArray(markov_initial.array, ["x2", "x1"])
-p_x3_given_x2 = LabeledArray(markov_initial.array, ["x3", "x2"])
-p_x4_given_x3 = LabeledArray(markov_initial.array, ["x4", "x3"])
 
-pgm.set_data(
-    {
-        "p(x4|x3)": p_x4_given_x3,
-        "p(x3|x2)": p_x3_given_x2,
-        "p(x2|x1)": p_x2_given_x1,
-        "p(x1)": p_x1,
-        "p(x2)": p_x2,
-        "p(x3)": p_x3,
-        "p(x4)": p_x4,
-    }
-)
+data_dict = {}
+for i in range(N):
+    data_dict["p(x" + str(i + 1) + ")"] = LabeledArray(
+        np.array(sp.random(1, Q, density=0.2, format="csr").toarray().flatten()),
+        ["x" + str(i + 1)],
+    )
+    data_dict["p(x" + str(i + 2) + "|x" + str(i + 1) + ")"] = LabeledArray(
+        markov_initial.array, ["x" + str(i + 2), "x" + str(i + 1)]
+    )
 
-# print("marginals: ")
-# print(Messages().marginal(pgm.variable_from_name("x1")))
-# print(Messages().marginal(pgm.variable_from_name("x2")))
-# print(Messages().marginal(pgm.variable_from_name("x3")))
-# print(Messages().marginal(pgm.variable_from_name("x4")))
-print("sampling")
+pgm.set_data(data_dict)
 
-all_res = []
+nb_iterations = 100
+print(f"computing {nb_iterations} marginals: ")
 total_time = 0
 
-N = 1
-for _ in range(N):
-    res = []
-    pgm.factor_from_name("p(x1)").data = p_x1
-    pgm.factor_from_name("p(x2)").data = p_x2
-    pgm.factor_from_name("p(x3)").data = p_x3
-    pgm.factor_from_name("p(x4)").data = p_x4
-
+for i in range(nb_iterations):
     t0 = time.perf_counter_ns()
-    marg1 = Messages().marginal(pgm.variable_from_name("x1"))
-    t1 = time.perf_counter_ns()
-    total_time += t1 - t0
-    x1_value = np.random.choice(range(0, len(p_x1.array)), p=marg1)
-    res.append(["C", "D", "E"][x1_value])
-    data = np.array([0, 0, 0])
-    data[x1_value] = 1
-    pgm.factor_from_name("p(x1)").data = LabeledArray(data, ["x1"])
+    marg1 = Messages().marginal(pgm.variable_from_name("x"+str(i%N + 1)))
+    total_time += time.perf_counter_ns() - t0
 
-    t0 = time.perf_counter_ns()
-    marg2 = Messages().marginal(pgm.variable_from_name("x2"))
-    t1 = time.perf_counter_ns()
-    total_time += t1 - t0
-    x2_value = np.random.choice(range(0, len(p_x1.array)), p=marg2)
-    res.append(["C", "D", "E"][x2_value])
-    data = [0, 0, 0]
-    data[x2_value] = 1
-    pgm.factor_from_name("p(x2)").data = LabeledArray(data, ["x2"])
-
-    t0 = time.perf_counter_ns()
-    marg3 = Messages().marginal(pgm.variable_from_name("x3"))
-    t1 = time.perf_counter_ns()
-    total_time += t1 - t0
-    x3_value = np.random.choice(range(0, len(p_x1.array)), p=marg3)
-    res.append(["C", "D", "E"][x3_value])
-    data = [0, 0, 0]
-    data[x3_value] = 1
-    pgm.factor_from_name("p(x3)").data = LabeledArray(data, ["x3"])
-
-    t0 = time.perf_counter_ns()
-    marg4 = Messages().marginal(pgm.variable_from_name("x4"))
-    t1 = time.perf_counter_ns()
-    total_time += t1 - t0
-    x4_value = np.random.choice(range(0, len(p_x1.array)), p=marg4)
-    res.append(["C", "D", "E"][x4_value])
-    data = [0, 0, 0]
-    data[x4_value] = 1
-    pgm.factor_from_name("p(x4)").data = LabeledArray(data, ["x4"])
-    t1 = time.perf_counter_ns()
-    total_time += t1 - t0
-    # print(res)
-    all_res.append(tuple(res))
-
-occurrences = Counter(all_res)
-print(f"{len(occurrences)} unique sequences")
-sorted_keys = sorted(occurrences.keys(), key=lambda x: occurrences[x], reverse=True)
-for k in sorted_keys:
-    print(f"{k}:{occurrences[k]/N}")
-
-print(total_time / (4 * N) / 1000000)
-
-# ijcai's paper
-# pgm = PGM.from_string("p(x1)p(x2|x1)p(x3|x2)p(x4|x3)p(x2)p(x3)p(x4)")
-# markov_initial = LabeledArray(
-#     np.array([[0.5, 0.5, 0.5], [0.25, 0, 0.25], [0.25, 0.5, 0.25]]),
-#     ["x2", "x1"],
-# )
-# assert is_conditional_prob(markov_initial, "x2")
-# p_x1 = LabeledArray(np.array([0, 1, 0]), ["x1"])
-# p_x2 = LabeledArray(np.array([1 / 3, 1 / 3, 1 / 3]), ["x2"])
-# p_x3 = LabeledArray(np.array([1 / 3, 1 / 3, 1 / 3]), ["x3"])
-# p_x4 = LabeledArray(np.array([0, 1, 0]), ["x4"])
-# p_x2_given_x1 = LabeledArray(markov_initial.array, ["x2", "x1"])
-# p_x3_given_x2 = LabeledArray(markov_initial.array, ["x3", "x2"])
-# p_x4_given_x3 = LabeledArray(markov_initial.array, ["x4", "x3"])
-#
-# pgm.set_data(
-#     {
-#         "p(x4|x3)": p_x4_given_x3,
-#         "p(x3|x2)": p_x3_given_x2,
-#         "p(x2|x1)": p_x2_given_x1,
-#         "p(x1)": p_x1,
-#         "p(x2)": p_x2,
-#         "p(x3)": p_x3,
-#         "p(x4)": p_x4,
-#     }
-# )
-# marg2 = Messages().marginal(pgm.variable_from_name("x2"))
-# print("marginal 2: ")
-# print(marg2)
+print(f"{total_time / nb_iterations / 1000000}ms per marginal")

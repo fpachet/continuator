@@ -228,24 +228,24 @@ class MaxEntropyMelodyGenerator:
         track = mido.MidiTrack()
         mid.tracks.append(track)
         for note in sequence:
-            track.append(mido.Message("note_on", note=note, velocity=64, time=200))
-            track.append(mido.Message("note_off", note=note, velocity=64, time=200))
+            track.append(mido.Message("note_on", note=note, velocity=64, time=0))
+            track.append(mido.Message("note_off", note=note, velocity=64, time=120))
         mid.save(output_file)
         # plays the file approximatively, can be heard of Logic is open
-        with mido.open_output() as output:
-            for note in sequence:
-                output.send(mido.Message("note_on", note=note, velocity=64))
-                time.sleep(0.3)
-                output.send(mido.Message("note_off", note=note, velocity=64))
+        # with mido.open_output() as output:
+        #     for note in sequence:
+        #         output.send(mido.Message("note_on", note=note, velocity=64))
+        #         time.sleep(0.3)
+        #         output.send(mido.Message("note_off", note=note, velocity=64))
 
 
 if __name__ == "__main__":
     # Utilisation
-    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=3)
+    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=4)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=10)
-    # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
-    generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
+    generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    # generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
     # [generator, h_opt, J_opt] = pickle.load(open("../data/bach_partita_short_generator.p", "rb"))
     t0 = time.perf_counter_ns()
     h_opt, J_opt = generator.train(max_iter=10)
@@ -271,6 +271,6 @@ if __name__ == "__main__":
     print(f"{generator.cpt_compute_likelihood=}")
 
     generated_sequence = generator.generate_sequence_metropolis(
-        h_opt, J_opt, burn_in=2000, length=50
+        h_opt, J_opt, burn_in=5000, length=200
     )
     generator.save_midi(generated_sequence, "../data/generated_melody.mid")

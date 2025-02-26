@@ -175,17 +175,16 @@ if __name__ == "__main__":
     # )
     P = np.array(
         [
-            [0, 1, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0],
+            [1 / 2, 1 / 4, 1 / 4],
+            [1 / 2, 0, 1 / 2],
+            [1 / 2, 1 / 4, 1 / 4],
         ]
     )
     n = 4
 
+    # x1_prob = [1/2, 1/6, 1/3]
+
     # Test with constraints at various positions
-    constraints = {}  # X_1 = 0, X_3 = 1, others free
+    constraints = {1: 1, 4: 1}  # X_1 = 0, X_3 = 1, others free
     seq = sample_sequence_with_constraints(P, constraints, n)
     print(f"Sequence with constraints {constraints}:", seq)
