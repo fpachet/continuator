@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from core.max_entropy4 import MaxEntropyMelodyGenerator
+from maxent_np import NDArrayInt
 from maxent_np.preprocess_indices import (
     compute_contexts,
     compute_context_indices,
@@ -16,6 +17,8 @@ from utils.profiler import timeit
 
 
 class MaxEnt:
+    PADDING = -1
+
     # 1D-numpy array of shape (M), training_seq[µ] is the index of the symbol at
     # position µ in the training sequence
     ix_seq: list[int]
@@ -38,7 +41,7 @@ class MaxEnt:
 
     # 2D-numpy array of shape (M, 2•kmax + 1), contexts[µ] is the context centered
     # around the symbol at position µ
-    contexts: np.ndarray[int]
+    contexts: NDArrayInt
 
     # The left-padding index, usually -1
     left_padding: int
@@ -49,10 +52,9 @@ class MaxEnt:
     # The partition function, this is a 1D-array of shape (M)
     Z: npt.NDArray[float]
 
-    Z_ix: tuple[npt.NDArray[int], ...]
-
-    L_ix1: tuple[npt.NDArray[int], ...]
-    L_ix: tuple[npt.NDArray[int], ...]
+    Z_ix: tuple[NDArrayInt, ...]
+    L_ix1: NDArrayInt
+    L_ix: tuple[NDArrayInt, ...]
 
     # λ in the paper, the lambda regularization parameter
     l: float
@@ -63,8 +65,6 @@ class MaxEnt:
         *,
         q: int,
         kmax,
-        left_padding=-1,
-        right_padding=-2,
         l=1.0,
     ):
         self.ix_seq: list[int] = index_training_seq
@@ -74,21 +74,23 @@ class MaxEnt:
         self.l = l
 
         self.Z = np.zeros(self.M, dtype=float)
-        self.h = np.linspace(0, 1, self.q)
-        self.J = np.zeros((self.Kmax, self.q * self.q))
-        self.J[:] = np.linspace(0, 1, self.q**2)
-        self.J = np.reshape(self.J, (self.Kmax, self.q, self.q))
 
-        self.left_padding = left_padding
-        self.right_padding = right_padding
+        # init h with h[:q] = [0, 1/q, 2/q, ..., 1] and h[q] = PADDING
+        # self.h = np.zeros(self.q, dtype=float)
+        self.h = np.linspace(0, 1, self.q)
+
+        # init J with j_init and an additional row of zeros at the end and an
+        # additional column of zeros at the end of each row
+
+        self.J = np.zeros((self.Kmax, self.q + 1, self.q + 1), dtype=float)
+        j_init = np.linspace(0, 1, self.q**2).reshape(self.q, self.q)
+        self.J[:, : self.q, : self.q] = j_init
 
         self.contexts = compute_contexts(
             index_training_seq,
             kmax=self.Kmax,
-            left_padding=self.left_padding,
-            right_padding=self.right_padding,
+            padding=MaxEnt.PADDING,
         )
-        self.context_indices = compute_context_indices(self.contexts, self.Kmax)
 
         # get the indices in J of the contexts prepared in such a way that J[self.Z_ix]
         # returns the potential values for all contexts in a single 1D-array
@@ -100,13 +102,13 @@ class MaxEnt:
         _indices = np.reshape(_indices, (self.M, 3, -1))
         _indices = np.swapaxes(_indices, 0, 1)
         _indices = np.reshape(_indices, (3, -1))
-        self.Z_ix = tuple(_indices)
+        self.Z_ix = tuple(row for row in _indices)
 
         self.L_ix1 = compute_context_indices(self.contexts, self.Kmax)
         _indices = compute_context_indices(self.contexts, self.Kmax)
         _indices = np.swapaxes(_indices, 0, 1)
         _indices = np.reshape(_indices, (3, -1))
-        self.L_ix = tuple(_indices)
+        self.L_ix = tuple(row for row in _indices)
 
         # get the partition context indices and converts the 4D-array of shape (M, q, 3, 2•kmax) into a list
         # of length M, each element is a list of length q whose elements are tuple of three 2•kmax numpy vectors

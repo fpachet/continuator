@@ -1,10 +1,11 @@
 import numpy as np
 
+from maxent_np import NDArrayInt
 from utils.profiler import timeit
 
 
 @timeit
-def compute_contexts(idx_seq, /, *, kmax, left_padding=-1, right_padding=-2):
+def compute_contexts(idx_seq: list[int], /, *, kmax: int, padding=-1) -> NDArrayInt:
     """
     Compute all contexts for a given index sequence.
 
@@ -17,8 +18,7 @@ def compute_contexts(idx_seq, /, *, kmax, left_padding=-1, right_padding=-2):
     Args:
         idx_seq: the index sequence
         kmax: defines the size of contexts, i.e., 2•kmax + 1
-        left_padding: the index used for padding on the left
-        right_padding: the index used for padding on the right
+        padding: the index used for padding
 
     Returns:
         a 2D-numpy array of shape (m, 2•kmax + 1) where m is the length of the
@@ -31,17 +31,17 @@ def compute_contexts(idx_seq, /, *, kmax, left_padding=-1, right_padding=-2):
 
     # left-pad and right-pad the input sequence
     padded_seq = np.concatenate(
-        [np.array([left_padding] * kmax), idx_seq, np.array([right_padding] * kmax)])
+        [np.array([padding] * kmax), idx_seq, np.array([padding] * kmax)]
+    )
 
     for i in np.arange(m):
-        c[i, :] = padded_seq[i:i + l]
+        c[i, :] = padded_seq[i : i + l]
 
-    assert c.shape == (m, l)
     return c
 
 
 @timeit
-def compute_context_indices(contexts, kmax=0):
+def compute_context_indices(contexts, kmax=0) -> NDArrayInt:
     """
     Compute the indices of each context in J, the 3D-array of interaction potentials.
 
@@ -73,7 +73,7 @@ def compute_context_indices(contexts, kmax=0):
     m, ctx_length = contexts.shape
     kmax = kmax or (ctx_length - 1) // 2
 
-    k_indices = np.tile(np.arange(kmax).repeat(2), m).reshape(m, -1)
+    k_indices = np.tile(np.arange(kmax, dtype=int).repeat(2), m).reshape(m, -1)
 
     left_indices = np.zeros(2 * kmax, dtype=int)
     left_indices[0::2] = np.arange(kmax - 1, -1, -1)
@@ -110,7 +110,7 @@ def compute_context_indices_naive(contexts, kmax=0):
             s_0 = contexts[i, kmax]
             s_k = contexts[i, kmax + k + 1]
             s_mk = contexts[i, kmax - k - 1]
-            result[i, 0, 2 * k: 2 * (k + 1)] = k
+            result[i, 0, 2 * k : 2 * (k + 1)] = k
             result[i, 1, 2 * k] = s_mk
             result[i, 1, 2 * k + 1] = s_0
             result[i, 2, 2 * k] = s_0
@@ -119,7 +119,9 @@ def compute_context_indices_naive(contexts, kmax=0):
 
 
 @timeit
-def compute_partition_context_indices(contexts, /, *, q: int, kmax: int = 0):
+def compute_partition_context_indices(
+    contexts, /, *, q: int, kmax: int = 0
+) -> NDArrayInt:
     """
     Compute the indices of each context in J with respect to each 0 ≤ sigma < q.
 
@@ -152,8 +154,8 @@ def compute_partition_context_indices(contexts, /, *, q: int, kmax: int = 0):
     """
     indices = compute_context_indices(contexts, kmax)
     normalization_indices = np.tile(
-        indices.reshape(indices.shape[0], 1, *indices.shape[1:]),
-        (1, q, 1, 1))
+        indices.reshape(indices.shape[0], 1, *indices.shape[1:]), (1, q, 1, 1)
+    )
     for sigma in range(q):
         normalization_indices[:, sigma, 1, 1::2] = sigma
         normalization_indices[:, sigma, 2, 0::2] = sigma
@@ -161,7 +163,7 @@ def compute_partition_context_indices(contexts, /, *, q: int, kmax: int = 0):
     return normalization_indices
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mat = np.arange(28).reshape((7, 4))
     g = np.random.default_rng(10)
     q = 3
