@@ -95,6 +95,9 @@ class MaxEnt:
         # get the indices in J of the contexts prepared in such a way that J[self.Z_ix]
         # returns the potential values for all contexts in a single 1D-array
         # see compute_z() for more details on how this is used
+        self.Z_ix1 = compute_partition_context_indices(
+            self.contexts, q=self.q, kmax=self.Kmax
+        )
         _indices = compute_partition_context_indices(
             self.contexts, q=self.q, kmax=self.Kmax
         )
@@ -192,7 +195,7 @@ class MaxEnt:
                 if self.ix_seq[mu] == r:
                     dg_dh[r] += 1
                 dg_dh[r] -= (1 / self.Z[mu]) * np.exp(
-                    self.h[r] + self.J[tuple(self.L_ix1[mu])].sum()
+                    self.h[r] + self.J[tuple(self.Z_ix1[mu, r])].sum()
                 )
         return -dg_dh / self.M
 
