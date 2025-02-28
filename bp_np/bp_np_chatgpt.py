@@ -1,6 +1,8 @@
 import time
+from collections import Counter
 
 import numpy as np
+from huggingface_hub import paper_info
 
 
 class ChainBP:
@@ -24,6 +26,19 @@ class ChainBP:
         # Placeholders for forward and backward messages
         self.alpha = np.zeros_like(self.unary_factors)  # shape (n, m)
         self.beta = np.zeros_like(self.unary_factors)  # shape (n, m)
+
+    def reinit(self):
+        # Placeholders for forward and backward messages
+        self.alpha = np.zeros_like(self.unary_factors)  # shape (n, m)
+        self.beta = np.zeros_like(self.unary_factors)  # shape (n, m)
+
+    def assign_factors(self, factors):
+        self.unary_factors = factors.astype(
+            float
+        )
+
+    def assign_factor(self, idx, vector):
+        self.unary_factors[idx] = vector
 
     def run_forward_backward(self):
         """Compute alpha, beta arrays (unnormalized) using sum-product on the chain."""
@@ -103,61 +118,131 @@ class ChainBP:
         X = np.zeros(n, dtype=int)
 
         # 1) Sample X1 from unary_factors[0]
-        p1 = self.unary_factors[0, :].copy()
+        # p1 = self.unary_factors[0, :].copy()
+        p1 = self.marginal_of(0)
         p1_sum = p1.sum()
         if p1_sum > 0:
             p1 /= p1_sum
         # sample from p1
-        X[0] = np.random.choice(m, p=p1)
-
+        value = np.random.choice(m, p=p1)
+        self.assign_value(0, value)
+        X[0] =  value
         # 2) For i in [0..n-2], sample X_{i+1}
         for i in range(n - 1):
+            self.reinit()
+            self.run_forward_backward()
             # distribution for X_{i+1} given X_i
             j = X[i]
             # trans_row = trans_matrices[i, j, :] => shape (m,)
             # multiply by unary_factors[i+1, :]
             p_next = self.trans_matrices[i, j, :].copy()
-            p_next *= self.unary_factors[i + 1, :]
+            # p_next *= self.unary_factors[i + 1, :]
+            p_next *= self.marginal_of(i+1)
             p_sum = p_next.sum()
             if p_sum > 0:
                 p_next /= p_sum
-            X[i + 1] = np.random.choice(m, p=p_next)
+            # if p_next.sum() !=  1:
+            #     print("problem")
+            value = np.random.choice(m, p=p_next)
+            self.assign_value(i+1, value)
+            X[i+1] =  value
 
         return X
 
+    def print_marginals(self):
+        for i in range(self.n):
+            marg = self.marginal_of(i)
+            print(f"Marginal of X_{i}: {marg}")
+
 
 if __name__ == "__main__":
-    # Example usage:
-    n = 50  # number of variables
-    m = 500  # domain size
-
-    # Suppose we have arbitrary unary_factors and transition matrices:
-    np.random.seed(42)
-    unary_factors = np.random.rand(n, m) + 0.1  # random positive
-    trans_matrices = np.random.rand(n - 1, m, m) + 0.1
-
-    bp = ChainBP(unary_factors, trans_matrices)
-    t0 = time.perf_counter_ns()
-    bp.run_forward_backward()
-    t1 = time.perf_counter_ns()
-    print(f"Time for forward-backward: {(t1 - t0) / 1_000_000}ms")
-
-    # Print marginals
+    # # Example usage:
+    # n = 50  # number of variables
+    # m = 500  # domain size
+    #
+    # # Suppose we have arbitrary unary_factors and transition matrices:
+    # np.random.seed(42)
+    # unary_factors = np.random.rand(n, m) + 0.1  # random positive
+    # trans_matrices = np.random.rand(n - 1, m, m) + 0.1
+    #
+    # bp = ChainBP(unary_factors, trans_matrices)
+    # t0 = time.perf_counter_ns()
+    # bp.run_forward_backward()
+    # t1 = time.perf_counter_ns()
+    # print(f"Time for forward-backward: {(t1 - t0) / 1_000_000}ms")
+    #
+    # # Print marginals
+    # # for i in range(n):
+    # #     marg = bp.marginal_of(i)
+    # #     print(f"Marginal of X_{i}: {marg}")
+    #
+    # # Clamp X_2 to a specific value
+    # bp.assign_value(i=2, value=1)
+    # # Now check marginals again
     # for i in range(n):
     #     marg = bp.marginal_of(i)
-    #     print(f"Marginal of X_{i}: {marg}")
+    #     print(f"Marginal of X_{i} after clamping X_2=1: {marg}")
+    #
+    # # Sample a full sequence from left to right
+    #
+    # t0 = time.perf_counter_ns()
+    # sample = bp.sample_sequence()
+    # t1 = time.perf_counter_ns()
+    # print(f"Time to sample: {(t1 - t0) / 1_000_000}ms")
+    # print("Sampled sequence:", sample)
+# Ijcai paper
+    # Example usage:
+    n = 4  # number of variables
+    m = 3  # domain size
 
-    # Clamp X_2 to a specific value
-    bp.assign_value(i=2, value=1)
+    # Suppose we have arbitrary unary_factors and transition matrices:
+    # np.random.seed(42)
+    unary_factor = np.random.uniform(1/m, 1/m, m)   # random positive
+    unary_factors = np.tile(unary_factor, (n, 1))  # random positive
+    unary_factors[0] = np.array([1/2,1/6,1/3])
+    trans_matrice = [[1/2, 1/4, 1/4], [1/2, 0, 1/2], [1/2, 1/4, 1/4]]
+    # trans_matrice = [[1/2, 1/2, 1/2], [1/4, 0, 1/4], [1/4, 1/2, 1/4]]
+    trans_matrices =  np.tile(trans_matrice, (n-1, 1, 1))
+    bp = ChainBP(unary_factors, trans_matrices)
+    # bp.assign_factor(0, np.array([1/2,1/6,1/3]))
+    bp.run_forward_backward()
+
+    print("marginals:")
+    bp.print_marginals()
+
+    print("assign last value to 1")
+    bp.assign_value(3, value=1)
+    bp.run_forward_backward()
     # Now check marginals again
-    for i in range(n):
-        marg = bp.marginal_of(i)
-        print(f"Marginal of X_{i} after clamping X_2=1: {marg}")
+    print("marginals:")
+    bp.print_marginals()
 
     # Sample a full sequence from left to right
 
     t0 = time.perf_counter_ns()
-    sample = bp.sample_sequence()
-    t1 = time.perf_counter_ns()
+    all_seq = []
+    nb_iterations = 20000
+    print("sampling")
+    total_time = 0
+    for _ in range(nb_iterations):
+        t0 = time.perf_counter_ns()
+        # resets value to initial ones
+        bp.assign_factors(unary_factors)
+        bp.assign_factor(0, np.array([1 / 2, 1 / 6, 1 / 3]))
+        bp.assign_value(3, 1)
+        bp.reinit()
+        bp.run_forward_backward()
+        sample = bp.sample_sequence()
+        t1 = time.perf_counter_ns()
+        print_seq = tuple([['C', 'D', 'E'][i] for i in sample])
+        # print("Sampled sequence:", print_seq)
+        all_seq.append(print_seq)
+
+    occurrences = Counter(all_seq)
+    print(f"{len(occurrences)} unique sequences")
+
+    sorted_keys = sorted(occurrences.keys(), key=lambda x: occurrences[x], reverse=True)
+    for k in sorted_keys:
+        print(f"{k}:{occurrences[k] / nb_iterations}")
+
     print(f"Time to sample: {(t1 - t0) / 1_000_000}ms")
-    print("Sampled sequence:", sample)
