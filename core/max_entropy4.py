@@ -6,7 +6,6 @@ from scipy.optimize import minimize
 import random
 import pickle
 
-
 from utils.profiler import timeit
 
 """
@@ -97,7 +96,7 @@ class MaxEntropyMelodyGenerator:
         h = params[:voc_size]
         J_flat = params[voc_size:]
         J = {
-            k: J_flat[k * voc_size**2 : (k + 1) * voc_size**2].reshape(
+            k: J_flat[k * voc_size ** 2: (k + 1) * voc_size ** 2].reshape(
                 (voc_size, voc_size)
             )
             for k in range(self.Kmax)
@@ -107,16 +106,14 @@ class MaxEntropyMelodyGenerator:
         self.compute_all_Z(J, h)
         result = self.negative_log_likelihood(h, J), self.gradient(h, J)
         self.elapsed_ns_in_negative_log_likelihood_and_gradient += (
-            time.perf_counter_ns() - t0
+                time.perf_counter_ns() - t0
         )
         return result
 
     @timeit
     def compute_all_Z(self, J, h):
-        for mu, s_0 in enumerate(self.seq):
-            self.all_partitions[mu] = self.compute_partition_function(
-                h, J, self.all_contexts[mu]
-            )
+        self.all_partitions = [self.compute_partition_function(h, J, self.all_contexts[mu]) for mu in
+                               range(len(self.seq))]
 
     @timeit
     def negative_log_likelihood(self, h, J):
@@ -164,17 +161,17 @@ class MaxEntropyMelodyGenerator:
                             if r2 == s_0:
                                 prob += 1
                             prob -= (
-                                np.exp(
-                                    h[r2] + self.sum_energy_in_context(J, context, r2)
-                                )
-                                / Z
+                                    np.exp(
+                                        h[r2] + self.sum_energy_in_context(J, context, r2)
+                                    )
+                                    / Z
                             )
                         if mu + k + 1 < M and r2 == self.seq[mu + k + 1]:
                             if r == s_0:
                                 prob += 1
                             prob -= (
-                                np.exp(h[r] + self.sum_energy_in_context(J, context, r))
-                                / Z
+                                    np.exp(h[r] + self.sum_energy_in_context(J, context, r))
+                                    / Z
                             )
                     grad_J[k][r][r2] = -prob / M + (self.lambda_reg / M) * np.abs(
                         J[k][r][r2]
@@ -183,7 +180,7 @@ class MaxEntropyMelodyGenerator:
         return np.concatenate([grad_h, grad_J_flat])
 
     def train(self, max_iter=1000):
-        voc_2 = self.voc_size**2
+        voc_2 = self.voc_size ** 2
         params_init = np.zeros(self.voc_size + self.Kmax * voc_2)
         res = minimize(
             self.negative_log_likelihood_and_gradient,
@@ -194,8 +191,8 @@ class MaxEntropyMelodyGenerator:
         )
         return res.x[: self.voc_size], {
             k: res.x[
-                self.voc_size + k * voc_2 : self.voc_size + (k + 1) * voc_2
-            ].reshape((self.voc_size, self.voc_size))
+               self.voc_size + k * voc_2: self.voc_size + (k + 1) * voc_2
+               ].reshape((self.voc_size, self.voc_size))
             for k in range(self.Kmax)
         }
 
