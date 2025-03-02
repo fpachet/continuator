@@ -1,3 +1,4 @@
+import mido
 import numpy as np
 from collections import defaultdict
 from scipy.optimize import minimize
@@ -202,6 +203,7 @@ def generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=20)
         # Now normalize mixture_dist (in case not summing to 1)
         total_prob = sum(mixture_dist.values())
         if total_prob < 1e-12:
+            print('small proba')
             # fallback: uniform over all notes
             for n in all_notes:
                 mixture_dist[n] = 1.0 / vocab_size
@@ -223,13 +225,40 @@ def generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=20)
 
     return generated
 
+def extract_notes(path) -> list[int]:
+    """Extracts MIDI note sequence from a MIDI file."""
+    mid = mido.MidiFile(path)
+    notes = []
+    if (len(mid.tracks)) == 1:
+        track = mid.tracks[0]
+    else:
+        track = mid.tracks[1]
+    for msg in track:
+        if msg.type == "note_on" and msg.velocity > 0:
+            notes.append(msg.note)
+    return notes
+
+def save_midi(sequence, output_file="../../data/skip_markov_generated.mid"):
+    mid = mido.MidiFile()
+    track = mido.MidiTrack()
+    mid.tracks.append(track)
+    for note in sequence:
+        track.append(mido.Message("note_on", note=note, velocity=64, time=0))
+        track.append(mido.Message("note_off", note=note, velocity=64, time=120))
+    mid.save(output_file)
 
 def main_example():
-    # 1) Suppose we have a small training sequence of "notes"
-    train_seq = [60, 62, 64, 62, 60, 60, 67, 65, 64, 62, 60]
-    train_seq = train_seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq
+    # path = "../../data/bach_partita_mono.midi"
+    path = "../../data/prelude_c.mid"
+    train_seq = extract_notes(path)
+    # train_seq = train_seq +train
+    # _seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq
+    # train_seq = [60, 62, 64, 62, 60, 60, 67, 65, 64, 62, 60]
+    # train_seq = [1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3]
     # 2) Choose skip distances to try
-    skip_distances = [1, 2, 3]
+    # skip_distances = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    skip_distances = np.arange(1, 30, 1)
+    # skip_distances = [1]
 
     # Train the skip models
     skip_models = train_all_skip_models(train_seq, skip_distances)
@@ -243,8 +272,9 @@ def main_example():
 
     # Generate new sequence
     seed_note = 60
-    gen_seq = generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=50)
-    print("Generated sequence:", gen_seq)
+    gen_seq = generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=500)
+    print(gen_seq)
+    save_midi(gen_seq)
 
 # Uncomment to run the example:
 if __name__ == "__main__":

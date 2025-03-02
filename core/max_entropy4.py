@@ -238,10 +238,10 @@ class MaxEntropyMelodyGenerator:
 
 if __name__ == "__main__":
     # Utilisation
-    generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=4)
+    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=4)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=10)
-    # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
     # generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
     # [generator, h_opt, J_opt] = pickle.load(open("../data/bach_partita_short_generator.p", "rb"))
     t0 = time.perf_counter_ns()
