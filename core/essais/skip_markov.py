@@ -251,13 +251,16 @@ def main_example():
     # path = "../../data/bach_partita_mono.midi"
     path = "../../data/prelude_c.mid"
     train_seq = extract_notes(path)
-    # train_seq = train_seq +train
-    # _seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq +train_seq
+
+    # with open('../../data/proust_du_cote.txt', 'r') as file:
+    #     recherche = file.read().rstrip()
+    # train_seq = list(recherche)
+
     # train_seq = [60, 62, 64, 62, 60, 60, 67, 65, 64, 62, 60]
     # train_seq = [1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3, 1, 2, 4, 1, 2, 5, 1, 2, 6, 1, 2, 5, 1, 2, 4, 1, 2, 3]
     # 2) Choose skip distances to try
     # skip_distances = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-    skip_distances = np.arange(1, 30, 1)
+    skip_distances = np.arange(1, 4, 1)
     # skip_distances = [1]
 
     # Train the skip models
@@ -272,8 +275,11 @@ def main_example():
 
     # Generate new sequence
     seed_note = 60
-    gen_seq = generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=500)
-    print(gen_seq)
+    gen_seq = generate_sequence(skip_models, skip_distances, alpha, seed_note, gen_len=200)
+    # print (gen_seq)
+
+    # result = ''.join(gen_seq)
+    # print(result)
     save_midi(gen_seq)
 
 # Uncomment to run the example:

@@ -680,31 +680,30 @@ class Continuator2:
             total += len(self.viewpoints_realizations[k])
         print(f"average nb of vp realizations: {total/voc_size}")
 
-
-
-
 if __name__ == '__main__':
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"
     # midi_file_path = "../../data/test_sequence_3notes.mid"
     # midi_file_path = "../../data/test_sequence_arpeggios.mid"
     # midi_file_path = "../../data/debussy_prelude.mid"
     # midi_file_path = "../../data/prelude_c_expressive.mid"
-    midi_file_path = "../../data/partita_piano_1/pr1_1_joined.mid"
+    # midi_file_path = "../../data/prelude_c_linear.mid"
+    # midi_file_path = "../../data/partita_piano_1/pr1_1_joined.mid"
     # midi_file_path = "../../data/take6/A_quiet_place_joined.mid"
     # midi_file_path = "../../data/prelude_c_expressive.mid"
-    # midi_file_path = "../../data/prelude_c.mid"
+    midi_file_path = "../../data/prelude_c.mid"
     # midi_file_path = "../../data/bach_partita_mono.midi"
     # midi_file_path = "../../data/keith/train/K7_MD.mid"
+    # midi_file_path = "../../../maestro-v3.0.0/2004/MIDI-Unprocessed_SMF_12_01_2004_01-05_ORIG_MID--AUDIO_12_R1_2004_03_Track03_wav--1.midi"
     t0 = time.perf_counter_ns()
     generator = Continuator2(midi_file_path, 4, transposition=False)
-    t1 = time.perf_counter_ns()
-    print(f"total time: {(t1 - t0) / 1_000_000}ms")
     # matrix = generator.get_first_order_matrix()
     # print(matrix.shape)
     # t1 = time.perf_counter_ns()
     # print(f"total time: {(t1 - t0) / 1000000}")
     # Sampling a new sequence from the  model
-    generated_sequence = generator.sample_sequence(generator.get_start_vp(), length=-1)
+    generated_sequence = generator.sample_sequence(generator.get_start_vp(), length=200)
+    t1 = time.perf_counter_ns()
+    print(f"total time: {(t1 - t0) / 1_000_000}ms")
     # print(f"generated sequence of length {len(generated_sequence)}")
     generator.save_midi(generated_sequence, "../../data/ctor2_output.mid", tempo=-1, sustain=False)
     # pmpr = generator.create_pretty_midi_pr(generated_sequence)
