@@ -43,7 +43,8 @@ class Variable_order_Markov:
 
     def learn_file(self, sequence_of_stuff):
         # adds start and end notes
-        real_sequence = np.concatenate(([self.start_padding], sequence_of_stuff, [self.end_padding]))
+        # real_sequence = np.concatenate(([self.start_padding], sequence_of_stuff, [self.end_padding]))
+        real_sequence = [self.start_padding] + sequence_of_stuff + [self.end_padding]
         # store sequence in list of input sequences
         self.input_sequences.append(real_sequence)
         # learns sequence
@@ -181,15 +182,15 @@ class Variable_order_Markov:
         # if length is negative, stops when reaching the provided end_viewpoint
         # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
 
-        # pgm = self.build_bp_graph(start_vp, length, self.get_end_vp())
+        pgm = self.build_bp_graph(start_vp, length, self.get_end_vp())
         # sets constraints on start and end
-        # pgm.set_value('x1', self.index_of_vp(start_vp))
-        # pgm.set_value('x' + str(length + 2), self.index_of_vp(self.get_end_vp()))
+        pgm.set_value('x1', self.index_of_vp(start_vp))
+        pgm.set_value('x' + str(length + 2), self.index_of_vp(self.get_end_vp()))
 
         # without BP
-        vp_seq = self.sample_vp_sequence(start_vp, length, end_vp)
+        # vp_seq = self.sample_vp_sequence(start_vp, length, end_vp)
         # with BP
-        # vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
+        vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
         return vp_seq
 
     def build_bp_graph(self, start_vp, length, end_vp):
@@ -224,16 +225,20 @@ class Variable_order_Markov:
             print("impossible")
         current_seq = [start_vp]
         # generate fixed length sequence
-        pgm.print_marginals()
+        # pgm.print_marginals()
         for i in range(length):
-            marginal_i = Messages().marginal(pgm.variable_from_name('x' + str(i + 2)))
+            pgm_variable = pgm.variable_from_name('x' + str(i + 2))
+            marginal_i = Messages().marginal(pgm_variable)
+            print(marginal_i)
             # compare with the markov transition matrix
-            self.get_first_order_matrix()[self.index_of_vp(self.get_start_vp())]
-            cont = self.get_continuation(current_seq)
+            markov_proba = self.get_first_order_matrix()[self.index_of_vp(current_seq[-1])]
+            product_proba = marginal_i *  markov_proba
+            cont = self.get_continuation_with_bp(current_seq, product_proba)
             if cont == -1:
                 print("restarting from scratch")
                 cont = self.random_initial_vp()
             current_seq.append(cont)
+            pgm.set_value('x' + str(i + 2), self.index_of_vp(cont))
         return current_seq
 
     def sample_vp_sequence(self, start_vp, length, end_vp):
@@ -284,14 +289,41 @@ class Variable_order_Markov:
                 else:
                     conts_to_use = all_cont_vps
                 next_continuation = random.choice(conts_to_use)
-                # print(
-                #     f"found continuation for k {k} with cont size {len(all_cont_vps)}"
-                # )
-                # print(f"{k}/{len(conts_to_use)}")
                 return next_continuation
         print("no continuation found")
         return -1
 
+    def get_continuation_with_bp(self, current_seq, probs):
+        vp_to_skip = None
+        for k in range(self.kmax, 0, -1):
+            if k > len(current_seq):
+                continue
+            continuations_dict = self.prefixes_to_continuations[k - 1]
+            viewpoint_ctx = tuple(current_seq[-k:])
+            if viewpoint_ctx in continuations_dict:
+                all_cont_vps = continuations_dict[viewpoint_ctx]
+                # filters out the continuations with low probabilities
+                all_cont_vps = [vp for vp in all_cont_vps if probs[self.index_of_vp(vp)] > 0]
+                if len(all_cont_vps) == 0 :
+                    continue
+                # considers the number of different viewpoints, not the number of continuations as they are repeated
+                if len(set(all_cont_vps)) == 1 and k > 1:
+                    # proba to skip is proportional to order
+                    if random.random() > (1 / (k + 1)):
+                        # print(f"skipping continuation for {k=}")
+                        vp_to_skip = all_cont_vps[0]
+                        continue
+                    else:
+                        vp_to_skip = None
+                        # print(f"not skipping singleton continuation for {k=}")
+                if vp_to_skip is not None and k > 1:
+                    conts_to_use = [c for c in all_cont_vps if c != vp_to_skip]
+                else:
+                    conts_to_use = all_cont_vps
+                next_continuation = random.choice(conts_to_use)
+                return next_continuation
+        print("no continuation found")
+        return -1
 
     def get_longest_subsequence_with_train(self, address_sequence):
         note_sequence = [self.get_input_object(address) for address in address_sequence]

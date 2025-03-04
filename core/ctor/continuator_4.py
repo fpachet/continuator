@@ -351,7 +351,7 @@ class Continuator2:
         return start
 
     def sample_sequence(self, start_vp, length=50):
-        # pgm = self.build_bp_graph(start_vp, length, self.get_end_vp())
+        pgm = self.build_bp_graph(start_vp, length, self.get_end_vp())
         # sets constraints on start and end
         # pgm.set_value('x1', self.index_of_vp(start_vp))
         # pgm.set_value('x' + str(length + 2), self.index_of_vp(self.get_end_vp()))
