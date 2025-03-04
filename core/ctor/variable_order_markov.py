@@ -8,7 +8,8 @@ from difflib import SequenceMatcher
 from core.ctor.belief_propag_stringham_clean import PGM, LabeledArray, Messages
 from core.ctor.dynaprog import VariableDomainSequenceOptimizer
 
-class Start_vp():
+
+class _Start_vp():
     def __init__(self):
         pass
 
@@ -16,17 +17,19 @@ class Start_vp():
         return True
 
 
-class End_vp():
+class _End_vp():
     def __init__(self):
         pass
 
     def is_end_padding(self):
         return True
 
-
 class Variable_order_Markov:
     def __init__(self, sequence_of_stuff, vp_lambda, kmax=5):
         # the input sequences of realizations
+        self.viewpoint_lambda = vp_lambda
+        self.start_padding = _Start_vp()
+        self.end_padding = _End_vp()
         self.input_sequences = []
         # needs a fixed list of viewpoint to build the markov matrix
         self.all_unique_viewpoints = []
@@ -37,11 +40,10 @@ class Variable_order_Markov:
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
         self.learn_file(sequence_of_stuff)
-        self.viewpoint_lambda = vp_lambda
 
     def learn_file(self, sequence_of_stuff):
         # adds start and end notes
-        real_sequence = np.concatenate(([Start_vp()], sequence_of_stuff, [End_vp()]))
+        real_sequence = np.concatenate(([self.start_padding], sequence_of_stuff, [self.end_padding]))
         # store sequence in list of input sequences
         self.input_sequences.append(real_sequence)
         # learns sequence
@@ -61,10 +63,10 @@ class Variable_order_Markov:
         return vp == self.get_end_vp()
 
     def get_start_vp(self):
-        return self.get_viewpoint(Start_vp())
+        return self.get_viewpoint(self.start_padding)
 
     def get_end_vp(self):
-        return self.get_viewpoint(End_vp())
+        return self.get_viewpoint(self.end_padding)
 
     def voc_size(self):
         # the number of unique viewpoints, including Start and End viewpoints
@@ -72,7 +74,7 @@ class Variable_order_Markov:
 
     def random_initial_vp(self):
         # returns a random initial vp, which are continuations of start paddings
-        return self.prefixes_to_continuations[0][tuple(self.get_start_vp())]
+        return self.prefixes_to_continuations[0][tuple([self.get_start_vp()])]
 
     def get_all_unique_viewpoints(self):
         return self.all_unique_viewpoints
@@ -107,12 +109,30 @@ class Variable_order_Markov:
                 prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
         # special case for the endVp, which has no continuation, but should be in the list for consistency
-        end_tuple = tuple(self.get_end_vp())
+        end_tuple = tuple([self.get_end_vp()])
         if end_tuple not in self.prefixes_to_continuations[0]:
             # ends goes to end
-            self.prefixes_to_continuations[0][tuple([end_tuple])] = [self.get_end_vp()]
+            self.prefixes_to_continuations[0][end_tuple] = [self.get_end_vp()]
 
-    def add_viewpoint_realization(self, i, sequence_index, vp):
+    def get_priors(self):
+        key_counts = {key: len(continuations) for key, continuations in self.viewpoints_realizations.items()}
+        total_count = sum(key_counts.values())
+        priors = {key: count / total_count for key, count in key_counts.items()}
+        # Step 4: Convert to a sorted vector (optional)
+        sorted_keys = self.get_all_unique_viewpoints()  # Ensure consistent ordering
+        probability_vector = np.array([priors[key] for key in sorted_keys])
+        return probability_vector
+
+    def sample_zero_order(self, k):
+        priors = self.get_priors()
+        return random.choices(self.get_all_unique_viewpoints(), weights=priors, k=k)
+
+
+    def add_viewpoint_realization_old(self, i, sequence_index, vp):
+        new_address = tuple([sequence_index, i])
+        self.viewpoints_realizations[vp].append(new_address)
+
+    def add_viewpoint_realization_new(self, i, sequence_index, vp):
         # adds only if different from existing ones, to avoid inflation in case of monotonous pieces
         new_address = tuple([sequence_index, i])
         if self.is_starting_address(new_address) or self.is_ending_address(new_address):
@@ -125,6 +145,8 @@ class Variable_order_Markov:
             if real_note.is_similar_realization(new_note):
                 return
         self.viewpoints_realizations[vp].append(new_address)
+
+    add_viewpoint_realization = add_viewpoint_realization_old
 
     def get_first_order_matrix(self):
         # returns the matrix for first order Markov transitions
@@ -142,6 +164,8 @@ class Variable_order_Markov:
         return result
 
     def get_viewpoint(self, real_object):
+        if self.viewpoint_lambda is None:
+            return real_object
         return self.viewpoint_lambda(real_object)
 
     def get_realizations_for_vp(self, vp):
@@ -153,14 +177,17 @@ class Variable_order_Markov:
         start = random.choice(starting_conts)
         return start
 
-    def sample_sequence(self, start_vp, length=50):
+    def sample_sequence(self, start_vp, length=50, end_vp=None):
+        # if length is negative, stops when reaching the provided end_viewpoint
+        # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
+
         # pgm = self.build_bp_graph(start_vp, length, self.get_end_vp())
         # sets constraints on start and end
         # pgm.set_value('x1', self.index_of_vp(start_vp))
         # pgm.set_value('x' + str(length + 2), self.index_of_vp(self.get_end_vp()))
 
         # without BP
-        vp_seq = self.sample_vp_sequence(start_vp, length)
+        vp_seq = self.sample_vp_sequence(start_vp, length, end_vp)
         # with BP
         # vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
         return vp_seq
@@ -209,7 +236,7 @@ class Variable_order_Markov:
             current_seq.append(cont)
         return current_seq
 
-    def sample_vp_sequence(self, start_vp, length=50):
+    def sample_vp_sequence(self, start_vp, length, end_vp):
         # Generates a new sequence of vps from the Markov model.
         current_seq = [start_vp]
         if length >= 0:
@@ -226,10 +253,12 @@ class Variable_order_Markov:
             if cont == -1:
                 print("restarting from scratch")
                 cont = self.random_initial_vp()
-            current_seq.append(cont)
-            if self.is_end_padding(cont):
+            if cont == end_vp:
                 print("found the end")
+                if cont != self.end_padding:
+                    current_seq.append(cont)
                 return current_seq
+            current_seq.append(cont)
 
     def get_continuation(self, current_seq):
         vp_to_skip = None
@@ -258,6 +287,7 @@ class Variable_order_Markov:
                 # print(
                 #     f"found continuation for k {k} with cont size {len(all_cont_vps)}"
                 # )
+                # print(f"{k}/{len(conts_to_use)}")
                 return next_continuation
         print("no continuation found")
         return -1
