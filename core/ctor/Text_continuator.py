@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # train_seq = list(recherche)
     # train_seq =  re.findall(r"\w+|[^\w\s]", recherche, re.UNICODE)
     # train_seq =  non_overlapping_tuples(train_seq, 2)
-    train_seq = [1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7, 6, 7, 8]
+    train_seq = [1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7, 6, 7, 8, 7, 8, 9, 8, 9, 10]
     vo = Variable_order_Markov(train_seq, None, 10)
 
 # zero order
@@ -27,4 +27,4 @@ if __name__ == '__main__':
 #     print(result)# Removes spaces before punctuation
 
     seq = vo.sample_sequence(vo.get_start_vp(), 12, vo.get_end_vp())
-    print(seq)# Removes spaces before punctuation
+    print(seq)

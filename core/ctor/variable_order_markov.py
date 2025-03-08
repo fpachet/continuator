@@ -229,7 +229,6 @@ class Variable_order_Markov:
         for i in range(length):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
             marginal_i = Messages().marginal(pgm_variable)
-            print(marginal_i)
             # compare with the markov transition matrix
             markov_proba = self.get_first_order_matrix()[self.index_of_vp(current_seq[-1])]
             product_proba = marginal_i *  markov_proba
@@ -305,6 +304,7 @@ class Variable_order_Markov:
                 # filters out the continuations with low probabilities
                 all_cont_vps = [vp for vp in all_cont_vps if probs[self.index_of_vp(vp)] > 0]
                 if len(all_cont_vps) == 0 :
+                    # print("continuations removed by bp")
                     continue
                 # considers the number of different viewpoints, not the number of continuations as they are repeated
                 if len(set(all_cont_vps)) == 1 and k > 1:
@@ -321,6 +321,7 @@ class Variable_order_Markov:
                 else:
                     conts_to_use = all_cont_vps
                 next_continuation = random.choice(conts_to_use)
+                # print(f"{k=}")
                 return next_continuation
         print("no continuation found")
         return -1
