@@ -8,13 +8,13 @@ import numpy as np
 import numpy.typing as npt
 from scipy.optimize import minimize
 
-from core.max_entropy4 import MaxEntropyMelodyGenerator
-from maxent_np import NDArrayInt
+from maxent_np import NDArrayInt, NDArrayFloat, FloatType, IdxType
 from maxent_np.preprocess_indices import (
     compute_contexts,
     compute_context_indices,
     compute_partition_context_indices,
 )
+
 
 # from utils.profiler import Timeit
 
@@ -78,10 +78,10 @@ class MaxEnt:
     M: int
     q: int
     K: int
-    J: npt.NDArray[float]
+    J: npt.NDArray[FloatType]
     h: np.ndarray
     C: NDArrayInt
-    Z: npt.NDArray[float]
+    Z: npt.NDArray[FloatType]
 
     context_ix: NDArrayInt
     partition_ix: NDArrayInt
@@ -102,24 +102,19 @@ class MaxEnt:
         kmax,
         l=1.0,
     ):
-        self.S: list[int] = index_training_seq
+        self.S: NDArrayInt = np.array(index_training_seq, dtype=IdxType)
         self.M: int = len(self.S)
         self.q: int = q
         self.K: int = kmax
         self.l = l
 
-        self.Z = np.zeros(self.M, dtype=float)
+        self.Z = np.zeros(self.M, dtype=FloatType)
 
-        # init h with h[:q] = [0, 1/q, 2/q, ..., 1] and h[q] = PADDING
-        self.h = np.zeros(self.q, dtype=float)
-        # self.h = np.linspace(0, 1, self.q)
+        self.h = np.zeros(self.q, dtype=FloatType)
 
         # init J with j_init and an additional row of zeros at the end and an
         # additional column of zeros at the end of each row
-
-        self.J = np.zeros((self.K, self.q + 1, self.q + 1), dtype=float)
-        # j_init = np.linspace(0, 1, self.q**2).reshape(self.q, self.q)
-        # self.J[:, : self.q, : self.q] = j_init
+        self.J = np.zeros((self.K, self.q + 1, self.q + 1), dtype=FloatType)
 
         self.C = compute_contexts(
             index_training_seq,
@@ -168,7 +163,19 @@ class MaxEnt:
                 matrix_mu_sigma.append(tuple(col_sigma))
             self.partition_context_indices.append(matrix_mu_sigma)
 
+        self.checkpoint_index = 0
         self.compute_z()
+
+    def save_checkpoint(self, path: str):
+        np.savez(
+            path,
+            S=self.S,
+            M=self.M,
+            q=self.q,
+            K=self.K,
+            J=self.J,
+            h=self.h,
+        )
 
     # @Timeit
     def compute_z(self):
@@ -211,6 +218,7 @@ class MaxEnt:
         sum_j = self.J[self.J5].sum()
         log_z = np.log(self.Z).sum()
         norm1_j = np.sum(np.abs(self.J))
+
         loss = (-(sum_h + sum_j - log_z) + self.l * norm1_j) / self.M
         print("loss={loss}".format(loss=loss))
         return loss
@@ -312,7 +320,7 @@ class MaxEnt:
         return dg_dj / self.M
 
     # @Timeit
-    def update_arrays_from_params(self, params: npt.NDArray[float]):
+    def update_arrays_from_params(self, params: NDArrayFloat):
         self.h = params[: self.q]
         self.J[:, : self.q, : self.q] = params[self.q :].reshape(self.K, self.q, self.q)
 
@@ -330,27 +338,58 @@ class MaxEnt:
         )
         return self.nll(), flat_grad
 
+    def training_callback(self, params):
+        self.save_checkpoint(f"./model-checkpoint-{self.checkpoint_index}")
+        self.checkpoint_index += 1
+        print(self.sample_seq(length=100))
+
     # @Timeit
     def train(self, max_iter=1000):
+        self.checkpoint_index = 0
         params_init = np.zeros(self.q + self.K * self.q * self.q)
         res = minimize(
             self.nll_and_grad,
             params_init,
             method="L-BFGS-B",
+            # method="Powell",
             jac=True,
+            callback=self.training_callback,
             options={"maxiter": max_iter},
         )
-        return res.x[: self.q], {
-            k: res.x[
-                self.q + k * self.q * self.q : self.q + (k + 1) * self.q * self.q
-            ].reshape((self.q, self.q))
-            for k in range(self.K)
-        }
+        self.h = res.x[: self.q]
+        self.J[:, : self.q, : self.q] = res.x[self.q :].reshape(self.K, self.q, self.q)
 
+    def sum_energy_in_context(
+        self, seq: NDArrayInt, ix: int, center: int | None = None
+    ):
+        energy = 0
+        for k in range(self.K):
+            energy += self.J[k, seq[ix - (k + 1)], center]
+            energy += self.J[k, center, seq[ix + (k + 1)]]
+        return energy
 
-if __name__ == "__main__":
-    g = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    def sample_index_seq(self, length=20, burn_in=1000) -> npt.NDArray:
+        # index_seq = np.random.randint(0, self.q, size=length + 2 * self.K)
+        index_seq = np.full(length + 2 * self.K, fill_value=0)
+        index_seq[: self.K] = MaxEnt.PADDING
+        index_seq[-self.K :] = MaxEnt.PADDING
 
-    MaxEnt(g.seq, q=g.voc_size, kmax=g.Kmax).train(max_iter=10000)
+        random_gen = np.random.RandomState(seed=1)
+        for _ in range(burn_in):
+            pos_in_seq = self.K + random_gen.randint(0, length)
+            center = index_seq[pos_in_seq]
+            current_energy = self.h[center] + self.sum_energy_in_context(
+                index_seq, pos_in_seq, int(center)
+            )
 
-    # Timeit.all_info()
+            new_center = np.random.randint(0, self.q - 1)
+            if new_center >= center:
+                new_center += 1
+
+            new_energy = self.h[new_center] + self.sum_energy_in_context(
+                index_seq, pos_in_seq, new_center
+            )
+            acceptance_ratio = min(1, np.exp(new_energy - current_energy))
+            if random_gen.random() < acceptance_ratio:
+                index_seq[pos_in_seq] = new_center
+        return index_seq[self.K : -self.K]
