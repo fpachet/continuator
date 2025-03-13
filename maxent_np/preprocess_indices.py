@@ -4,7 +4,6 @@ from maxent_np import NDArrayInt
 from utils.profiler import timeit
 
 
-@timeit
 def compute_contexts(idx_seq: list[int], /, *, kmax: int, padding=-1) -> NDArrayInt:
     """
     Compute all contexts for a given index sequence.
@@ -40,8 +39,7 @@ def compute_contexts(idx_seq: list[int], /, *, kmax: int, padding=-1) -> NDArray
     return c
 
 
-@timeit
-def compute_context_indices(contexts, kmax=0) -> NDArrayInt:
+def compute_context_indices(contexts: NDArrayInt, kmax: int = 0) -> NDArrayInt:
     """
     Compute the indices of each context in J, the 3D-array of interaction potentials.
 
@@ -95,7 +93,6 @@ def compute_context_indices(contexts, kmax=0) -> NDArrayInt:
     return indices
 
 
-@timeit
 def compute_context_indices_naive(contexts, kmax=0):
     """
     same as compute_context_indices2 except much slower
@@ -118,7 +115,6 @@ def compute_context_indices_naive(contexts, kmax=0):
     return result
 
 
-@timeit
 def compute_partition_context_indices(
     contexts, /, *, q: int, kmax: int = 0
 ) -> NDArrayInt:

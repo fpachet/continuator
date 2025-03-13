@@ -2,12 +2,13 @@ import time
 
 import numpy as np
 import mido
+import sys
 from scipy.optimize import minimize
 import random
 import pickle
 
 
-from utils.profiler import timeit
+# from utils.profiler import timeit
 
 """
 A more efficient version of the Max Entropy paper.
@@ -26,6 +27,7 @@ class MaxEntropyMelodyGenerator:
         self.lambda_reg = lambda_reg
         self.notes = self.extract_notes()
         self.note_set = list(set(self.notes))
+        self.note_set.sort()
         self.voc_size = len(self.note_set)
         self.note_to_idx = {note: i for i, note in enumerate(self.note_set)}
         self.idx_to_note = {i: note for note, i in self.note_to_idx.items()}
@@ -109,11 +111,12 @@ class MaxEntropyMelodyGenerator:
         self.elapsed_ns_in_negative_log_likelihood_and_gradient += (
             time.perf_counter_ns() - t0
         )
-        return (
-            self.all_partitions,
-            self.negative_log_likelihood(h, J),
-            self.gradient(h, J),
-        )
+        return result
+        # return (
+        #     self.all_partitions,
+        #     self.negative_log_likelihood(h, J),
+        #     self.gradient(h, J),
+        # )
 
     def compute_all_Z(self, J, h):
         for mu, s_0 in enumerate(self.seq):
@@ -121,7 +124,7 @@ class MaxEntropyMelodyGenerator:
                 h, J, self.all_contexts[mu]
             )
 
-    @timeit
+    # @timeit
     def negative_log_likelihood(self, h, J):
         self.cpt_compute_likelihood += 1
         loss = 0
@@ -138,7 +141,7 @@ class MaxEntropyMelodyGenerator:
         print(f"{loss=}")
         return loss
 
-    @timeit
+    # @timeit
     def gradient(self, h, J):
         self.cpt_compute_gradient += 1
         grad_h = np.zeros_like(h)
@@ -204,22 +207,31 @@ class MaxEntropyMelodyGenerator:
 
     def generate_sequence_metropolis(self, h, J, length=20, burn_in=1000):
         # generate sequence of note indexes
-        sequence = [random.choice(self.seq) for _ in range(length)]
+        # sequence = [random.choice(self.seq) for _ in range(length)]
+        sequence = [0] * length
+        random_gen = np.random.RandomState(seed=1)
         for _ in range(burn_in):
-            idx = random.randint(0, length - 1)
+            # idx = random.randint(0, length - 1)
+            idx = random_gen.randint(0, length)
+            print(f"index: {idx}")
             current_note = sequence[idx]
             context = self.build_context(sequence, idx)
             current_energy = h[current_note] + self.sum_energy_in_context(
                 J, context, current_note
             )
-            proposed_note = random.choice(
+            proposed_note = random_gen.choice(
                 [elt for elt in range(self.voc_size) if elt != current_note]
             )
+            print(f"{proposed_note=}")
             proposed_energy = h[proposed_note] + self.sum_energy_in_context(
                 J, context, proposed_note
             )
             acceptance_ratio = min(1, np.exp(proposed_energy - current_energy))
-            if random.random() < acceptance_ratio:
+            # if random.random() < acceptance_ratio:
+            random = random_gen.random()
+            print(f"{random=}")
+            if random < acceptance_ratio:
+                print(f"seq[{idx}] = {proposed_note}")
                 sequence[idx] = proposed_note
         # build sequence of notes
         result = [self.idx_to_note[i] for i in sequence]
@@ -243,15 +255,12 @@ class MaxEntropyMelodyGenerator:
 
 
 if __name__ == "__main__":
-    K_max = 5
+    K_max = 10
+    np.set_printoptions(threshold=sys.maxsize)
+    # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=K_max)
     generator = MaxEntropyMelodyGenerator(
         "../data/test_sequence_3notes.mid", Kmax=K_max
     )
-    h = np.linspace(0, 1, generator.voc_size)
-    _J = np.linspace(0, 1, generator.voc_size**2).reshape(-1)
-    J = np.tile(_J, K_max).reshape(-1)
-    params = np.concat([h, J])
-    Z, nll, grad = generator.negative_log_likelihood_and_gradient(params)
-    print(f"Z = {Z}")
-    print(f"NLL = {nll}")
-    print(f"Loc. grad. = {grad}")
+    h_opt, J_opt = generator.train(max_iter=10)
+    seq = generator.generate_sequence_metropolis(h_opt, J_opt, length=200, burn_in=5000)
+    generator.save_midi(seq, "/Users/proy/Desktop/generated-max-ent-loop.mid")
