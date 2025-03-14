@@ -252,7 +252,7 @@ print(f"{generator.cpt_compute_partition=}")
 print(f"{generator.cpt_compute_gradient=}")
 print(f"{generator.cpt_compute_likelihood=}")
 
-generated_sequence = generator.generate_sequence_metropolis(
+generated_sequence = generator.generate(
     h_opt, J_opt, burn_in=2000, length=50
 )
 generator.save_midi(generated_sequence, "../data/generated_melody.mid")

@@ -1,40 +1,28 @@
-# Maximum Entropy Melody Generator
+# A Python implementation of a constrainable Continuator
 
-A melody generation system implementing an efficient Maximum Entropy model. This project provides a novel approach to musical composition by leveraging statistical modeling for creating coherent and diverse melodies.
+A revival of th Continuator system, using a combination of variable-order Markov model and belief propagation to enforce positional constraints.
 
-It is based on the paper:
-Sakellariou, J., Tria, F., Loreto, V. et al. Maximum entropy models capture melodic styles. Sci Rep 7, 9172 (2017). https://doi.org/10.1038/s41598-017-08028-4
-
-which is available at: https://www.nature.com/articles/s41598-017-08028-4
-
+It is based on the following papers:
+- Pachet, F. The Continuator: Musical Interaction with Style. Journal of New Music Research, 32(3):333-341, 2003
+- Papadopoulos, A., Pachet, F., Roy, P. and Sakellariou, J. Exact Sampling for Regular and Markov Constraints with Belief Propagation. 21th Principles and Practice of Constraint Programming Conference (CP 2015), Cork (Ireland), 2015
+- Pachet, F., Roy, P. and Barbieri, G. Finite-Length Markov Processes with Constraints. Proceedings of the 22nd International Joint Conference on Artificial Intelligence (IJCAI), pages 635-642, Barcelona, Spain, July 2011
+- Roy, P. and Pachet, F. Enforcing Meter in Finite-Length Markov Sequences. 27th Conference on Artificial Intelligence (AAAI 2013), Bellevue, Washington (USA), June 2013
 
 ## Features
 
-- Efficient implementation of Maximum Entropy models for melody generation
-- Optimized context creation and partition function computation
-- MIDI file processing and generation capabilities
+- Efficient implementation of variable-order markov model
+- Combination with a viewpoint system that enables the generation of musically plausible material
+- Combination with a belief propagation system to enforce positional constraints (that are retro propagated)
+- many tricks here and there to maximize musical quality
 
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/max-entropy-melody-generator.git
-cd max-entropy-melody-generator
-```
-
-2. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
 
 ### Dependencies
 
 The project requires the following Python packages:
-- numpy ~= 1.24.2
-- mido ~= 1.2.10
-- scipy ~= 1.10.1
-- torch ~= 2.6.0
-- transformers ~= 4.48.3
+numpy~=2.2.3
+mido~=1.2.10
+scipy~=1.15.2
+torch~=2.6.0
 
 ## Usage
 
@@ -58,35 +46,6 @@ new_melody = model.generate(length=32)
 # Save the generated melody
 processor.save_midi(new_melody, 'output.midi')
 ```
-
-## Project Structure
-
-```
-├── core/
-│   ├── max_entropy.py        # Main implementation of MaxEntropy model
-│   └── model_utils.py        # Utility functions for model operations
-├── data/
-│   └── midi/                 # Directory for MIDI training data
-├── utils/
-│   ├── midi_processor.py     # MIDI file processing utilities
-│   └── data_utils.py         # Data preprocessing utilities
-├── requirements.txt          # Project dependencies
-└── README.md                 # Project documentation
-```
-
-## Implementation Details
-
-The implementation focuses on two key aspects:
-
-1. **Efficient Context Creation**
-- Optimized context window management
-- Efficient feature extraction from musical sequences
-- Smart caching of frequently used contexts
-
-2. **Partition Function Computation**
-- Improved algorithms for partition function calculation
-- Parallelized computation using PyTorch
-- Memory-efficient implementation for large-scale models
 
 ## Contributing
 
