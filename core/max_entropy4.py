@@ -219,6 +219,37 @@ class MaxEntropyMelodyGenerator:
         result = [self.idx_to_note[i] for i in sequence]
         return result
 
+    def generate_sequence_paper(self, h, J, length=20, burn_in=1000):
+        # generate sequence of note indexes
+        sequence = [random.choice(self.seq) for _ in range(length)]
+        for _ in range(burn_in):
+            idx = random.randint(0, length - 1)
+            context = self.build_context(sequence, idx)
+            energies = np.zeros(self.voc_size)
+            for i in range (self.voc_size):
+                energies[i] = np.exp(h[i] + self.sum_energy_in_context(
+                J, context, i))
+            energies = energies/energies.sum()
+            proposed_note = np.random.choice(range(self.voc_size), p=energies)
+            sequence[idx] = proposed_note
+        # build sequence of notes
+        generator.save_midi([self.idx_to_note[i] for i in sequence], "../data/temp_NEWMetrogenerated_melody.mid")
+        seq2 = self.generate_sequence_final_checks(sequence, h, J)
+        result = [self.idx_to_note[i] for i in seq2]
+        return result
+
+    def generate_sequence_final_checks(self, sequence, h, J):
+        for idx in range(len(sequence)):
+            context = self.build_context(sequence, idx)
+            energies = np.zeros(self.voc_size)
+            for i in range(self.voc_size):
+                energies[i] = np.exp(h[i] + self.sum_energy_in_context(
+                    J, context, i))
+            energies = energies / energies.sum()
+            best_note = np.where(energies == max(energies))[0][0]
+            sequence[idx] = best_note
+        return sequence
+
     @staticmethod
     def save_midi(sequence, output_file="generated.mid"):
         mid = mido.MidiFile()
@@ -238,20 +269,21 @@ class MaxEntropyMelodyGenerator:
 
 if __name__ == "__main__":
     # Utilisation
-    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=4)
+    # generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=2)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
     # generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=10)
-    generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    # generator = MaxEntropyMelodyGenerator("../data/partita_violon_jason.mid", Kmax=10)
     # generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
-    # [generator, h_opt, J_opt] = pickle.load(open("../data/bach_partita_short_generator.p", "rb"))
+    generator = MaxEntropyMelodyGenerator("../data/jason examples/bach_jesus_joy.mid", Kmax=3)
+    # generator = MaxEntropyMelodyGenerator("../data/jason examples/Just_Friends-_Pat_Martino_Solo.mid", Kmax=10)
+    # [generator, h_opt, J_opt] = pickle.load(open("../data/artita_violon_jason.p", "rb"))
     t0 = time.perf_counter_ns()
     h_opt, J_opt = generator.train(max_iter=10)
     print(f"{h_opt=}")
     print(f"{J_opt=}")
     t1 = time.perf_counter_ns()
-
-    # pickle.dump([generator, h_opt, J_opt], open("../data/bach_prelude_c.p", "wb"))
-
+    # pickle.dump([generator, h_opt, J_opt], open("../data/jason examples/martino.p", "wb"))
     print(f"total time: {(t1 - t0) / 1000000}")
     print(
         f"time in sum_energy_in_context: {generator.elapsed_ns_in_sum_energy_in_context / 1000000}ms"
@@ -266,8 +298,10 @@ if __name__ == "__main__":
     print(f"{generator.cpt_compute_partition=}")
     print(f"{generator.cpt_compute_gradient=}")
     print(f"{generator.cpt_compute_likelihood=}")
-
-    generated_sequence = generator.generate_sequence_metropolis(
-        h_opt, J_opt, burn_in=5000, length=200
+    # generated_sequence = generator.generate_sequence_metropolis(
+    #     h_opt, J_opt, burn_in=10000, length=200
+    # )
+    generated_sequence = generator.generate_sequence_paper(
+        h_opt, J_opt, burn_in=4000, length=300
     )
-    generator.save_midi(generated_sequence, "../data/generated_melody.mid")
+    generator.save_midi(generated_sequence, "../data/maxent-generated_melody.mid")
