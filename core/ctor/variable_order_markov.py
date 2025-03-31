@@ -8,6 +8,9 @@ from difflib import SequenceMatcher
 from core.ctor.belief_propag_stringham_clean import PGM, LabeledArray, Messages
 from core.ctor.dynaprog import VariableDomainSequenceOptimizer
 
+class NoSolutionError(Exception):
+    def __init__(self, message):
+        self.message = message
 
 class _Start_vp():
     def __init__(self):
@@ -178,7 +181,7 @@ class Variable_order_Markov:
         start = random.choice(starting_conts)
         return start
 
-    def sample_sequence(self, start_vp, length=50, end_vp=None):
+    def sample_sequence_that_ends(self, start_vp, length=50):
         # if length is negative, stops when reaching the provided end_viewpoint
         # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
 
@@ -186,16 +189,31 @@ class Variable_order_Markov:
         # sets constraints on start and end
         pgm.set_value('x1', self.index_of_vp(start_vp))
         pgm.set_value('x' + str(length + 2), self.index_of_vp(self.get_end_vp()))
-
-        # without BP
-        # vp_seq = self.sample_vp_sequence(start_vp, length, end_vp)
         # with BP
-        vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
+        try:
+            vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
+        except NoSolutionError:
+            return None
         return vp_seq
 
+    def sample_sequence(self, start_vp, end_vp, length=50):
+        # if length is negative, stops when reaching the provided end_viewpoint
+        # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
+
+        pgm = self.build_bp_graph(start_vp, length, end_vp)
+        # sets constraints on start and end
+        pgm.set_value('x1', self.index_of_vp(start_vp))
+        pgm.set_value('x' + str(length + 2), self.index_of_vp(end_vp))
+        # with BP
+        try:
+            vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
+        except NoSolutionError:
+            return None
+        return vp_seq
+
+    # length of bp graph is length + 2: plus the start (possibly the end of an existing sequence) and plus the end viewpoint
     def build_bp_graph(self, start_vp, length, end_vp):
         string = ""
-        # length of bp graph is length + 2: plus the start (possibly the end of an existing sequence) and plus the end viewpoint
         seq_length = length + 2
         for i in range(1, seq_length + 1):
             string = string + "p(x" + str(i) + ")"
@@ -219,6 +237,12 @@ class Variable_order_Markov:
         pgm.set_data(data_dict)
         return pgm
 
+    def is_ok(self, marginal):
+        for x in marginal:
+            if np.isnan(x):
+                return False
+        return True
+
     def sample_vp_sequence_with_bp(self, start_vp, length, pgm):
         # Generates a new sequence of vps from the Markov model.
         if length < 0:
@@ -229,6 +253,8 @@ class Variable_order_Markov:
         for i in range(length):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
             marginal_i = Messages().marginal(pgm_variable)
+            if not self.is_ok(marginal_i):
+                raise NoSolutionError("marginals are nan")
             # compare with the markov transition matrix
             markov_proba = self.get_first_order_matrix()[self.index_of_vp(current_seq[-1])]
             product_proba = marginal_i *  markov_proba

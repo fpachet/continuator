@@ -31,7 +31,7 @@ They have a "status" describing how they were played originally, which is preser
 - TODO: data augmentation with inversions, negative harmony, etc.
 - TODO: rhythm transfer for data augmentation/control
 - TODO: server with js client, or hugginface solution or github page with python2js
-- TODO: use max_entropy when possible
+- TODO: use continuator when possible
 - TODO: use fine-tuning of transformers
 """
 
@@ -75,11 +75,13 @@ class Note:
 
     def transpose(self, t):
         note = self.copy()
-        note.pitch= self.pitch + t
+        note.pitch = self.pitch + t
         return note
 
     def copy(self):
-        new_note = Note(self.pitch, self.velocity, self.duration, start_time=self.start_time)
+        new_note = Note(
+            self.pitch, self.velocity, self.duration, start_time=self.start_time
+        )
         new_note.preceding_start_delta = self.preceding_start_delta
         new_note.preceding_end_delta = self.preceding_end_delta
         new_note.next_start_delta = self.next_start_delta
@@ -95,17 +97,17 @@ class Note:
 
     def get_status_right(self):
         if self.next_end_delta <= 0:
-            return 'inside'
+            return "inside"
         if self.next_start_delta < 0:
-            return 'overlaps'
-        return 'after'
+            return "overlaps"
+        return "after"
 
     def get_status_left(self):
-        if self.preceding_end_delta  >= 0:
-            return 'before'
+        if self.preceding_end_delta >= 0:
+            return "before"
         if abs(self.preceding_end_delta) < self.duration:
-            return 'overlaps'
-        return 'contains'
+            return "overlaps"
+        return "contains"
 
     def is_similar_realization(self, note):
         if self.pitch != note.pitch:
@@ -123,6 +125,7 @@ class Note:
         if self.next_end_delta != note.next_end_delta:
             return False
         return True
+
 
 class Start_Padding(Note):
     def __init__(self):
@@ -172,7 +175,9 @@ class Continuator2:
         print(f"number of different pitches in train: {len(Counter(all_pitches))}")
         print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
         # adds start and end notes
-        notes_original = np.concatenate(([Start_Padding()], notes_original, [End_Padding()]))
+        notes_original = np.concatenate(
+            ([Start_Padding()], notes_original, [End_Padding()])
+        )
         # learns, possibly in 12 transpositions
         trange = range(0, 1)
         if transposition:
@@ -236,7 +241,7 @@ class Continuator2:
         for track in mid.tracks:
             for msg in track:
                 current_time += msg.time
-                if msg.type == 'set_tempo':
+                if msg.type == "set_tempo":
                     self.tempo_msgs.append(msg.tempo)
                 if msg.type == "note_on" and msg.velocity > 0:
                     new_note = Note(msg.note, msg.velocity, 0)
@@ -245,7 +250,9 @@ class Continuator2:
                     pending_start_times[msg.note] = current_time
                     new_note.set_start_time(current_time)
                     new_note.set_duration(120)
-                if msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0):
+                if msg.type == "note_off" or (
+                    msg.type == "note_on" and msg.velocity == 0
+                ):
                     if pending_notes[msg.note] == None:
                         print("found 0 velocity note, skipping it")
                         continue
@@ -266,7 +273,7 @@ class Continuator2:
 
     def all_midi_files_from_path(self, path_string):
         path = pathlib.Path(path_string)
-        return list(path.glob('*.mid')) + list(path.glob('*.midi'))
+        return list(path.glob("*.mid")) + list(path.glob("*.midi"))
 
     def build_vo_markov_model(self, sequence):
         """Builds a variable-order Markov model for max K order
@@ -289,7 +296,7 @@ class Continuator2:
             for i in range(len(vp_sequence) - k):
                 if i < k + 1:
                     continue
-                current_ctx = tuple(vp_sequence[i - k - 1: i])
+                current_ctx = tuple(vp_sequence[i - k - 1 : i])
                 if current_ctx not in prefixes_to_cont_k:
                     prefixes_to_cont_k[current_ctx] = []
                 prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
@@ -321,7 +328,10 @@ class Continuator2:
     add_viewpoint_realization = add_viewpoint_realization_new
 
     def get_priors(self):
-        key_counts = {key: len(continuations) for key, continuations in self.viewpoints_realizations.items()}
+        key_counts = {
+            key: len(continuations)
+            for key, continuations in self.viewpoints_realizations.items()
+        }
         total_count = sum(key_counts.values())
         priors = {key: count / total_count for key, count in key_counts.items()}
         # Step 4: Convert to a sorted vector (optional)
@@ -350,7 +360,14 @@ class Continuator2:
         return result
 
     def get_viewpoint(self, note):
-        vp = tuple([note.pitch, (int)(note.duration / 5), note.overlaps_left(), note.overlaps_right()])
+        vp = tuple(
+            [
+                note.pitch,
+                (int)(note.duration / 5),
+                note.overlaps_left(),
+                note.overlaps_right(),
+            ]
+        )
         # vp = tuple([note.pitch, (int)(note.duration / 10)])
         return vp
 
@@ -385,7 +402,10 @@ class Continuator2:
         for i in range(2, seq_length + 1):
             string = string + "p(x" + str(i) + "|x" + str(i - 1) + ")"
         pgm = PGM.from_string(string)
-        mat = LabeledArray(np.array(self.get_first_order_matrix()).transpose(), ["x2", "x1"], )
+        mat = LabeledArray(
+            np.array(self.get_first_order_matrix()).transpose(),
+            ["x2", "x1"],
+        )
         # assert is_conditional_prob(mat, "x2")
         m = self.voc_size()
         data_dict = {}
@@ -395,7 +415,9 @@ class Continuator2:
             variable_dist[self.index_of_vp(start_vp)] = 0
             variable_dist[self.index_of_vp(end_vp)] = 0
             variable_dist /= variable_dist.sum()
-            data_dict["p(x" + str(i + 1) + ")"] = LabeledArray(np.array(variable_dist), ["x" + str(i + 1)])
+            data_dict["p(x" + str(i + 1) + ")"] = LabeledArray(
+                np.array(variable_dist), ["x" + str(i + 1)]
+            )
             data_dict["p(x" + str(i + 2) + "|x" + str(i + 1) + ")"] = LabeledArray(
                 mat.array, ["x" + str(i + 2), "x" + str(i + 1)]
             )
@@ -410,7 +432,7 @@ class Continuator2:
         # generate fixed length sequence
         pgm.print_marginals()
         for i in range(length):
-            marginal_i = Messages().marginal(pgm.variable_from_name('x' + str(i + 2)))
+            marginal_i = Messages().marginal(pgm.variable_from_name("x" + str(i + 2)))
             # compare with the markov transition matrix
             self.get_first_order_matrix()[self.index_of_vp(self.get_start_vp())]
             cont = self.get_continuation(current_seq)
@@ -478,12 +500,20 @@ class Continuator2:
         note_sequence = []
         for i, vp in enumerate(vp_seq):
             if i == 1:
-                initials = [real for real in self.viewpoints_realizations[vp] if self.is_starting_address(real)]
+                initials = [
+                    real
+                    for real in self.viewpoints_realizations[vp]
+                    if self.is_starting_address(real)
+                ]
                 if len(initials) != 0:
                     note_sequence.append(random.choice(initials))
                     continue
             if i == len(vp_seq) - 2 and vp_seq[-1] == End_Padding:
-                lasts = [real for real in self.viewpoints_realizations[vp] if self.is_ending_address(real)]
+                lasts = [
+                    real
+                    for real in self.viewpoints_realizations[vp]
+                    if self.is_ending_address(real)
+                ]
                 if len(lasts) != 0:
                     note_sequence.append(random.choice(lasts))
                     continue
@@ -509,7 +539,11 @@ class Continuator2:
             if len(sequence) > 0:
                 preceding = sequence[-1]
                 preceding_address = idx_sequence[i - 1]
-                delta = (int) (self.decide_delta_time(note_address, note_copy, preceding_address, preceding))
+                delta = (int)(
+                    self.decide_delta_time(
+                        note_address, note_copy, preceding_address, preceding
+                    )
+                )
                 start_time += delta
             note_copy.set_start_time(start_time)
             sequence.append(note_copy)
@@ -524,23 +558,36 @@ class Continuator2:
 
     def decide_delta_time_old(self, note_address, note, current_address, current_note):
         preceding_original_note = self.get_input_note(
-            tuple([note_address[0], note_address[1] - 1]))
-        interval_with_preceding_original = note.start_time - preceding_original_note.start_time
+            tuple([note_address[0], note_address[1] - 1])
+        )
+        interval_with_preceding_original = (
+            note.start_time - preceding_original_note.start_time
+        )
 
         if current_address is not None:
             if not self.is_ending_address(current_address):
-                current_next_original_note = self.get_input_note(tuple([current_address[0], current_address[1] + 1]))
-                current_overlap_with_next_original = current_note.start_time + current_note.duration > current_next_original_note.start_time
+                current_next_original_note = self.get_input_note(
+                    tuple([current_address[0], current_address[1] + 1])
+                )
+                current_overlap_with_next_original = (
+                    current_note.start_time + current_note.duration
+                    > current_next_original_note.start_time
+                )
 
         # delta = interval_with_preceding_original_end + preceding_note.duration
         delta = interval_with_preceding_original
         delta = int(max(delta, 0))
-        if current_note is not None and note.start_time + delta > current_note.get_end_time():
+        if (
+            current_note is not None
+            and note.start_time + delta > current_note.get_end_time()
+        ):
             print("create hole")
             delta = (int)(current_note.duration)
         return delta
 
-    def decide_delta_time (self, note_to_add_address, note_to_add, current_address, current_note):
+    def decide_delta_time(
+        self, note_to_add_address, note_to_add, current_address, current_note
+    ):
         if current_note is None:
             return 0
         cur_status = current_note.get_status_right()
@@ -572,18 +619,18 @@ class Continuator2:
         return 0
 
     def create_pretty_midi_pr(self, note_sequence):
-    # For each note in the list, create a pretty_midi.Note object and add to the instrument
+        # For each note in the list, create a pretty_midi.Note object and add to the instrument
         pm = pretty_midi.PrettyMIDI()
         # Create an Instrument instance for a specific program (sound)
         instrument = pretty_midi.Instrument(program=0)
         for note in note_sequence:
-                note = pretty_midi.Note(
-                    velocity=note.velocity,
-                    pitch=note.pitch,
-                    start=note.start_time,
-                    end=note.get_end_time()
-                )
-                instrument.notes.append(note)
+            note = pretty_midi.Note(
+                velocity=note.velocity,
+                pitch=note.pitch,
+                start=note.start_time,
+                end=note.get_end_time(),
+            )
+            instrument.notes.append(note)
         # Add the instrument to the PrettyMIDI object
         pm.instruments.append(instrument)
         return pm.get_piano_roll(fs=100)
@@ -591,12 +638,7 @@ class Continuator2:
     def plot_piano_roll(piano_roll, fs=100):
         # Plot using matplotlib
         plt.figure()
-        plt.imshow(
-            piano_roll,
-            aspect='auto',
-            origin='lower',
-            interpolation='nearest'
-        )
+        plt.imshow(piano_roll, aspect="auto", origin="lower", interpolation="nearest")
         plt.xlabel("Time (frames at fs = {})".format(fs))
         plt.ylabel("MIDI pitch")
         plt.title("PrettyMIDI Piano Roll")
@@ -632,16 +674,21 @@ class Continuator2:
         mido_sequence.sort(key=lambda msg: msg.time)
         if sustain:
             # add pedal message
-            mido_sequence.insert(0, mido.Message(
-                "control_change",
-                control=64,
-                value=127,
-                time=0,
-            ))
+            mido_sequence.insert(
+                0,
+                mido.Message(
+                    "control_change",
+                    control=64,
+                    value=127,
+                    time=0,
+                ),
+            )
         if tempo == -1 and len(self.tempo_msgs) > 0:
             # takes the original average tempo
             average_tempo = (int)(np.sum(self.tempo_msgs) / len(self.tempo_msgs))
-            mido_sequence.insert(0, mido.MetaMessage(type='set_tempo', tempo=average_tempo))
+            mido_sequence.insert(
+                0, mido.MetaMessage(type="set_tempo", tempo=average_tempo)
+            )
         current_time = 0
         for msg in mido_sequence:
             delta = msg.time - current_time
@@ -665,7 +712,7 @@ class Continuator2:
             match = SequenceMatcher(
                 None, train_string, sequence_string, autojunk=False
             ).find_longest_match()
-            nb_notes_common = train_string[match.a: match.a + match.size].count(" ")
+            nb_notes_common = train_string[match.a : match.a + match.size].count(" ")
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
@@ -693,7 +740,8 @@ class Continuator2:
             total += len(self.viewpoints_realizations[k])
         print(f"average nb of vp realizations: {total/voc_size}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"
     # midi_file_path = "../../data/test_sequence_3notes.mid"
     # midi_file_path = "../../data/test_sequence_arpeggios.mid"
@@ -721,7 +769,9 @@ if __name__ == '__main__':
     t1 = time.perf_counter_ns()
     print(f"total time: {(t1 - t0) / 1_000_000}ms")
     # print(f"generated sequence of length {len(generated_sequence)}")
-    generator.save_midi(generated_sequence, "../../data/ctor2_output.mid", tempo=-1, sustain=False)
+    generator.save_midi(
+        generated_sequence, "../../data/ctor2_output.mid", tempo=-1, sustain=False
+    )
     # pmpr = generator.create_pretty_midi_pr(generated_sequence)
     # generator.plot_piano_roll(pmpr)
     # os.system("say sequence generated &")

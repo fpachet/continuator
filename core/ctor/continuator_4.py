@@ -32,7 +32,7 @@ They have a "status" describing how they were played originally, which is preser
 - TODO: data augmentation with inversions, negative harmony, etc.
 - TODO: rhythm transfer for data augmentation/control
 - TODO: server with js client, or hugginface solution or github page with python2js
-- TODO: use max_entropy when possible
+- TODO: use continuator when possible
 - TODO: use fine-tuning of transformers
 """
 
