@@ -183,7 +183,7 @@ class MaxEntropyMelodyGenerator:
 
 
 # Utilisation
-generator = MaxEntropyMelodyGenerator("../data/test_sequence_3notes.mid", Kmax=3)
+generator = MaxEntropyMelodyGenerator("../../data/test_sequence_3notes.mid", Kmax=3)
 # generator = MaxEntropyMelodyGenerator("../data/test_sequence_2notes.mid", Kmax=3)
 # generator = MaxEntropyMelodyGenerator("../data/test_sequence_arpeggios.mid", Kmax=5)
 # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono_short.mid", Kmax=10)

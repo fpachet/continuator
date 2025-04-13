@@ -126,7 +126,6 @@ class Note:
             return False
         return True
 
-
 class Start_Padding(Note):
     def __init__(self):
         Note.__init__(self, -1, 0, 0)
@@ -251,7 +250,7 @@ class Continuator2:
                     new_note.set_start_time(current_time)
                     new_note.set_duration(120)
                 if msg.type == "note_off" or (
-                    msg.type == "note_on" and msg.velocity == 0
+                        msg.type == "note_on" and msg.velocity == 0
                 ):
                     if pending_notes[msg.note] == None:
                         print("found 0 velocity note, skipping it")
@@ -296,7 +295,7 @@ class Continuator2:
             for i in range(len(vp_sequence) - k):
                 if i < k + 1:
                     continue
-                current_ctx = tuple(vp_sequence[i - k - 1 : i])
+                current_ctx = tuple(vp_sequence[i - k - 1: i])
                 if current_ctx not in prefixes_to_cont_k:
                     prefixes_to_cont_k[current_ctx] = []
                 prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
@@ -561,7 +560,7 @@ class Continuator2:
             tuple([note_address[0], note_address[1] - 1])
         )
         interval_with_preceding_original = (
-            note.start_time - preceding_original_note.start_time
+                note.start_time - preceding_original_note.start_time
         )
 
         if current_address is not None:
@@ -570,23 +569,23 @@ class Continuator2:
                     tuple([current_address[0], current_address[1] + 1])
                 )
                 current_overlap_with_next_original = (
-                    current_note.start_time + current_note.duration
-                    > current_next_original_note.start_time
+                        current_note.start_time + current_note.duration
+                        > current_next_original_note.start_time
                 )
 
         # delta = interval_with_preceding_original_end + preceding_note.duration
         delta = interval_with_preceding_original
         delta = int(max(delta, 0))
         if (
-            current_note is not None
-            and note.start_time + delta > current_note.get_end_time()
+                current_note is not None
+                and note.start_time + delta > current_note.get_end_time()
         ):
             print("create hole")
             delta = (int)(current_note.duration)
         return delta
 
     def decide_delta_time(
-        self, note_to_add_address, note_to_add, current_address, current_note
+            self, note_to_add_address, note_to_add, current_address, current_note
     ):
         if current_note is None:
             return 0
@@ -712,7 +711,7 @@ class Continuator2:
             match = SequenceMatcher(
                 None, train_string, sequence_string, autojunk=False
             ).find_longest_match()
-            nb_notes_common = train_string[match.a : match.a + match.size].count(" ")
+            nb_notes_common = train_string[match.a: match.a + match.size].count(" ")
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
@@ -738,7 +737,7 @@ class Continuator2:
         total = 0
         for k in self.viewpoints_realizations:
             total += len(self.viewpoints_realizations[k])
-        print(f"average nb of vp realizations: {total/voc_size}")
+        print(f"average nb of vp realizations: {total / voc_size}")
 
 
 if __name__ == "__main__":

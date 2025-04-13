@@ -1,8 +1,4 @@
-import os
-import pathlib
-
-import core.ctor
-from core.ctor.continuator_v3 import Continuator2
+from core.old.continuator_v3 import Continuator2
 
 midi_file_path = "../../data/keith/train/K7_MD.mid"
 generator = Continuator2(midi_file_path, 4, transposition=False)

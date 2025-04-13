@@ -19,7 +19,6 @@ class _Start_vp():
     def is_start_padding(self):
         return True
 
-
 class _End_vp():
     def __init__(self):
         pass
@@ -42,12 +41,14 @@ class Variable_order_Markov:
         self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
-        self.learn_file(sequence_of_stuff)
+        if sequence_of_stuff is not None:
+            self.learn_sequence(sequence_of_stuff)
 
-    def learn_file(self, sequence_of_stuff):
+    def learn_sequence(self, sequence_of_stuff):
         # adds start and end notes
         # real_sequence = np.concatenate(([self.start_padding], sequence_of_stuff, [self.end_padding]))
-        real_sequence = [self.start_padding] + sequence_of_stuff + [self.end_padding]
+        # real_sequence = [self.start_padding] + sequence_of_stuff + [self.end_padding]
+        real_sequence = sequence_of_stuff
         # store sequence in list of input sequences
         self.input_sequences.append(real_sequence)
         # learns sequence
@@ -64,13 +65,7 @@ class Variable_order_Markov:
         return note_address[1] == len(self.input_sequences[note_address[0]]) - 2
 
     def is_end_padding(self, vp):
-        return vp == self.get_end_vp()
-
-    def get_start_vp(self):
-        return self.get_viewpoint(self.start_padding)
-
-    def get_end_vp(self):
-        return self.get_viewpoint(self.end_padding)
+        return vp == self.end_padding
 
     def voc_size(self):
         # the number of unique viewpoints, including Start and End viewpoints
@@ -78,7 +73,7 @@ class Variable_order_Markov:
 
     def random_initial_vp(self):
         # returns a random initial vp, which are continuations of start paddings
-        return self.prefixes_to_continuations[0][tuple([self.get_start_vp()])]
+        return self.prefixes_to_continuations[0][tuple([self.start_padding])]
 
     def get_all_unique_viewpoints(self):
         return self.all_unique_viewpoints
@@ -89,15 +84,15 @@ class Variable_order_Markov:
     def build_vo_markov_model(self, real_sequence):
         """Builds a variable-order Markov model for max K order
         accumulates with existing model"""
-        # builds the vp sequence first
-        vp_sequence = [self.get_viewpoint(obj) for obj in real_sequence]
+        # builds the vp sequence with extra start and end padding vps
+        vp_sequence = [self.start_padding] + [self.get_viewpoint(obj) for obj in real_sequence] + [self.end_padding]
         # adds unique viewpoints if any
         for vp in vp_sequence:
             if vp not in self.all_unique_viewpoints:
                 self.all_unique_viewpoints.append(vp)
         # add the realization to the viewpoint's realizations
         sequence_index = len(self.input_sequences) - 1
-        for i, vp in enumerate(vp_sequence):
+        for i, vp in enumerate(vp_sequence[1:-1]):
             if vp not in self.viewpoints_realizations:
                 self.viewpoints_realizations[vp] = []
             self.add_viewpoint_realization(i, sequence_index, vp)
@@ -113,10 +108,10 @@ class Variable_order_Markov:
                 prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
             self.prefixes_to_continuations[k] = prefixes_to_cont_k
         # special case for the endVp, which has no continuation, but should be in the list for consistency
-        end_tuple = tuple([self.get_end_vp()])
+        end_tuple = tuple([self.end_padding])
         if end_tuple not in self.prefixes_to_continuations[0]:
             # ends goes to end
-            self.prefixes_to_continuations[0][end_tuple] = [self.get_end_vp()]
+            self.prefixes_to_continuations[0][end_tuple] = [self.end_padding]
 
     def get_priors(self):
         key_counts = {key: len(continuations) for key, continuations in self.viewpoints_realizations.items()}
@@ -133,6 +128,7 @@ class Variable_order_Markov:
 
 
     def add_viewpoint_realization_old(self, i, sequence_index, vp):
+        # attention! vp sequence has extra start_vp, so i should be decreased by 1!
         new_address = tuple([sequence_index, i])
         self.viewpoints_realizations[vp].append(new_address)
 
@@ -196,39 +192,47 @@ class Variable_order_Markov:
             return None
         return vp_seq
 
-    def sample_sequence(self, start_vp, end_vp, length=50):
+    def sample_sequence(self, length, constraints=None):
         # if length is negative, stops when reaching the provided end_viewpoint
         # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
 
-        pgm = self.build_bp_graph(start_vp, length, end_vp)
-        # sets constraints on start and end
-        pgm.set_value('x1', self.index_of_vp(start_vp))
-        pgm.set_value('x' + str(length + 2), self.index_of_vp(end_vp))
-        # with BP
+        pgm = self.build_bp_graph(length)
+        # sets constraints
+        # if start_vp is not None:
+        #     pgm.set_value('x1', self.index_of_vp(start_vp))
+        # if end_vp is not None:
+        #     pgm.set_value('x' + str(length + 2), self.index_of_vp(end_vp))
+        if constraints is not None:
+            for ct_pos, ct_vp in constraints.items():
+                var_name = "x" + str(ct_pos + 1)
+                pgm.set_value(var_name, self.index_of_vp(ct_vp))
+        start_vp =  None
+        if constraints[0] is not None:
+            start_vp = constraints[0]
         try:
-            vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
+            vp_seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm, constraints=constraints)
         except NoSolutionError:
+            print("too many constraints?")
             return None
         return vp_seq
 
     # length of bp graph is length + 2: plus the start (possibly the end of an existing sequence) and plus the end viewpoint
-    def build_bp_graph(self, start_vp, length, end_vp):
+    def build_bp_graph(self, length):
         string = ""
-        seq_length = length + 2
-        for i in range(1, seq_length + 1):
-            string = string + "p(x" + str(i) + ")"
-        for i in range(2, seq_length + 1):
+        for i in range(length):
+            string = string + "p(x" + str(i+1) + ")"
+        for i in range(2, length+1):
             string = string + "p(x" + str(i) + "|x" + str(i - 1) + ")"
         pgm = PGM.from_string(string)
         mat = LabeledArray(np.array(self.get_first_order_matrix()).transpose(), ["x2", "x1"], )
         # assert is_conditional_prob(mat, "x2")
         m = self.voc_size()
         data_dict = {}
-        for i in range(seq_length):
+        for i in range(length):
             variable_dist = np.random.uniform(1 / m, 1 / m, m)
             # should avoid start and end values
-            variable_dist[self.index_of_vp(start_vp)] = 0
-            variable_dist[self.index_of_vp(end_vp)] = 0
+            variable_dist[self.index_of_vp(self.start_padding)] = 0
+            variable_dist[self.index_of_vp(self.end_padding)] = 0
             variable_dist /= variable_dist.sum()
             data_dict["p(x" + str(i + 1) + ")"] = LabeledArray(np.array(variable_dist), ["x" + str(i + 1)])
             data_dict["p(x" + str(i + 2) + "|x" + str(i + 1) + ")"] = LabeledArray(
@@ -243,14 +247,19 @@ class Variable_order_Markov:
                 return False
         return True
 
-    def sample_vp_sequence_with_bp(self, start_vp, length, pgm):
+    def sample_vp_sequence_with_bp(self, length, start_vp, pgm, constraints=None):
         # Generates a new sequence of vps from the Markov model.
         if length < 0:
             print("impossible")
-        current_seq = [start_vp]
+        if start_vp is not None:
+            current_seq = [start_vp]
+        else:
+            current_seq = [self.random_initial_vp()]
+        pgm.set_value('x' + str(1), self.index_of_vp(current_seq[0]))
+
         # generate fixed length sequence
         # pgm.print_marginals()
-        for i in range(length):
+        for i in range(length-1):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
             marginal_i = Messages().marginal(pgm_variable)
             if not self.is_ok(marginal_i):

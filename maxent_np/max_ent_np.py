@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.optimize import minimize
 
-from core.max_entropy4 import MaxEntropyMelodyGenerator
+from core.old.max_entropy4 import MaxEntropyMelodyGenerator
 from maxent_np import NDArrayInt
 from maxent_np.preprocess_indices import (
     compute_contexts,

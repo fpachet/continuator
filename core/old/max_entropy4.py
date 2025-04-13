@@ -275,7 +275,7 @@ if __name__ == "__main__":
     # generator = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
     # generator = MaxEntropyMelodyGenerator("../data/partita_violon_jason.mid", Kmax=10)
     # generator = MaxEntropyMelodyGenerator("../data/prelude_c.mid", Kmax=10)
-    generator = MaxEntropyMelodyGenerator("../data/jason examples/bach_jesus_joy.mid", Kmax=3)
+    generator = MaxEntropyMelodyGenerator("../../data/jason examples/bach_jesus_joy.mid", Kmax=3)
     # generator = MaxEntropyMelodyGenerator("../data/jason examples/Just_Friends-_Pat_Martino_Solo.mid", Kmax=10)
     # [generator, h_opt, J_opt] = pickle.load(open("../data/artita_violon_jason.p", "rb"))
     t0 = time.perf_counter_ns()
