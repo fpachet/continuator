@@ -1,8 +1,10 @@
 # A Python implementation of a constrainable Continuator
 
-A revival of th Continuator system, using a combination of variable-order Markov model and belief propagation to enforce positional constraints.
+A reimplmentation of the Continuator system, using a combination of variable-order Markov model and belief propagation to enforce positional constraints.
+Note that this is the only system, to my knowledge, able to produce controllable sequences (with guarantees) with unary/positional constraints.
+These are extremely powerful and can turn seemingly "random" walks into actual music with intention.
 
-It is based on the following papers:
+It is inspired from on the following papers:
 - Pachet, F. The Continuator: Musical Interaction with Style. Journal of New Music Research, 32(3):333-341, 2003
 - Papadopoulos, A., Pachet, F., Roy, P. and Sakellariou, J. Exact Sampling for Regular and Markov Constraints with Belief Propagation. 21th Principles and Practice of Constraint Programming Conference (CP 2015), Cork (Ireland), 2015
 - Pachet, F., Roy, P. and Barbieri, G. Finite-Length Markov Processes with Constraints. Proceedings of the 22nd International Joint Conference on Artificial Intelligence (IJCAI), pages 635-642, Barcelona, Spain, July 2011
@@ -10,42 +12,58 @@ It is based on the following papers:
 
 ## Features
 
-- Efficient implementation of variable-order markov model
-- Combination with a viewpoint system that enables the generation of musically plausible material
-- Combination with a belief propagation system to enforce positional constraints (that are retro propagated)
-- many tricks here and there to maximize musical quality
+- Efficient but simple implementation of variable-order markov model
+- Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
+- Sampling is a combination of Markov with a belief propagation system that enforce positional constraints (that are duly retro propagated)
+- Many tricks here and there to maximize musical quality
 
+## Authors
+- [François Pachet](https://github.com/fpachet)
 
 ### Dependencies
 
 The project requires the following Python packages:
 numpy~=2.2.3
 mido~=1.2.10
-scipy~=1.15.2
-torch~=2.6.0
 
 ## Usage
 
 ```python
-from core.max_entropy import MaxEntropyModel
-from utils.midi_processor import MIDIProcessor
+from core.ctor.continuator_4 import Continuator2
 
 # Initialize the model
-model = MaxEntropyModel()
+midi_file_path = "../../data/prelude_c.mid"
+generator = Continuator2(midi_file_path, 4, transposition=False)
 
-# Process MIDI data
-processor = MIDIProcessor()
-training_data = processor.load_midi_files('path/to/midi/files')
+#set positional constraints as a dictionary index -> viewpoint
+constraints = {}
+# to start with a "start"
+# constraints[0] = generator.get_start_vp()
+#to force arbitrary value at arbitrary position, here a D3 as first note
+constraints[0] = generator.get_vp_for_pitch(62)
+# to end with an "end"
+constraints[19] = generator.get_end_vp()
 
-# Train the model
-model.train(training_data)
+# generate the viewpoint sequence with some length
+generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
 
-# Generate new melody
-new_melody = model.generate(length=32)
+#remove extra start or end viewpoint if needed
+sequence_to_render = generated_sequence[0:-1]
 
-# Save the generated melody
-processor.save_midi(new_melody, 'output.midi')
+#realize the sequence with actual notes
+rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
+
+# Save the generated sequence
+generator.save_midi(rendered_sequence, "../../data/ctor2_output.mid", tempo=-1, sustain=False)
 ```
+
+## User interface
+Currently continuator can be run as:
+- python code on midi files (input and output)
+- real time midi with rt-midi on a local machine, command line
+- real time midi with rt-midi on a local machine, with a gradio interface from a browser
+
+A web client-server version will be available soon, as so far attempts at using gradio and javascript failed.
 
 ## Contributing
 
