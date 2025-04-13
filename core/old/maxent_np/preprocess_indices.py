@@ -1,6 +1,6 @@
 import numpy as np
 
-from maxent_np import NDArrayInt
+from core.old.maxent_np import NDArrayInt
 from utils.profiler import timeit
 
 

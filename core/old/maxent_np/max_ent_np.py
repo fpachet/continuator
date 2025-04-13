@@ -9,8 +9,8 @@ import numpy.typing as npt
 from scipy.optimize import minimize
 
 from core.old.max_entropy4 import MaxEntropyMelodyGenerator
-from maxent_np import NDArrayInt
-from maxent_np.preprocess_indices import (
+from core.old.maxent_np import NDArrayInt
+from core.old.maxent_np.preprocess_indices import (
     compute_contexts,
     compute_context_indices,
     compute_partition_context_indices,
@@ -349,7 +349,7 @@ class MaxEnt:
 
 
 if __name__ == "__main__":
-    g = MaxEntropyMelodyGenerator("../data/bach_partita_mono.midi", Kmax=10)
+    g = MaxEntropyMelodyGenerator("../../../data/bach_partita_mono.midi", Kmax=10)
 
     MaxEnt(g.seq, q=g.voc_size, kmax=g.Kmax).train(max_iter=10000)
 

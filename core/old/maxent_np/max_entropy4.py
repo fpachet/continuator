@@ -245,7 +245,7 @@ class MaxEntropyMelodyGenerator:
 if __name__ == "__main__":
     K_max = 5
     generator = MaxEntropyMelodyGenerator(
-        "../data/test_sequence_3notes.mid", Kmax=K_max
+        "../../../data/test_sequence_3notes.mid", Kmax=K_max
     )
     h = np.linspace(0, 1, generator.voc_size)
     _J = np.linspace(0, 1, generator.voc_size**2).reshape(-1)

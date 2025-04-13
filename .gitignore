@@ -54,3 +54,5 @@ data/generated_melody.mid
 *.pclprof
 
 data/all_chords_C.txt
+
+old/
