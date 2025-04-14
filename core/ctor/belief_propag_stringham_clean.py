@@ -1,6 +1,10 @@
 import numpy as np
 from collections import namedtuple
 
+class NoSolutionError(Exception):
+    def __init__(self, message):
+        self.message = message
+
 # code by Jessica Stringham:
 # https://jessicastringham.net/2019/01/09/sum-product-message-passing/
 
@@ -283,9 +287,11 @@ class Messages(object):
             ],
             axis=0,
         )
-
         # At this point, we can normalize this distribution
-        return unnorm_p / np.sum(unnorm_p)
+        somme = np.sum(unnorm_p)
+        if somme == 0:
+            raise NoSolutionError("marginals are nan")
+        return unnorm_p / somme
 
     def variable_to_factor_messages(self, variable, factor):
         # print (f"variable_to_factor_messages: {variable} to {factor}")

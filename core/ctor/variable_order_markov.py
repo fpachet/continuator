@@ -5,12 +5,8 @@ import random
 import time
 from difflib import SequenceMatcher
 
-from core.ctor.belief_propag_stringham_clean import PGM, LabeledArray, Messages
+from core.ctor.belief_propag_stringham_clean import PGM, LabeledArray, Messages, NoSolutionError
 from core.ctor.dynaprog import VariableDomainSequenceOptimizer
-
-class NoSolutionError(Exception):
-    def __init__(self, message):
-        self.message = message
 
 class _Start_vp():
     def __init__(self):
@@ -25,6 +21,8 @@ class _End_vp():
 
     def is_end_padding(self):
         return True
+
+
 
 class Variable_order_Markov:
     def __init__(self, sequence_of_stuff, vp_lambda, kmax=5):
@@ -73,7 +71,12 @@ class Variable_order_Markov:
 
     def random_initial_vp(self):
         # returns a random initial vp, which are continuations of start paddings
-        return self.prefixes_to_continuations[0][tuple([self.start_padding])]
+        all_initial_vps = self.prefixes_to_continuations[0][tuple([self.start_padding])]
+        return random.choice(all_initial_vps)
+
+    def random_vp_with_probs(self, probs):
+        idx = np.random.choice(len(probs), p=probs)
+        return self.get_all_unique_viewpoints()[idx]
 
     def get_all_unique_viewpoints(self):
         return self.all_unique_viewpoints
@@ -202,13 +205,13 @@ class Variable_order_Markov:
         #     pgm.set_value('x1', self.index_of_vp(start_vp))
         # if end_vp is not None:
         #     pgm.set_value('x' + str(length + 2), self.index_of_vp(end_vp))
+        start_vp =  None
         if constraints is not None:
             for ct_pos, ct_vp in constraints.items():
                 var_name = "x" + str(ct_pos + 1)
                 pgm.set_value(var_name, self.index_of_vp(ct_vp))
-        start_vp =  None
-        if constraints[0] is not None:
-            start_vp = constraints[0]
+            if 0 in constraints:
+                start_vp = constraints[0]
         try:
             vp_seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm, constraints=constraints)
         except NoSolutionError:
@@ -254,16 +257,21 @@ class Variable_order_Markov:
         if start_vp is not None:
             current_seq = [start_vp]
         else:
-            current_seq = [self.random_initial_vp()]
-        pgm.set_value('x' + str(1), self.index_of_vp(current_seq[0]))
-
-        # generate fixed length sequence
-        # pgm.print_marginals()
+            try:
+                marginal_1 = Messages().marginal(pgm.variable_from_name('x1'))
+                vp = self.random_vp_with_probs(marginal_1)
+                current_seq = [vp]
+                pgm.set_value('x1', self.index_of_vp(current_seq[0]))
+            except NoSolutionError:
+                return None
+        # generate the rest of the sequence
         for i in range(length-1):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
-            marginal_i = Messages().marginal(pgm_variable)
-            if not self.is_ok(marginal_i):
-                raise NoSolutionError("marginals are nan")
+            try:
+                marginal_i = Messages().marginal(pgm_variable)
+                # if not self.is_ok(marginal_i):
+            except NoSolutionError:
+                return None
             # compare with the markov transition matrix
             markov_proba = self.get_first_order_matrix()[self.index_of_vp(current_seq[-1])]
             product_proba = marginal_i *  markov_proba

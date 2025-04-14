@@ -1,6 +1,6 @@
 # A Python implementation of a constrainable Continuator
 
-A reimplmentation of the Continuator system, using a combination of variable-order Markov model and belief propagation to enforce positional constraints.
+A reimplementation of the Continuator system, using a combination of variable-order Markov model and belief propagation to enforce positional constraints.
 Note that this is the only system, to my knowledge, able to produce controllable sequences (with guarantees) with unary/positional constraints.
 These are extremely powerful and can turn seemingly "random" walks into actual music with intention.
 
@@ -35,11 +35,11 @@ from core.ctor.continuator_4 import Continuator2
 midi_file_path = "../../data/prelude_c.mid"
 generator = Continuator2(midi_file_path, 4, transposition=False)
 
-#set positional constraints as a dictionary index -> viewpoint
+# set positional constraints as a dictionary index -> viewpoint
 constraints = {}
 # to start with a "start"
 # constraints[0] = generator.get_start_vp()
-#to force arbitrary value at arbitrary position, here a D3 as first note
+# to force arbitrary value at arbitrary position, here a D3 as first note
 constraints[0] = generator.get_vp_for_pitch(62)
 # to end with an "end"
 constraints[19] = generator.get_end_vp()
@@ -47,14 +47,14 @@ constraints[19] = generator.get_end_vp()
 # generate the viewpoint sequence with some length
 generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
 
-#remove extra start or end viewpoint if needed
+# remove extra start or end viewpoint if needed
 sequence_to_render = generated_sequence[0:-1]
 
-#realize the sequence with actual notes
+# realize the sequence with actual notes
 rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
 
-# Save the generated sequence
-generator.save_midi(rendered_sequence, "../../data/ctor2_output.mid", tempo=-1, sustain=False)
+# save the generated sequence
+generator.save_midi(rendered_sequence, "../../data/constrained_prelude.mid", tempo=-1)
 ```
 
 ## User interface
