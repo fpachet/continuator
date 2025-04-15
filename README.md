@@ -26,6 +26,7 @@ The project requires the following Python packages:
 numpy~=2.2.3
 mido~=1.2.10
 gradio
+matplotlib
 
 ## Installation
 1 - clone the repository: 
@@ -36,7 +37,7 @@ python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 > python3 -m core.ctor.gradio_midi_listener.py
 and then click on the url displayed in the command line
 
-## Usage
+## Usage in Python
 
 ```python
 from core.ctor.continuator_4 import Continuator2
