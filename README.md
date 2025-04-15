@@ -26,6 +26,12 @@ The project requires the following Python packages:
 numpy~=2.2.3
 mido~=1.2.10
 
+## Installation
+clone the repository
+install with pip install
+launch:
+> python3 core.ctor.app.py
+
 ## Usage
 
 ```python
