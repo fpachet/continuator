@@ -15,8 +15,8 @@ dependencies = [
     "numpy ~= 2.2",
     "mido ~= 1.3",
     "python-rtmidi",
-    "gradio"
-    "matplotlib"
+    "gradio",
+    "matplotlib",
 ]
 [tool.hatch.build.targets.sdist]
 include = [
