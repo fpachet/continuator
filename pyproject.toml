@@ -27,7 +27,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["continuator"]
+packages = ["core"]
 
 [tool.black]
 line-length = 88
