@@ -10,8 +10,8 @@ from difflib import SequenceMatcher
 from ctor.variable_order_markov import Variable_order_Markov
 
 """
-- Split the music Continuator class from a generic Variable Order Markov, usable for any type of sequence (e.g. words).
-- Implementation of Continuator different from original, to enable experiments with belief propagation and skips.
+- Split the music Continuator class from a generic Variable_Order_Markov, usable for any type of sequence (e.g. words).
+- Implementation of Continuator is different from original, to enable experiments with belief propagation and skips.
 - Representation of contexts of size 1 to K and their continuations with dictionaries. Trees/oracles are useless here.
 - Contexts are tuples of viewpoints AND continuations are viewpoints (see get_viewpoint()) (Unlike in the original)
 - Realizations are kept separately for each vp and reused during sampling. They are represented as addresses, i.e. tuple (index_of_melody, index_in_melody)
@@ -20,10 +20,8 @@ from ctor.variable_order_markov import Variable_order_Markov
 - Realization of viewpoints is performed with dynamic programming, à la HMM
 - Representation of polyphony is different from original Continuator. Clusters are not considered, only notes.
 They have a "status" describing how they were played originally, which is preserved at sampling. This enables more creativity for chords.
-- TODO: add real-time input
 - TODO: audio synthesis with Dawdreamer
 - TODO: add database storage of real time performances
-- TODO: pre-train on large corpus of melodies
 - TODO: data augmentation with inversions, negative harmony, etc.
 - TODO: rhythm transfer for data augmentation/control
 - TODO: server with js client, or huggingface solution or github page with python2js
@@ -204,7 +202,8 @@ class Continuator2:
         self.set_delta_notes(sequence)
         return sequence
 
-    def transpose_notes(self, notes, t):
+    @staticmethod
+    def transpose_notes(notes, t):
         return [n.transpose(t) for n in notes]
 
     def get_input_note(self, note_address):
@@ -257,7 +256,8 @@ class Continuator2:
         self.set_delta_notes(notes)
         return np.array(notes)
 
-    def set_delta_notes(self, notes):
+    @staticmethod
+    def set_delta_notes(notes):
         for i, note in enumerate(notes):
             if i > 0:
                 note.preceding_start_delta = note.start_time - notes[i - 1].start_time
@@ -273,6 +273,7 @@ class Continuator2:
 
     def sample_sequence(self, length=50, constraints=None):
         """
+        :param length:
         :type constraints: dict
         """
         return self.vom.sample_sequence(length, constraints=constraints)
@@ -333,10 +334,12 @@ class Continuator2:
             note.start_time = note.start_time - first_note_time
         return sequence
 
-    def get_pitch_string(self, note_sequence):
+    @staticmethod
+    def get_pitch_string(note_sequence):
         return "".join([str(note.pitch) + " " for note in note_sequence])
 
-    def decide_delta_time(self, note_to_add_address, note_to_add, current_address, current_note):
+    @staticmethod
+    def decide_delta_time(note_to_add_address, note_to_add, current_address, current_note):
         if current_note is None:
             return 0
         cur_status = current_note.get_status_right()
@@ -368,7 +371,7 @@ class Continuator2:
         return 0
 
     def save_midi(self, sequence, output_file, tempo=120, sustain=False):
-        ms = self.create_mido_sequence(sequence, tempo=tempo, sustain=False)
+        ms = self.create_mido_sequence(sequence, tempo=tempo, sustain=sustain)
         ms.save(output_file)
 
     def create_mido_sequence(self, sequence, tempo=120, sustain=False):
@@ -398,7 +401,7 @@ class Continuator2:
                     time=note.start_time + note.duration,
                 )
             )
-        mido_sequence.sort(key=lambda msg: msg.time)
+        mido_sequence.sort(key=lambda messg: messg.time)
         if sustain:
             # add pedal message
             mido_sequence.insert(0, mido.Message(
@@ -409,7 +412,7 @@ class Continuator2:
             ))
         if tempo == -1 and len(self.tempo_msgs) > 0:
             # takes the original average tempo
-            average_tempo = (int)(np.sum(self.tempo_msgs) / len(self.tempo_msgs))
+            average_tempo = int(np.sum(self.tempo_msgs) / len(self.tempo_msgs))
             mido_sequence.insert(0, mido.MetaMessage(type='set_tempo', tempo=average_tempo))
         current_time = 0
         # converts beats into ticks, assuming 480 ticks per second
@@ -457,10 +460,8 @@ if __name__ == '__main__':
     # t1 = time.perf_counter_ns()
     # print(f"total time: {(t1 - t0) / 1000000}")
     # Sampling a new sequence from the  model
-    constraints = {}
+    constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
     # constraints[0] = generator.get_start_vp()
-    constraints[0] = generator.get_vp_for_pitch(62)
-    constraints[19] = generator.get_end_vp()
     generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
     t1 = time.perf_counter_ns()
     print(f"total time: {(t1 - t0) / 1_000_000}ms")
