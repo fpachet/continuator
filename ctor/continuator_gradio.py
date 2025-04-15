@@ -47,7 +47,7 @@ class Continuator_gradio:
         # self.write_messages_to_midi(mido_sequence, 'midi_sequence.mid')
         phrase = self.continuator.get_phrase_from_mido(mido_sequence)
         if self.continuator.get_learn_input():
-            self.continuator.learn_phrase(phrase, False)
+            self.continuator.learn_phrase(phrase, self.continuator.transpose)
         constraints = {}
         # constraints[0] = self.continuator.get_vp_for_pitch(62)
         constraints[len(phrase)] = self.continuator.get_end_vp()
@@ -220,10 +220,13 @@ class Continuator_gradio:
     def set_learn_input(self, choice):
         self.continuator.set_learn_input(choice=="Learn input")
 
+    def set_transpose(self, choice):
+        self.continuator.set_transpose(choice=="Transpose")
+
     def open_midi_files(self, files):
         midi_files = [f.name for f in files if f.name.lower().endswith('.mid') or f.name.lower().endswith('.midi')]
         # print ("\n".join(midi_files) if midi_files else "No MIDI files found.")
-        self.continuator.learn_files(midi_files)
+        self.continuator.learn_files(midi_files, transposition=self.continuator.transpose)
 
     def clear_memory(self):
         self.continuator.clear_memory()
@@ -280,8 +283,10 @@ class Continuator_gradio:
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
 
                 with gr.TabItem("Settings"):
-                    choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode")
-                    choice.change(fn=self.set_learn_input, inputs=choice)
+                    learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode", value="Learn input")
+                    learn_choice.change(fn=self.set_learn_input, inputs=learn_choice)
+                    transpose_choice = gr.Radio(choices=["Transpose", "Don't transpose"], label="Transpose", value="Don't transpose")
+                    transpose_choice.change(fn=self.set_transpose, inputs=transpose_choice)
 
         demo.launch()
 

@@ -123,6 +123,7 @@ class Continuator2:
         self.learn_input = True
         self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
         self.tempo_msgs = []
+        self.transpose = transposition
         if midi_file is not None:
             self.learn_file(midi_file, transposition)
 
@@ -137,6 +138,9 @@ class Continuator2:
 
     def get_learn_input(self):
         return self.learn_input
+
+    def set_transpose(self, trans):
+        self.transpose = trans
 
     def get_phrase_titles(self):
         return [f"{i + 1} phrase with {len(phrase)} notes" for i, phrase in enumerate(self.vom.input_sequences)]
@@ -437,7 +441,6 @@ class Continuator2:
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
-
 
 if __name__ == '__main__':
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"
