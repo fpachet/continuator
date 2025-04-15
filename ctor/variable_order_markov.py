@@ -2,11 +2,10 @@ from collections import Counter
 
 import numpy as np
 import random
-import time
 from difflib import SequenceMatcher
 
-from core.ctor.belief_propag_stringham_clean import PGM, LabeledArray, Messages, NoSolutionError
-from core.ctor.dynaprog import VariableDomainSequenceOptimizer
+from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionError
+
 
 class _Start_vp():
     def __init__(self):

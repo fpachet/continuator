@@ -2,8 +2,8 @@ import gradio as gr
 import mido
 import threading
 
-from core.ctor.phrase_listener import MidiPhraseListener
-from core.ctor.continuator_4 import Continuator2
+from ctor.phrase_listener import MidiPhraseListener
+from ctor.continuator import Continuator2
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches

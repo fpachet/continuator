@@ -7,7 +7,7 @@ import random
 import time
 from difflib import SequenceMatcher
 
-from core.ctor.variable_order_markov import Variable_order_Markov
+from ctor.variable_order_markov import Variable_order_Markov
 
 """
 - Split the music Continuator class from a generic Variable Order Markov, usable for any type of sequence (e.g. words).
@@ -438,7 +438,7 @@ if __name__ == '__main__':
     # midi_file_path = "../../data/partita_piano_1/pr1_1_joined.mid"
     # midi_file_path = "../../data/take6/A_quiet_place_joined.mid"
     # midi_file_path = "../../data/prelude_c_expressive.mid"
-    midi_file_path = "../../data/prelude_c.mid"
+    midi_file_path = "../data/prelude_c.mid"
     # midi_file_path = "../../data/bach_partita_mono.midi"
     # midi_file_path = "../../data/keith/train/K7_MD.mid"
     # midi_file_path = "../../../maestro-v3.0.0/2004/MIDI-Unprocessed_SMF_12_01_2004_01-05_ORIG_MID--AUDIO_12_R1_2004_03_Track03_wav--1.midi"

@@ -43,7 +43,7 @@ python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 ## Usage in Python
 
 ```python
-from core.ctor.continuator_4 import Continuator2
+from ctor import Continuator2
 
 # Initialize the model
 midi_file_path = "../../data/prelude_c.mid"

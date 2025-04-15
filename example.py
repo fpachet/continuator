@@ -1,4 +1,4 @@
-from core.ctor.continuator_4 import Continuator2
+from ctor import Continuator2
 
 # Initialize the model
 midi_file_path = "../../data/prelude_c.mid"

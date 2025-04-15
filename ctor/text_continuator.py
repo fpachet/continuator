@@ -1,6 +1,5 @@
-import core
-from core.ctor.variable_order_markov import Variable_order_Markov
-import re
+from ctor.variable_order_markov import Variable_order_Markov
+
 
 def non_overlapping_tuples(lst, k):
     return [tuple(lst[i:i+k]) for i in range(0, len(lst) - k + 1, k)]
