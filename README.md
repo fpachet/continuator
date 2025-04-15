@@ -27,9 +27,11 @@ numpy~=2.2.3
 mido~=1.2.10
 
 ## Installation
-clone the repository: git@github.com:fpachet/continuator.git
-cd continuator, then install with pip install
-launch:
+1 - clone the repository: 
+git clone https://github.com/fpachet/continuator.git
+2 - cd continuator, then install with pip install:
+python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
+3 - launch:
 > python3 core.ctor.app.py
 
 ## Usage
