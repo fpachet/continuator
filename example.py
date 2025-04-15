@@ -2,7 +2,7 @@ from ctor.continuator import Continuator2
 
 # Initialize the model
 midi_file_path = "data/prelude_c.mid"
-generator = Continuator2(midi_file_path, 4, transposition=False)
+generator = Continuator2(midi_file_path, 4, transposition=True)
 
 # set positional constraints
 constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
