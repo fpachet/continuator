@@ -4,19 +4,15 @@ import numpy as np
 import random
 from difflib import SequenceMatcher
 
-from numpy.matlib import empty
-
 from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionError
 
-
-class _Start_vp():
+class _Start_vp:
     def __init__(self):
         pass
 
-class _End_vp():
+class _End_vp:
     def __init__(self):
         pass
-
 
 class Variable_order_Markov:
     def __init__(self, sequence_of_stuff, vp_lambda, kmax=5):
@@ -25,7 +21,12 @@ class Variable_order_Markov:
         self.start_padding = _Start_vp()
         self.end_padding = _End_vp()
         self.kmax = kmax
-        self.clear_memory()
+        self.input_sequences = []
+        self.all_unique_viewpoints = []
+        self.viewpoints_realizations = {}
+        self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
+        for k in range(self.kmax):
+            self.prefixes_to_continuations[k] = {}
         if sequence_of_stuff is not None:
             self.learn_sequence(sequence_of_stuff)
 
@@ -47,20 +48,15 @@ class Variable_order_Markov:
             self.learn_sequence(seq)
 
     def learn_sequence(self, sequence_of_stuff):
-        # adds start and end notes
-        # real_sequence = np.concatenate(([self.start_padding], sequence_of_stuff, [self.end_padding]))
-        # real_sequence = [self.start_padding] + sequence_of_stuff + [self.end_padding]
-        real_sequence = sequence_of_stuff
-        # store sequence in list of input sequences
-        self.input_sequences.append(real_sequence)
-        # learns sequence
-        self.build_vo_markov_model(real_sequence)
+        self.input_sequences.append(sequence_of_stuff)
+        self.build_vo_markov_model(sequence_of_stuff)
 
     def get_input_object(self, obj_address):
         # note_address is a tuple (melody index, index in melody)
         return self.input_sequences[obj_address[0]][obj_address[1]]
 
-    def is_starting_address(self, note_address):
+    @staticmethod
+    def is_starting_address(note_address):
         return note_address[1] == 1
 
     def is_ending_address(self, note_address):
@@ -188,10 +184,10 @@ class Variable_order_Markov:
         # if length is negative, stops when reaching the provided end_viewpoint
         # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
 
-        pgm = self.build_bp_graph(start_vp, length, self.get_end_vp())
+        pgm = self.build_bp_graph(length)
         # sets constraints on start and end
         pgm.set_value('x1', self.index_of_vp(start_vp))
-        pgm.set_value('x' + str(length + 2), self.index_of_vp(self.get_end_vp()))
+        pgm.set_value('x' + str(length + 2), self.index_of_vp(self.end_padding))
         # with BP
         try:
             vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
@@ -217,7 +213,7 @@ class Variable_order_Markov:
             if 0 in constraints:
                 start_vp = constraints[0]
         try:
-            vp_seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm, constraints=constraints)
+            vp_seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm)
         except NoSolutionError:
             print("too many constraints?")
             return None
@@ -248,13 +244,14 @@ class Variable_order_Markov:
         pgm.set_data(data_dict)
         return pgm
 
-    def is_ok(self, marginal):
+    @staticmethod
+    def is_ok(marginal):
         for x in marginal:
             if np.isnan(x):
                 return False
         return True
 
-    def sample_vp_sequence_with_bp(self, length, start_vp, pgm, constraints=None):
+    def sample_vp_sequence_with_bp(self, length, start_vp, pgm):
         # Generates a new sequence of vps from the Markov model.
         if length < 0:
             print("impossible")
@@ -374,20 +371,6 @@ class Variable_order_Markov:
         print("no continuation found")
         return -1
 
-    def get_longest_subsequence_with_train(self, address_sequence):
-        note_sequence = [self.get_input_object(address) for address in address_sequence]
-        sequence_string = self.get_pitch_string(note_sequence)
-        best = 0
-        for input_seq in self.input_sequences:
-            train_string = self.get_pitch_string(input_seq)
-            match = SequenceMatcher(
-                None, train_string, sequence_string, autojunk=False
-            ).find_longest_match()
-            nb_notes_common = train_string[match.a: match.a + match.size].count(" ")
-            if nb_notes_common > best:
-                best = nb_notes_common
-        return best
-
     def show_conts_structure(self):
         for k in range(self.kmax):
             print(
@@ -396,16 +379,16 @@ class Variable_order_Markov:
         # looks at the sparsity of the matrix
         order1 = self.prefixes_to_continuations[0]
         voc_size = self.voc_size()
-        min = voc_size
-        max = 0
+        min_size = voc_size
+        max_size = 0
         for voc in order1.keys():
             conts_size = len(set(order1[voc]))
-            if conts_size > max:
-                max = conts_size
-            if conts_size < min:
-                min = conts_size
+            if conts_size > max_size:
+                max_size = conts_size
+            if conts_size < min_size:
+                min_size = conts_size
         print(f"voc size: {voc_size}")
-        print(f"min order 1 size: {min}, max: {max}")
+        print(f"min order 1 size: {min_size}, max: {max_size}")
         total = 0
         for k in self.viewpoints_realizations:
             total += len(self.viewpoints_realizations[k])

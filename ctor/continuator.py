@@ -121,7 +121,7 @@ class Note:
 
 class Continuator2:
 
-    def __init__(self, midi_file: object = None, kmax: object = 5, transposition: object = False) -> None:
+    def __init__(self, midi_file: object = None, kmax: int = 5, transposition: bool = False) -> None:
         self.learn_input = True
         self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
         self.tempo_msgs = []
