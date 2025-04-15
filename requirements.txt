@@ -1,3 +1,0 @@
-numpy~=2.2.3
-mido~=1.2.10
-python-rtmidi
