@@ -119,7 +119,7 @@ class Continuator_gradio:
         image_b64 = self.draw_piano_roll(phrase)
         return image_b64
 
-    def draw_piano_roll(self, notes, beat_width_px=100, min_fig_width_px=400, px_per_note=60, min_fig_height_px=600,
+    def draw_piano_roll(self, notes, beat_width_px=100, min_fig_width_px=400, px_per_note=30, min_fig_height_px=600,
                         dpi=300):
         """
         Draws a piano roll with big vertical zoom using actual pitch range.

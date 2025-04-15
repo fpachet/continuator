@@ -6,7 +6,7 @@ class MidiPhraseListener:
     def __init__(self, input_port_name=None, output_port_name=None, phrase_timeout=1.0, on_phrase_callback=None):
         # Ports
         self.inport = mido.open_input(input_port_name or mido.get_input_names()[0])
-        self.outport = mido.open_output(output_port_name or mido.get_output_names()[4])
+        self.outport = mido.open_output(output_port_name or mido.get_output_names()[0])
 
         # Phrase tracking
         self.phrase_timeout = phrase_timeout  # seconds of inactivity before phrase ends
