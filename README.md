@@ -33,7 +33,7 @@ git clone https://github.com/fpachet/continuator.git
 2 - cd continuator, then install with pip install:
 python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 3 - launch:
-> python3 core/ctor/gradio_midi_listener.py
+> python3 -m core.ctor.gradio_midi_listener.py
 
 ## Usage
 
