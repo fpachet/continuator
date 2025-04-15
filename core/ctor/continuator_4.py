@@ -7,7 +7,7 @@ import random
 import time
 from difflib import SequenceMatcher
 
-from variable_order_markov import Variable_order_Markov
+from core.ctor.variable_order_markov import Variable_order_Markov
 
 """
 - Split the music Continuator class from a generic Variable Order Markov, usable for any type of sequence (e.g. words).
