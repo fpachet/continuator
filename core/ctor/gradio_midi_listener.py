@@ -161,7 +161,7 @@ class Continuator_gradio:
     def launch(self):
         input_ports, output_ports = self.list_midi_ports()
         with gr.Blocks() as demo:
-            gr.Markdown("## 🎹 Real-time MIDI Phrase Listener")
+            gr.Markdown("## 🎹 Continuator")
             with gr.Row():
                 refresh_button = gr.Button("🔄 Refresh MIDI Ports")
                 in_dropdown = gr.Dropdown(label="🎧 MIDI Input Port", choices=input_ports, value=input_ports[0] if input_ports else None)

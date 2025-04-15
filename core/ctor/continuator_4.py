@@ -60,12 +60,6 @@ class Note:
     def set_start_time(self, t):
         self.start_time = t
 
-    def is_start_padding(self):
-        return False
-
-    def is_end_padding(self):
-        return False
-
     def overlaps_left(self):
         # if overlap is greater than half the duration
         return self.preceding_end_delta < 0
@@ -214,9 +208,6 @@ class Continuator2:
 
     def is_ending_address(self, note_address):
         return self.vom.is_ending_address(note_address)
-
-    def is_end_padding(self, cont_vp):
-        return self.vom.is_end_padding(cont_vp)
 
     def get_start_vp(self):
         return self.vom.start_padding

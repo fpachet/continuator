@@ -12,16 +12,9 @@ class _Start_vp():
     def __init__(self):
         pass
 
-    def is_start_padding(self):
-        return True
-
 class _End_vp():
     def __init__(self):
         pass
-
-    def is_end_padding(self):
-        return True
-
 
 
 class Variable_order_Markov:
@@ -265,6 +258,7 @@ class Variable_order_Markov:
             except NoSolutionError:
                 return None
         # generate the rest of the sequence
+        first_order_matrix = self.get_first_order_matrix()
         for i in range(length-1):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
             try:
@@ -273,11 +267,11 @@ class Variable_order_Markov:
             except NoSolutionError:
                 return None
             # compare with the markov transition matrix
-            markov_proba = self.get_first_order_matrix()[self.index_of_vp(current_seq[-1])]
-            product_proba = marginal_i *  markov_proba
+            markov_proba = first_order_matrix[self.index_of_vp(current_seq[-1])]
+            product_proba = marginal_i * markov_proba
             cont = self.get_continuation_with_bp(current_seq, product_proba)
             if cont == -1:
-                print("restarting from scratch")
+                print("should not be here,there is always a continuation with BP")
                 cont = self.random_initial_vp()
             current_seq.append(cont)
             pgm.set_value('x' + str(i + 2), self.index_of_vp(cont))

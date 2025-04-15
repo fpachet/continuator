@@ -1,7 +1,6 @@
 import mido
 import threading
 import time
-from mido import Message
 
 class MidiPhraseListener:
     def __init__(self, input_port_name=None, output_port_name=None, phrase_timeout=1.0, on_phrase_callback=None):
