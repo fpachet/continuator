@@ -4,7 +4,7 @@ A reimplementation of the Continuator system, using a combination of variable-or
 Note that this is the only system, to my knowledge, able to produce controllable sequences (with guarantees) with unary/positional constraints.
 These are extremely powerful and can turn seemingly "random" walks into actual music with intention.
 
-It is inspired from on the following papers:
+It is inspired from the following papers:
 - Pachet, F. The Continuator: Musical Interaction with Style. Journal of New Music Research, 32(3):333-341, 2003
 - Papadopoulos, A., Pachet, F., Roy, P. and Sakellariou, J. Exact Sampling for Regular and Markov Constraints with Belief Propagation. 21th Principles and Practice of Constraint Programming Conference (CP 2015), Cork (Ireland), 2015
 - Pachet, F., Roy, P. and Barbieri, G. Finite-Length Markov Processes with Constraints. Proceedings of the 22nd International Joint Conference on Artificial Intelligence (IJCAI), pages 635-642, Barcelona, Spain, July 2011
