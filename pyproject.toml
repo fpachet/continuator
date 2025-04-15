@@ -20,8 +20,8 @@ dependencies = [
 ]
 [tool.hatch.build.targets.sdist]
 include = [
-    "/core/ctor",
+    "/ctor",
     "/data",
 ]
 [tool.hatch.build.targets.wheel]
-packages = ["core/ctor"]
+packages = ["ctor"]
