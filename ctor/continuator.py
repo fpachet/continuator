@@ -141,12 +141,7 @@ class Continuator2:
         return self.learn_input
 
     def get_phrase_titles(self):
-        cpt = 1
-        result = []
-        for phrase in self.vom.input_sequences:
-            result.append(f"{cpt} phrase with {len(phrase)} notes")
-            cpt+=1
-        return result
+        return [f"{i + 1} phrase with {len(phrase)} notes" for i, phrase in enumerate(self.vom.input_sequences)]
 
     def get_phrase(self, index):
         return self.vom.input_sequences[index]
