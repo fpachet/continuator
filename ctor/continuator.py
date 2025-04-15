@@ -124,6 +124,8 @@ class Continuator2:
         self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
         self.tempo_msgs = []
         self.transpose = transposition
+        self.forget_past = False
+        self.keep_last_n_melodies = 20
         if midi_file is not None:
             self.learn_file(midi_file, transposition)
 
@@ -138,6 +140,12 @@ class Continuator2:
 
     def get_learn_input(self):
         return self.learn_input
+
+    def set_forget(self, forget_past):
+        self.forget_past = forget_past
+
+    def set_keep_last(self, keep):
+        self.keep_last_n_melodies = keep
 
     def set_transpose(self, trans):
         self.transpose = trans

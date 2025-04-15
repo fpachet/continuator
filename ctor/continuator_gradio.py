@@ -223,6 +223,12 @@ class Continuator_gradio:
     def set_transpose(self, choice):
         self.continuator.set_transpose(choice=="Transpose")
 
+    def set_forget(self, choice):
+        self.continuator.set_forget(choice=="Forget")
+
+    def set_keep_last(self, choice):
+        self.continuator.set_keep_last(choice)
+
     def open_midi_files(self, files):
         midi_files = [f.name for f in files if f.name.lower().endswith('.mid') or f.name.lower().endswith('.midi')]
         # print ("\n".join(midi_files) if midi_files else "No MIDI files found.")
@@ -254,7 +260,7 @@ class Continuator_gradio:
                     stop_button.click(fn=self.stop_midi_listener, outputs=status_box)
                     in_dropdown.change(fn=self.apply_input_port_change, inputs=in_dropdown, outputs=status_box)
                     out_dropdown.change(fn=self.apply_output_port_change, inputs=out_dropdown, outputs=status_box)
-                    gr.Markdown("---")
+                    gr.Markdown("🧠 Memory")
                     with gr.Row():
                         phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True, container=True, scale= 2)
                         refresh_phrase_list = gr.Button("📋 Refresh List")
@@ -282,11 +288,15 @@ class Continuator_gradio:
                     load_button = gr.Button("🔄 Load MIDI files")
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
 
-                with gr.TabItem("Settings"):
+                with gr.TabItem("Parameters"):
                     learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode", value="Learn input")
                     learn_choice.change(fn=self.set_learn_input, inputs=learn_choice)
                     transpose_choice = gr.Radio(choices=["Transpose", "Don't transpose"], label="Transpose", value="Don't transpose")
                     transpose_choice.change(fn=self.set_transpose, inputs=transpose_choice)
+                    forget_choice = gr.Radio(choices=["Don't forget", "Forget"], label="Forget", value="Don't forget")
+                    forget_choice.change(fn=self.set_forget, inputs=forget_choice)
+                    keep_last_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Keep only N last inputs")
+                    keep_last_slider.change(fn=self.set_keep_last, inputs=[keep_last_slider])
 
         demo.launch()
 
