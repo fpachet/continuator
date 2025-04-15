@@ -27,8 +27,8 @@ numpy~=2.2.3
 mido~=1.2.10
 
 ## Installation
-clone the repository
-install with pip install
+clone the repository: git@github.com:fpachet/continuator.git
+cd continuator, then install with pip install
 launch:
 > python3 core.ctor.app.py
 
