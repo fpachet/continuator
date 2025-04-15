@@ -4,6 +4,8 @@ import numpy as np
 import random
 from difflib import SequenceMatcher
 
+from numpy.matlib import empty
+
 from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionError
 
 
@@ -22,17 +24,27 @@ class Variable_order_Markov:
         self.viewpoint_lambda = vp_lambda
         self.start_padding = _Start_vp()
         self.end_padding = _End_vp()
-        self.input_sequences = []
-        # needs a fixed list of viewpoint to build the markov matrix
-        self.all_unique_viewpoints = []
         self.kmax = kmax
-        # the list of realizations for a given viewpoint
+        self.clear_memory()
+        if sequence_of_stuff is not None:
+            self.learn_sequence(sequence_of_stuff)
+
+    def clear_memory(self):
+        self.input_sequences = []
+        self.all_unique_viewpoints = []
         self.viewpoints_realizations = {}
         self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
-        if sequence_of_stuff is not None:
-            self.learn_sequence(sequence_of_stuff)
+
+    def clear_last_phrase(self):
+        if not self.input_sequences:
+            print("nothing to remove, memory is empty")
+            return
+        sequences_to_learn = self.input_sequences[:-1]
+        self.clear_memory()
+        for seq in sequences_to_learn:
+            self.learn_sequence(seq)
 
     def learn_sequence(self, sequence_of_stuff):
         # adds start and end notes
@@ -398,3 +410,4 @@ class Variable_order_Markov:
         for k in self.viewpoints_realizations:
             total += len(self.viewpoints_realizations[k])
         print(f"average nb of vp realizations: {total / voc_size}")
+

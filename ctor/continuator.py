@@ -121,7 +121,8 @@ class Note:
 
 class Continuator2:
 
-    def __init__(self, midi_file=None, kmax=5, transposition=False):
+    def __init__(self, midi_file: object = None, kmax: object = 5, transposition: object = False) -> None:
+        self.learn_input = True
         self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
         self.tempo_msgs = []
         if midi_file is not None:
@@ -133,6 +134,12 @@ class Continuator2:
         # vp = tuple([note.pitch, (int)(note.duration / 10)])
         return vp
 
+    def set_learn_input(self, value):
+        self.learn_input = value
+
+    def get_learn_input(self):
+        return self.learn_input
+
     def get_phrase_titles(self):
         cpt = 1
         result = []
@@ -143,6 +150,12 @@ class Continuator2:
 
     def get_phrase(self, index):
         return self.vom.input_sequences[index]
+
+    def clear_memory(self):
+        self.vom.clear_memory()
+
+    def clear_last_phrase(self):
+        self.vom.clear_last_phrase()
 
     def learn_file(self, midi_file, transposition):
         notes_original = self.extract_notes(midi_file)

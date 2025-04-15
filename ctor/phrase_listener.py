@@ -22,6 +22,16 @@ class MidiPhraseListener:
         self.timer_thread = threading.Thread(target=self._check_phrase_end, daemon=True)
 
 
+    def set_input_port(self, port_name):
+        with self.lock:
+            try:
+                if self.inport:
+                    self.inport.close()
+                self.inport = mido.open_input(port_name)
+                print(f"🔄 Input port changed to: {port_name}")
+            except Exception as e:
+                print(f"❌ Failed to change output port: {e}")
+
     def set_output_port(self, port_name):
         with self.lock:
             try:

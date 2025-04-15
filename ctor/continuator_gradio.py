@@ -46,7 +46,8 @@ class Continuator_gradio:
     def create_continuation(self, mido_sequence):
         # self.write_messages_to_midi(mido_sequence, 'midi_sequence.mid')
         phrase = self.continuator.get_phrase_from_mido(mido_sequence)
-        self.continuator.learn_phrase(phrase, False)
+        if self.continuator.get_learn_input():
+            self.continuator.learn_phrase(phrase, False)
         constraints = {}
         # constraints[0] = self.continuator.get_vp_for_pitch(62)
         constraints[len(phrase)] = self.continuator.get_end_vp()
@@ -76,6 +77,16 @@ class Continuator_gradio:
             return "🛑 Listener stopped."
         return "ℹ️ No listener is running."
 
+    def apply_input_port_change(self, new_port_name):
+        if self.listener is not None:
+            try:
+                self.listener.set_input_port(new_port_name)
+                return f"🔈 Input port changed to: {new_port_name}"
+            except Exception as e:
+                return f"❌ Failed to change input port: {e}"
+        else:
+            return "ℹ️ Listener is not running."
+
     def apply_output_port_change(self, new_port_name):
         if self.listener is not None:
             try:
@@ -90,7 +101,7 @@ class Continuator_gradio:
 
     def update_phrase_dropdown(self):
         choices =self.continuator.get_phrase_titles()
-        return gr.update(choices=choices, value=choices[-1], label= f"{len(choices)} phrases")
+        return gr.update(choices=choices, value=choices[-1] if choices else None, label= f"{len(choices)} phrases")
 
     def show_phrase(self, index_label):
         if not index_label:
@@ -156,38 +167,72 @@ class Continuator_gradio:
         self.write_messages_to_midi(midi_messages, filename)
         return filename
 
+    def set_learn_input(self, choice):
+        self.continuator.set_learn_input(choice=="Learn input")
+
+    def open_midi_files(self, files):
+        midi_files = [f.name for f in files if f.name.lower().endswith('.mid') or f.name.lower().endswith('.midi')]
+        # print ("\n".join(midi_files) if midi_files else "No MIDI files found.")
+        self.continuator.learn_files(midi_files)
+
+    def clear_memory(self):
+        self.continuator.clear_memory()
+
+    def clear_last_phrase(self):
+        self.continuator.clear_last_phrase()
     # --- BUILD GRADIO UI ---
 
     def launch(self):
         input_ports, output_ports = self.list_midi_ports()
         with gr.Blocks() as demo:
             gr.Markdown("## 🎹 Continuator")
-            with gr.Row():
-                refresh_button = gr.Button("🔄 Refresh MIDI Ports")
-                in_dropdown = gr.Dropdown(label="🎧 MIDI Input Port", choices=input_ports, value=input_ports[0] if input_ports else None)
-                out_dropdown = gr.Dropdown(label="🔈 MIDI Output Port", choices=output_ports, value=output_ports[0] if output_ports else None)
-            with gr.Row():
-                start_button = gr.Button("▶️ Start Listening")
-                stop_button = gr.Button("⏹️ Stop Listening")
-                status_box = gr.Textbox(label="Status", lines=2)
-            refresh_button.click(fn=self.refresh_ports, outputs=[in_dropdown, out_dropdown])
-            start_button.click(fn=self.start_midi_listener, inputs=[in_dropdown, out_dropdown], outputs=status_box)
-            stop_button.click(fn=self.stop_midi_listener, outputs=status_box)
-            out_dropdown.change(fn=self.apply_output_port_change, inputs=out_dropdown, outputs=status_box)
-            gr.Markdown("---")
-            with gr.Row():
-                phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True, container=True, scale= 2)
-                refresh_phrase_list = gr.Button("📋 Refresh List")
-                save_button = gr.Button("💾 Save Phrase as MIDI")
-                download_file = gr.File(label="⬇️ Download MIDI File")
-            save_button.click(
-                fn=self.save_selected_phrase,
-                inputs=phrase_selector,
-                outputs=download_file
-            )
-            refresh_phrase_list.click(fn=self.update_phrase_dropdown, outputs=phrase_selector)
-            phrase_output = gr.Image(label="🎹 Piano Roll", type="pil")
-            phrase_selector.change(fn=self.show_phrase_as_piano_roll, inputs=phrase_selector, outputs=phrase_output)
+            with gr.Tabs():
+                with gr.TabItem("Real time"):
+                    with gr.Row():
+                        refresh_button = gr.Button("🔄 Refresh MIDI Ports")
+                        in_dropdown = gr.Dropdown(label="🎧 MIDI Input Port", choices=input_ports, value=input_ports[0] if input_ports else None)
+                        out_dropdown = gr.Dropdown(label="🔈 MIDI Output Port", choices=output_ports, value=output_ports[0] if output_ports else None)
+                    with gr.Row():
+                        start_button = gr.Button("▶️ Start Listening")
+                        stop_button = gr.Button("⏹️ Stop Listening")
+                        status_box = gr.Textbox(label="Status", lines=2)
+                    refresh_button.click(fn=self.refresh_ports, outputs=[in_dropdown, out_dropdown])
+                    start_button.click(fn=self.start_midi_listener, inputs=[in_dropdown, out_dropdown], outputs=status_box)
+                    stop_button.click(fn=self.stop_midi_listener, outputs=status_box)
+                    in_dropdown.change(fn=self.apply_input_port_change, inputs=in_dropdown, outputs=status_box)
+                    out_dropdown.change(fn=self.apply_output_port_change, inputs=out_dropdown, outputs=status_box)
+                    gr.Markdown("---")
+                    with gr.Row():
+                        phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True, container=True, scale= 2)
+                        refresh_phrase_list = gr.Button("📋 Refresh List")
+                        save_button = gr.Button("💾 Save Phrase as MIDI")
+                        clear_memory_button = gr.Button("💾 Clear memory")
+                        clear_last_phrase_button = gr.Button("💾 Forget last phrase")
+                        download_file = gr.File(label="⬇️ Download MIDI File")
+                    save_button.click(
+                        fn=self.save_selected_phrase,
+                        inputs=phrase_selector,
+                        outputs=download_file
+                    )
+                    clear_memory_button.click(
+                        fn=self.clear_memory,
+                    )
+                    clear_last_phrase_button.click(
+                        fn=self.clear_last_phrase,
+                    )
+                    refresh_phrase_list.click(fn=self.update_phrase_dropdown, outputs=phrase_selector)
+                    phrase_output = gr.Image(label="🎹 Piano Roll", type="pil")
+                    phrase_selector.change(fn=self.show_phrase_as_piano_roll, inputs=phrase_selector, outputs=phrase_output)
+                with gr.TabItem("Midi files"):
+                    file_input = gr.File(file_types=[".mid", ".midi"], label="Select MIDI file(s)",
+                                         file_count="multiple")
+                    load_button = gr.Button("🔄 Load MIDI files")
+                    load_button.click(fn=self.open_midi_files, inputs=file_input)
+
+                with gr.TabItem("Settings"):
+                    choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode")
+                    choice.change(fn=self.set_learn_input, inputs=choice)
+
         demo.launch()
 
 # --- LAUNCH ---
