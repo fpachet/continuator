@@ -25,6 +25,7 @@ It is inspired from on the following papers:
 The project requires the following Python packages:
 numpy~=2.2.3
 mido~=1.2.10
+gradio
 
 ## Installation
 1 - clone the repository: 
