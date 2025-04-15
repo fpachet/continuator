@@ -144,7 +144,7 @@ class Continuator2:
         cpt = 1
         result = []
         for phrase in self.vom.input_sequences:
-            result.append(str(cpt) + " phrase " + str(len(phrase)))
+            result.append(f"{cpt} phrase with {len(phrase)} notes")
             cpt+=1
         return result
 

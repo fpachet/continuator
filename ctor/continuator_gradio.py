@@ -119,7 +119,57 @@ class Continuator_gradio:
         image_b64 = self.draw_piano_roll(phrase)
         return image_b64
 
-    def draw_piano_roll(self, notes, note_range=(21, 108), beat_width_px=100, fig_height_px=300, min_fig_width_px=400):
+    def draw_piano_roll(self, notes, beat_width_px=100, min_fig_width_px=400, px_per_note=60, min_fig_height_px=600,
+                        dpi=300):
+        """
+        Draws a piano roll with big vertical zoom using actual pitch range.
+        - px_per_note: controls vertical zoom
+        - min_fig_height_px: prevents overly compressed vertical views
+        """
+        if not notes:
+            return None
+
+        # Actual pitch range from notes
+        min_note = min(note.pitch for note in notes)
+        max_note = max(note.pitch for note in notes)
+        note_span = max_note - min_note + 1
+        duration = max(note.start_time + note.duration for note in notes)
+
+        # Pixel dimensions
+        fig_width_px = max(int(duration * beat_width_px), min_fig_width_px)
+        fig_height_px = max(note_span * px_per_note, min_fig_height_px)
+
+        # Convert to inches for matplotlib (DPI scaling)
+        fig_width = fig_width_px / dpi
+        fig_height = fig_height_px / dpi
+
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+        ax.set_xlim(0, max(duration, 1.0))
+        ax.set_ylim(min_note - 1, max_note + 1)
+        ax.set_xlabel("Time (beats)")
+        ax.set_ylabel("MIDI Pitch")
+        ax.grid(True)
+
+        for note in notes:
+            rect = patches.Rectangle(
+                (note.start_time, note.pitch),
+                note.duration,
+                0.8,
+                linewidth=1,
+                edgecolor='black',
+                facecolor='skyblue'
+            )
+            ax.add_patch(rect)
+
+        plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15)
+
+        buf = BytesIO()
+        plt.savefig(buf, format='png', dpi=dpi)
+        plt.close(fig)
+        buf.seek(0)
+        return Image.open(buf)
+
+    def draw_piano_roll_old(self, notes, note_range=(21, 108), beat_width_px=100, fig_height_px=300, min_fig_width_px=400):
         """
         Returns a PIL image. Auto-scales width based on phrase duration.
         - beat_width_px: pixels per beat horizontally
@@ -206,8 +256,8 @@ class Continuator_gradio:
                         phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True, container=True, scale= 2)
                         refresh_phrase_list = gr.Button("📋 Refresh List")
                         save_button = gr.Button("💾 Save Phrase as MIDI")
-                        clear_memory_button = gr.Button("💾 Clear memory")
-                        clear_last_phrase_button = gr.Button("💾 Forget last phrase")
+                        clear_memory_button = gr.Button("🧽 Clear memory")
+                        clear_last_phrase_button = gr.Button("↩️ Forget last phrase")
                         download_file = gr.File(label="⬇️ Download MIDI File")
                     save_button.click(
                         fn=self.save_selected_phrase,
