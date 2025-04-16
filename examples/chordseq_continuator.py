@@ -13,4 +13,4 @@ if __name__ == '__main__':
     seq = vo.sample_sequence(length, constraints={0: vo.get_viewpoint('C'), length-1: vo.get_viewpoint('C')})
     result = ' '.join(seq)
     result = re.sub(r"\s([?.!,:;”])", r"\1", result)
-    print(result)# Removes spaces before punctuation
+    print(result)
