@@ -81,6 +81,12 @@ class Variable_order_Markov:
     def get_all_unique_viewpoints(self):
         return self.all_unique_viewpoints
 
+    def get_all_unique_viewpoints_except_paddings(self):
+        vps = self.all_unique_viewpoints[:]
+        vps.remove(self.start_padding)
+        vps.remove(self.end_padding)
+        return vps
+
     def index_of_vp(self, vp):
         return self.all_unique_viewpoints.index(vp)
 
@@ -116,18 +122,21 @@ class Variable_order_Markov:
             # ends goes to end
             self.prefixes_to_continuations[0][end_tuple] = [self.end_padding]
 
+# returns the priors for all viewpoints (except start and end)
     def get_priors(self):
+        # there is no start and end vps in this list
         key_counts = {key: len(continuations) for key, continuations in self.viewpoints_realizations.items()}
         total_count = sum(key_counts.values())
         priors = {key: count / total_count for key, count in key_counts.items()}
         # Step 4: Convert to a sorted vector (optional)
-        sorted_keys = self.get_all_unique_viewpoints()  # Ensure consistent ordering
+        sorted_keys = self.get_all_unique_viewpoints_except_paddings()
+        # Ensure consistent ordering
         probability_vector = np.array([priors[key] for key in sorted_keys])
         return probability_vector
 
     def sample_zero_order(self, k):
         priors = self.get_priors()
-        return random.choices(self.get_all_unique_viewpoints(), weights=priors, k=k)
+        return random.choices(self.get_all_unique_viewpoints_except_paddings(), weights=priors, k=k)
 
 
     def add_viewpoint_realization_old(self, i, sequence_index, vp):
