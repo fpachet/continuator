@@ -162,7 +162,7 @@ class Continuator2:
     def clear_memory(self):
         self.vom.clear_memory()
 
-    def clear_first_N_phrases(self, n):
+    def clear_first_n_phrases(self, n):
         self.vom.clear_first_N_phrases(n)
 
     def clear_last_phrase(self):
@@ -175,7 +175,7 @@ class Continuator2:
     def learn_phrase(self, note_sequence, transposition):
         # should I forget some phrases ?
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
-            self.clear_first_N_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
+            self.clear_first_n_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
         all_pitches = [note.pitch for note in note_sequence]
         print(f"number of different pitches in train: {len(Counter(all_pitches))}")
         print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
