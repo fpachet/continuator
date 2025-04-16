@@ -1,18 +1,13 @@
 import gradio as gr
 import mido
 import threading
-
 import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
 from ctor.phrase_listener import MidiPhraseListener
 from ctor.continuator import Continuator2
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 from io import BytesIO
 from PIL import Image
-
 
 class Continuator_gradio:
     listener = None
@@ -202,15 +197,16 @@ class Continuator_gradio:
     def set_generate_length(self, choice):
         self.continuator.generate_length = choice
 
-    def generate_from_memory(self, choice):
+    def generate_from_memory(self):
         generated_sequence = self.continuator.sample_sequence(length=self.continuator.generate_length, constraints=None)
         if generated_sequence is None:
             print("no sequence generated")
-            return
+            return []
         sequence_to_render = generated_sequence[:]
         rendered_sequence = self.continuator.realize_vp_sequence(sequence_to_render)
         mido_sequence = self.continuator.create_mido_sequence(rendered_sequence)
         self.listener.play_phrase(mido_sequence)
+        return rendered_sequence
 
     # --- BUILD GRADIO UI ---
 
@@ -236,7 +232,7 @@ class Continuator_gradio:
                     stop_button.click(fn=self.stop_midi_listener, outputs=status_box)
                     in_dropdown.change(fn=self.apply_input_port_change, inputs=in_dropdown, outputs=status_box)
                     out_dropdown.change(fn=self.apply_output_port_change, inputs=out_dropdown, outputs=status_box)
-                    gr.Markdown("🧠 Memory")
+                    gr.Markdown("## 🧠 Memory")
                     with gr.Row():
                         phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True,
                                                       container=True, scale=2)
@@ -273,10 +269,12 @@ class Continuator_gradio:
                     generate_button = gr.Button("🪄 Generate")
                     sequence_length_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
                                                  label="Sequence length")
-                    sequence_length_slider.change(fn=self.set_generate_length, inputs=[sequence_length_slider])
+                    generated_phrase_output = gr.Image(label="🎹 Piano Roll", type="pil")
 
+                    sequence_length_slider.change(fn=self.set_generate_length, inputs=[sequence_length_slider])
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
-                    generate_button.click(fn=self.generate_from_memory, inputs=file_input)
+                    generated_sequence_state = gr.State()
+                    generate_button.click(fn=self.generate_from_memory, outputs=generated_sequence_state).then(fn=self.generate_pianoroll_image, inputs=generated_sequence_state,outputs=generated_phrase_output)
 
                 with gr.TabItem("Parameters"):
                     learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode",
