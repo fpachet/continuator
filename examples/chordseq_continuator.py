@@ -14,7 +14,7 @@ if __name__ == '__main__':
         vo.learn_sequence(seq)
 
     for i in range(20):
-        length = 10
+        length = 8
         seq = vo.sample_sequence(length, constraints={0: vo.get_viewpoint('C'), length - 1: vo.get_viewpoint('C')})
         result = ' '.join(seq)
         result = re.sub(r"\s([?.!,:;”])", r"\1", result)
