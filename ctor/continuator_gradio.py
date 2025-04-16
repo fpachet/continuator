@@ -181,6 +181,7 @@ class Continuator_gradio:
         self.continuator.set_forget(choice == "Forget")
 
     def set_keep_last(self, choice):
+        print("keep last " + str(choice))
         self.continuator.set_keep_last(choice)
 
     def open_midi_files(self, files):

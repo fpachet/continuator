@@ -42,6 +42,18 @@ class Variable_order_Markov:
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
 
+    def clear_first_N_phrases(self, n):
+        if not self.input_sequences:
+            print("nothing to remove, memory is empty")
+            return
+        if len(self.input_sequences) < n:
+            print("nothing to remove, memory is less than " + str(n))
+            return
+        sequences_to_learn = self.input_sequences[n:]
+        self.clear_memory()
+        for seq in sequences_to_learn:
+            self.learn_sequence(seq)
+
     def clear_last_phrase(self):
         if not self.input_sequences:
             print("nothing to remove, memory is empty")
