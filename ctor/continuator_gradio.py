@@ -1,3 +1,7 @@
+import importlib
+import json
+import subprocess
+
 import gradio as gr
 import mido
 import threading
@@ -14,9 +18,13 @@ class Continuator_gradio:
     continuator = Continuator2()
 
     def list_midi_ports(self):
-        input_ports = mido.get_input_names()
-        output_ports = mido.get_output_names()
-        return input_ports, output_ports
+
+        # input_ports = mido.get_input_names()
+        # output_ports = mido.get_output_names()
+        # return input_ports, output_ports
+        result = subprocess.run(["python", "midi_ports_poll.py"], capture_output=True, text=True)
+        ports = json.loads(result.stdout)
+        return ports["inputs"], ports["outputs"]
 
     def refresh_ports(self):
         input_ports, output_ports = self.list_midi_ports()
@@ -220,9 +228,9 @@ class Continuator_gradio:
                     with gr.Row():
                         refresh_button = gr.Button("🔄 Refresh MIDI Ports")
                         in_dropdown = gr.Dropdown(label="🎧 MIDI Input Port", choices=input_ports,
-                                                  value=input_ports[0] if input_ports else None)
+                                                  value=input_ports[0] if isinstance(input_ports, list) and input_ports else None)
                         out_dropdown = gr.Dropdown(label="🔈 MIDI Output Port", choices=output_ports,
-                                                   value=output_ports[0] if output_ports else None)
+                                                   value=output_ports[0] if isinstance(output_ports, list) and output_ports else None)
                     with gr.Row():
                         start_button = gr.Button("▶️ Start Listening")
                         stop_button = gr.Button("⏹️ Stop Listening")
