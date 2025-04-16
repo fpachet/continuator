@@ -27,5 +27,5 @@ if __name__ == '__main__':
 
     # seq = vo.sample_sequence(vo.get_start_vp(), 12, vo.get_end_vp())
     # seq = vo.sample_sequence_that_ends(vo.get_start_vp(), 16)
-    seq = vo.sample_sequence(vo.get_start_vp(), 5, 14)
+    seq = vo.sample_sequence(20, constraints={0: vo.start_padding, 19: vo.end_padding})
     print(seq)
