@@ -46,9 +46,10 @@ python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 
 
 ## Usage in Python
+See example folder for examples with ints, characters and words.
 
 ```python
-from ctor import Continuator2
+from ctor.continuator import Continuator2
 
 # Initialize the model
 midi_file_path = "../../data/prelude_c.mid"
