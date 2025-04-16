@@ -34,8 +34,9 @@ matplotlib
 ```bash
 git clone https://github.com/fpachet/continuator.git
 ```
-2. cd continuator, then install with pip install:
+2. install with pip install:
 ```bash
+cd continuator
 python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 ```
 3. launch and then click on the url displayed in the command line:
