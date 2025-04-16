@@ -21,6 +21,10 @@ class MidiPhraseListener:
         self.lock = threading.Lock()
         self.running = False
         self.timer_thread = threading.Thread(target=self._check_phrase_end, daemon=True)
+        self.stop_playing = False
+
+    def stop_playing(self):
+        self.stop_playing = True
 
     def set_input_port(self, port_name):
         with self.lock:
@@ -62,6 +66,7 @@ class MidiPhraseListener:
             self.stop()
 
     def stop(self):
+        self.stop_playing = True
         self.running = False
         self.inport.close()
         self.outport.close()
@@ -79,6 +84,7 @@ class MidiPhraseListener:
             self.last_msg_time = now
             # Track note state
             if msg.type == 'note_on' and msg.velocity > 0:
+                self.stop_playing = True
                 self.pending_notes.add((msg.channel, msg.note))
             elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
                 self.pending_notes.discard((msg.channel, msg.note))
@@ -110,8 +116,25 @@ class MidiPhraseListener:
             self.on_phrase_callback(real_mido)
 
     def play_phrase(self, mido_sequence):
+        self.stop_playing = False
+        pending_note_ons_played_sequence = []
         for msg in mido_sequence:
+            if self.stop_playing:
+                pending_notes_being_played = [pending[1] for pending in self.pending_notes]
+                for i in range(128):
+                    if i not in pending_notes_being_played:
+                        self.outport.send(mido.Message(
+                            "note_off",
+                            note=i,
+                            velocity=0,
+                        ))
+                return
             time.sleep(msg.time)
+            if msg.type == "note-on":
+                pending_note_ons_played_sequence.append(msg.note)
+            if msg.type == "note-off":
+                if msg.note in pending_note_ons_played_sequence:
+                    pending_note_ons_played_sequence.remove(msg.note)
             self.outport.send(msg)
 
 
