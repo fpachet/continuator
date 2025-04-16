@@ -46,14 +46,14 @@ python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 
 
 ## Usage in Python
-See example folder for examples with ints, characters and words.
+See example folder for examples with ints, characters, words and chords.
 
 ```python
-from ctor.continuator import Continuator2
+import ctor.continuator
 
 # Initialize the model
 midi_file_path = "../../data/prelude_c.mid"
-generator = Continuator2(midi_file_path, 4, transposition=False)
+generator = ctor.continuator.Continuator2(midi_file_path, 4, transposition=False)
 
 # set positional constraints as a dictionary index -> viewpoint
 constraints = {}
