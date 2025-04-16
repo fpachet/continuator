@@ -275,9 +275,15 @@ class Continuator_gradio:
                     )
                     clear_memory_button.click(
                         fn=self.clear_memory,
+                        outputs=phrase_selector).then(
+                        fn=self.update_phrase_dropdown,
+                        outputs=phrase_selector
                     )
                     clear_last_phrase_button.click(
                         fn=self.clear_last_phrase,
+                        outputs=phrase_selector).then(
+                        fn=self.update_phrase_dropdown,
+                        outputs=phrase_selector
                     )
                     refresh_phrase_list.click(fn=self.update_phrase_dropdown, outputs=phrase_selector)
                     phrase_output = gr.Image(label="🎹 Piano Roll", type="pil")
