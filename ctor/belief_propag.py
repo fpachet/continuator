@@ -1,9 +1,11 @@
 import numpy as np
 from collections import namedtuple
 
+
 class NoSolutionError(Exception):
     def __init__(self, message):
         self.message = message
+
 
 # code by Jessica Stringham:
 # https://jessicastringham.net/2019/01/09/sum-product-message-passing/
@@ -155,6 +157,7 @@ def _parse_model_string_into_terms(model_string):
         if term
     ]
 
+
 def parse_model_into_variables_and_factors(model_string):
     # Takes in a model_string such as p(h1)p(h2∣h1)p(v1∣h1)p(v2∣h2) and returns a
     # dictionary of variable names to variables and a list of factors.
@@ -238,9 +241,8 @@ class PGM(object):
         for var in self._variables.values():
             print(f"marginal: {var.name}: {Messages().marginal(var)}")
 
-
     def set_value(self, var_name, value_idx):
-        factor = self.factor_from_name('p(' + var_name  + ')')
+        factor = self.factor_from_name('p(' + var_name + ')')
         data = np.zeros(len(factor.data.array))
         data[value_idx] = 1
         factor.data = LabeledArray(data, [var_name])

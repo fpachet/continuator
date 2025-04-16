@@ -10,6 +10,7 @@ import matplotlib.patches as patches
 from io import BytesIO
 from PIL import Image
 
+
 class Continuator_gradio:
     listener = None
     continuator = Continuator2()
@@ -34,7 +35,7 @@ class Continuator_gradio:
             self.listener = MidiPhraseListener(
                 input_port_name=input_port,
                 output_port_name=output_port,
-                on_phrase_callback=self.create_continuation # Hook
+                on_phrase_callback=self.create_continuation  # Hook
             )
             threading.Thread(target=self.listener.start, daemon=True).start()
             return f"✅ Listening on:\nIN: {input_port}\nOUT: {output_port}"
@@ -42,7 +43,7 @@ class Continuator_gradio:
             listener = None
             return f"❌ Error: {e}"
 
-# callback function called when a phrase is detected by the phrase_listenr
+    # callback function called when a phrase is detected by the phrase_listenr
     def create_continuation(self, mido_sequence):
         # self.write_messages_to_midi(mido_sequence, 'midi_sequence.mid')
         phrase = self.continuator.get_phrase_from_mido(mido_sequence)
@@ -100,8 +101,8 @@ class Continuator_gradio:
     # --- PHRASE MENU AND DISPLAY ---
 
     def update_phrase_dropdown(self):
-        choices =self.continuator.get_phrase_titles()
-        return gr.update(choices=choices, value=choices[-1] if choices else None, label= f"{len(choices)} phrases")
+        choices = self.continuator.get_phrase_titles()
+        return gr.update(choices=choices, value=choices[-1] if choices else None, label=f"{len(choices)} phrases")
 
     def show_phrase(self, index_label):
         if not index_label:
@@ -169,7 +170,8 @@ class Continuator_gradio:
         buf.seek(0)
         return Image.open(buf)
 
-    def draw_piano_roll_old(self, notes, note_range=(21, 108), beat_width_px=100, fig_height_px=300, min_fig_width_px=400):
+    def draw_piano_roll_old(self, notes, note_range=(21, 108), beat_width_px=100, fig_height_px=300,
+                            min_fig_width_px=400):
         """
         Returns a PIL image. Auto-scales width based on phrase duration.
         - beat_width_px: pixels per beat horizontally
@@ -218,13 +220,13 @@ class Continuator_gradio:
         return filename
 
     def set_learn_input(self, choice):
-        self.continuator.set_learn_input(choice=="Learn input")
+        self.continuator.set_learn_input(choice == "Learn input")
 
     def set_transpose(self, choice):
-        self.continuator.set_transpose(choice=="Transpose")
+        self.continuator.set_transpose(choice == "Transpose")
 
     def set_forget(self, choice):
-        self.continuator.set_forget(choice=="Forget")
+        self.continuator.set_forget(choice == "Forget")
 
     def set_keep_last(self, choice):
         self.continuator.set_keep_last(choice)
@@ -239,6 +241,7 @@ class Continuator_gradio:
 
     def clear_last_phrase(self):
         self.continuator.clear_last_phrase()
+
     # --- BUILD GRADIO UI ---
 
     def launch(self):
@@ -249,20 +252,24 @@ class Continuator_gradio:
                 with gr.TabItem("Real time"):
                     with gr.Row():
                         refresh_button = gr.Button("🔄 Refresh MIDI Ports")
-                        in_dropdown = gr.Dropdown(label="🎧 MIDI Input Port", choices=input_ports, value=input_ports[0] if input_ports else None)
-                        out_dropdown = gr.Dropdown(label="🔈 MIDI Output Port", choices=output_ports, value=output_ports[0] if output_ports else None)
+                        in_dropdown = gr.Dropdown(label="🎧 MIDI Input Port", choices=input_ports,
+                                                  value=input_ports[0] if input_ports else None)
+                        out_dropdown = gr.Dropdown(label="🔈 MIDI Output Port", choices=output_ports,
+                                                   value=output_ports[0] if output_ports else None)
                     with gr.Row():
                         start_button = gr.Button("▶️ Start Listening")
                         stop_button = gr.Button("⏹️ Stop Listening")
                         status_box = gr.Textbox(label="Status", lines=2)
                     refresh_button.click(fn=self.refresh_ports, outputs=[in_dropdown, out_dropdown])
-                    start_button.click(fn=self.start_midi_listener, inputs=[in_dropdown, out_dropdown], outputs=status_box)
+                    start_button.click(fn=self.start_midi_listener, inputs=[in_dropdown, out_dropdown],
+                                       outputs=status_box)
                     stop_button.click(fn=self.stop_midi_listener, outputs=status_box)
                     in_dropdown.change(fn=self.apply_input_port_change, inputs=in_dropdown, outputs=status_box)
                     out_dropdown.change(fn=self.apply_output_port_change, inputs=out_dropdown, outputs=status_box)
                     gr.Markdown("🧠 Memory")
                     with gr.Row():
-                        phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True, container=True, scale= 2)
+                        phrase_selector = gr.Dropdown(label="🎵 Captured Phrases", choices=[], interactive=True,
+                                                      container=True, scale=2)
                         refresh_phrase_list = gr.Button("📋 Refresh List")
                         save_button = gr.Button("💾 Save Phrase as MIDI")
                         clear_memory_button = gr.Button("🧽 Clear memory")
@@ -287,7 +294,8 @@ class Continuator_gradio:
                     )
                     refresh_phrase_list.click(fn=self.update_phrase_dropdown, outputs=phrase_selector)
                     phrase_output = gr.Image(label="🎹 Piano Roll", type="pil")
-                    phrase_selector.change(fn=self.show_phrase_as_piano_roll, inputs=phrase_selector, outputs=phrase_output)
+                    phrase_selector.change(fn=self.show_phrase_as_piano_roll, inputs=phrase_selector,
+                                           outputs=phrase_output)
                 with gr.TabItem("Midi files"):
                     file_input = gr.File(file_types=[".mid", ".midi"], label="Select MIDI file(s)",
                                          file_count="multiple")
@@ -295,16 +303,20 @@ class Continuator_gradio:
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
 
                 with gr.TabItem("Parameters"):
-                    learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode", value="Learn input")
+                    learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode",
+                                            value="Learn input")
                     learn_choice.change(fn=self.set_learn_input, inputs=learn_choice)
-                    transpose_choice = gr.Radio(choices=["Transpose", "Don't transpose"], label="Transpose", value="Don't transpose")
+                    transpose_choice = gr.Radio(choices=["Transpose", "Don't transpose"], label="Transpose",
+                                                value="Don't transpose")
                     transpose_choice.change(fn=self.set_transpose, inputs=transpose_choice)
                     forget_choice = gr.Radio(choices=["Don't forget", "Forget"], label="Forget", value="Don't forget")
                     forget_choice.change(fn=self.set_forget, inputs=forget_choice)
-                    keep_last_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1, label="Keep only N last inputs")
+                    keep_last_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
+                                                 label="Keep only N last inputs")
                     keep_last_slider.change(fn=self.set_keep_last, inputs=[keep_last_slider])
 
         demo.launch()
+
 
 # --- LAUNCH ---
 if __name__ == "__main__":

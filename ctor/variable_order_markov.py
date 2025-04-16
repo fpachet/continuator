@@ -7,13 +7,16 @@ from difflib import SequenceMatcher
 
 from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionError
 
+
 class _Start_vp:
     def __init__(self):
         pass
 
+
 class _End_vp:
     def __init__(self):
         pass
+
 
 class Variable_order_Markov:
     def __init__(self, sequence_of_stuff, vp_lambda, kmax=5):
@@ -123,7 +126,7 @@ class Variable_order_Markov:
             # ends goes to end
             self.prefixes_to_continuations[0][end_tuple] = [self.end_padding]
 
-# returns the priors for all viewpoints (except start and end)
+    # returns the priors for all viewpoints (except start and end)
     def get_priors(self):
         # there is no start and end vps in this list
         key_counts = {key: len(continuations) for key, continuations in self.viewpoints_realizations.items()}
@@ -138,7 +141,6 @@ class Variable_order_Markov:
     def sample_zero_order(self, k):
         priors = self.get_priors()
         return random.choices(self.get_all_unique_viewpoints_except_paddings(), weights=priors, k=k)
-
 
     def add_viewpoint_realization_old(self, i, sequence_index, vp):
         # attention! vp sequence has extra start_vp, so i should be decreased by 1!
@@ -209,7 +211,7 @@ class Variable_order_Markov:
         # if length is negative, stops when reaching the provided end_viewpoint
         # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
         pgm = self.build_bp_graph(length)
-        start_vp =  None
+        start_vp = None
         if constraints is not None:
             for ct_pos, ct_vp in constraints.items():
                 var_name = "x" + str(ct_pos + 1)
@@ -227,8 +229,8 @@ class Variable_order_Markov:
     def build_bp_graph(self, length):
         string = ""
         for i in range(length):
-            string = string + "p(x" + str(i+1) + ")"
-        for i in range(2, length+1):
+            string = string + "p(x" + str(i + 1) + ")"
+        for i in range(2, length + 1):
             string = string + "p(x" + str(i) + "|x" + str(i - 1) + ")"
         pgm = PGM.from_string(string)
         mat = LabeledArray(np.array(self.get_first_order_matrix()).transpose(), ["x2", "x1"], )
@@ -271,7 +273,7 @@ class Variable_order_Markov:
                 return None
         # generate the rest of the sequence
         first_order_matrix = self.get_first_order_matrix()
-        for i in range(length-1):
+        for i in range(length - 1):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
             try:
                 marginal_i = Messages().marginal(pgm_variable)
@@ -352,7 +354,7 @@ class Variable_order_Markov:
                 all_cont_vps = continuations_dict[viewpoint_ctx]
                 # filters out the continuations with low probabilities
                 all_cont_vps = [vp for vp in all_cont_vps if probs[self.index_of_vp(vp)] > 0]
-                if len(all_cont_vps) == 0 :
+                if len(all_cont_vps) == 0:
                     # print("continuations removed by bp")
                     continue
                 # considers the number of different viewpoints, not the number of continuations as they are repeated
@@ -397,4 +399,3 @@ class Variable_order_Markov:
         for k in self.viewpoints_realizations:
             total += len(self.viewpoints_realizations[k])
         print(f"average nb of vp realizations: {total / voc_size}")
-

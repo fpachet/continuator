@@ -1,5 +1,6 @@
 from music21 import key, pitch
 
+
 class PitchProfile:
     def krumhansl_weights(self, weightType):
         if weightType == 'major':
@@ -13,7 +14,8 @@ class PitchProfile:
 
     def rotate_right(self, arr, n):
         n = n % len(arr)  # handle cases where n > len(arr)
-        return  arr[-n:] + arr[:-n]
+        return arr[-n:] + arr[:-n]
+
 
 if __name__ == '__main__':
     k = key.Key('G', 'minor')

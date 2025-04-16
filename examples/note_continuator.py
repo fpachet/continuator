@@ -8,7 +8,7 @@ generator = Continuator2(midi_file_path, 4, transposition=True)
 constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
 # constraints[0] = generator.get_start_vp()
 
-#generate the viewpoint sequence:
+# generate the viewpoint sequence:
 generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
 
 # remove start or end viewpoint if needed

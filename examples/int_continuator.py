@@ -10,6 +10,6 @@ if __name__ == '__main__':
     result = re.sub(r"\s([?.!,:;”])", r"\1", result)
     print("zero order integer sequence:")
     print(result)
-    seq = vo.sample_sequence(20, constraints={0: vo.start_padding, 10:6, 19: vo.end_padding})
+    seq = vo.sample_sequence(20, constraints={0: vo.start_padding, 10: 6, 19: vo.end_padding})
     print("constrained integer sequence:")
     print(seq[1:-1])

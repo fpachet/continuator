@@ -38,13 +38,13 @@ class Note:
         # the start time in the original sequence in beats, assuming 120bpm
         self.start_time = start_time
         # time between start and the start of preceding note, always > 0
-        self.preceding_start_delta = 0 # in beats, assuming 120bpm
+        self.preceding_start_delta = 0  # in beats, assuming 120bpm
         # time between start and the end of preceding note. Negative if overlaps with preceding
-        self.preceding_end_delta = 0 # in beats, assuming 120bpm
+        self.preceding_end_delta = 0  # in beats, assuming 120bpm
         # time between start of next note and end. Negative if overlaps with next
-        self.next_start_delta = 0 # in beats, assuming 120bpm
+        self.next_start_delta = 0  # in beats, assuming 120bpm
         # time between end of next note and end
-        self.next_end_delta = 0 # in beats, assuming 120bpm
+        self.next_end_delta = 0  # in beats, assuming 120bpm
 
     def __str__(self):
         return f"{self.pitch} @ [{self.start_time}, {self.get_end_time()}]"
@@ -117,6 +117,7 @@ class Note:
             return False
         return True
 
+
 class Continuator2:
 
     def __init__(self, midi_file: object = None, kmax: int = 5, transposition: bool = False) -> None:
@@ -184,30 +185,30 @@ class Continuator2:
         for file in files:
             self.learn_file(file, transposition)
 
-# mido gives time in milliseconds from real input. Converts it into beast, assuming 120bpm
+    # mido gives time in milliseconds from real input. Converts it into beast, assuming 120bpm
     def learn_phrase_from_mido(self, phrase):
         self.learn_phrase(self.get_phrase_from_mido(phrase), False)
 
     def get_phrase_from_mido(self, phrase):
         sequence = []
         pending_notes = {}
-# assign ABSOLUTE TIME to each message first, by cumulating all the deltas
-# time here is in milliseconds
+        # assign ABSOLUTE TIME to each message first, by cumulating all the deltas
+        # time here is in milliseconds
         start_time = 0
         for msg in phrase:
             start_time = start_time + msg.time
             msg.time = start_time
-# joins note on and note off
+        # joins note on and note off
         for msg in phrase:
             if msg.type == "note_on":
-                 pending_notes[msg.note] = msg
+                pending_notes[msg.note] = msg
             else:
                 if msg.type == "note_off":
                     note_on_msg = pending_notes[msg.note]
                     if note_on_msg is None:
                         print('problem')
                     else:
-                        start_time = note_on_msg.time * 2 #seconds to beat at 120 bpm
+                        start_time = note_on_msg.time * 2  # seconds to beat at 120 bpm
                         duration = (msg.time - note_on_msg.time) * 2
                         new_note = Note(note_on_msg.note, note_on_msg.velocity, duration, start_time)
                         sequence.append(new_note)
@@ -234,7 +235,7 @@ class Continuator2:
     def get_end_vp(self):
         return self.vom.end_padding
 
-# @ time in midifile is expressed in ticks with some resolution. We convert it into beats, assuming 120bpm
+    # @ time in midifile is expressed in ticks with some resolution. We convert it into beats, assuming 120bpm
     def extract_notes(self, midi_file):
         """Extracts the sequence of note-on events from a MIDI file."""
         mid = mido.MidiFile(midi_file)
@@ -245,7 +246,7 @@ class Continuator2:
         current_time = 0
         for track in mid.tracks:
             for msg in track:
-                current_time += 2 * mido.tick2second(msg.time, ticks_per_beat=resolution,tempo= 500000) # in beats
+                current_time += 2 * mido.tick2second(msg.time, ticks_per_beat=resolution, tempo=500000)  # in beats
                 if msg.type == 'set_tempo':
                     self.tempo_msgs.append(msg.tempo)
                 if msg.type == "note_on" and msg.velocity > 0:
@@ -254,7 +255,7 @@ class Continuator2:
                     pending_notes[msg.note] = new_note
                     pending_start_times[msg.note] = current_time
                     new_note.set_start_time(current_time)
-                    new_note.set_duration(1) # beat
+                    new_note.set_duration(1)  # beat
                 if msg.type == "note_off" or (msg.type == "note_on" and msg.velocity == 0):
                     if pending_notes[msg.note] is None:
                         print("found 0 velocity note, skipping it")
@@ -449,6 +450,7 @@ class Continuator2:
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
+
 
 if __name__ == '__main__':
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"

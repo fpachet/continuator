@@ -2,6 +2,7 @@ import mido
 import threading
 import time
 
+
 class MidiPhraseListener:
     def __init__(self, input_port_name=None, output_port_name=None, phrase_timeout=1.0, on_phrase_callback=None):
         # Ports
@@ -10,8 +11,8 @@ class MidiPhraseListener:
 
         # Phrase tracking
         self.phrase_timeout = phrase_timeout  # seconds of inactivity before phrase ends
-        self.phrase = []                     # list of (msg, delta_time_from_previous)
-        self.pending_notes = set()           # active notes
+        self.phrase = []  # list of (msg, delta_time_from_previous)
+        self.pending_notes = set()  # active notes
         self.last_event_time = time.time()
         self.last_msg_time = None
         self.on_phrase_callback = on_phrase_callback
@@ -20,7 +21,6 @@ class MidiPhraseListener:
         self.lock = threading.Lock()
         self.running = False
         self.timer_thread = threading.Thread(target=self._check_phrase_end, daemon=True)
-
 
     def set_input_port(self, port_name):
         with self.lock:
@@ -113,6 +113,7 @@ class MidiPhraseListener:
         for msg in mido_sequence:
             time.sleep(msg.time)
             self.outport.send(msg)
+
 
 if __name__ == "__main__":
     MidiPhraseListener.list_ports()  # List available ports
