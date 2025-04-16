@@ -2,6 +2,9 @@ import gradio as gr
 import mido
 import threading
 
+import numpy as np
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 from ctor.phrase_listener import MidiPhraseListener
 from ctor.continuator import Continuator2
 
@@ -117,97 +120,51 @@ class Continuator_gradio:
         index = int(index_label.split()[0]) - 1
         phrase = self.continuator.get_phrase(index)
         # Draw piano roll and return as base64 image
-        image_b64 = self.draw_piano_roll(phrase)
+        # image_b64 = self.draw_piano_roll(phrase)
+        image_b64 = self.generate_pianoroll_image(phrase)
         return image_b64
 
-    def draw_piano_roll(self, notes, beat_width_px=100, min_fig_width_px=400, px_per_note=30, min_fig_height_px=600,
-                        dpi=300):
+    def generate_pianoroll_image(self, notes, beat_resolution=16, figsize=(10, 6)):
         """
-        Draws a piano roll with big vertical zoom using actual pitch range.
-        - px_per_note: controls vertical zoom
-        - min_fig_height_px: prevents overly compressed vertical views
+        Generates a piano roll image from a list of Note objects.
+
+        Returns:
+            A NumPy array (H x W x 3) suitable for gr.Image.
         """
-        if not notes:
-            return None
+        # Determine the total number of time steps
+        end_times = [note.start_time + note.duration for note in notes]
+        total_beats = max(end_times)
+        total_time_steps = int(np.ceil(total_beats * beat_resolution))
 
-        # Actual pitch range from notes
-        min_note = min(note.pitch for note in notes)
-        max_note = max(note.pitch for note in notes)
-        note_span = max_note - min_note + 1
-        duration = max(note.start_time + note.duration for note in notes)
-
-        # Pixel dimensions
-        fig_width_px = max(int(duration * beat_width_px), min_fig_width_px)
-        fig_height_px = max(note_span * px_per_note, min_fig_height_px)
-
-        # Convert to inches for matplotlib (DPI scaling)
-        fig_width = fig_width_px / dpi
-        fig_height = fig_height_px / dpi
-
-        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-        ax.set_xlim(0, max(duration, 1.0))
-        ax.set_ylim(min_note - 1, max_note + 1)
-        ax.set_xlabel("Time (beats)")
-        ax.set_ylabel("MIDI Pitch")
-        ax.grid(True)
+        # Initialize pianoroll array (we'll plot it, not return this)
+        pianoroll = np.zeros((128, total_time_steps), dtype=int)
 
         for note in notes:
-            rect = patches.Rectangle(
-                (note.start_time, note.pitch),
-                note.duration,
-                0.8,
-                linewidth=1,
-                edgecolor='black',
-                facecolor='skyblue'
-            )
-            ax.add_patch(rect)
+            pitch = note.pitch
+            start_idx = int(note.start_time * beat_resolution)
+            end_idx = int((note.start_time + note.duration) * beat_resolution)
+            pianoroll[pitch, start_idx:end_idx] = 1
 
-        plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15)
+        # Create matplotlib figure
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.imshow(pianoroll[::-1], aspect='auto', cmap='Blues', interpolation='nearest')
+        ax.set_xlabel("Time (steps)")
+        ax.set_ylabel("Pitch (MIDI)")
+        ax.set_title("Piano Roll")
+        ax.set_yticks(np.linspace(0, 127, 13))
+        ax.set_yticklabels([int(127 - i) for i in np.linspace(0, 127, 13)])
+        ax.set_xticks([])
+        ax.grid(False)
 
+        # Convert to NumPy image for gr.Image
+        canvas = FigureCanvas(fig)
         buf = BytesIO()
-        plt.savefig(buf, format='png', dpi=dpi)
-        plt.close(fig)
+        canvas.print_png(buf)
         buf.seek(0)
-        return Image.open(buf)
-
-    def draw_piano_roll_old(self, notes, note_range=(21, 108), beat_width_px=100, fig_height_px=300,
-                            min_fig_width_px=400):
-        """
-        Returns a PIL image. Auto-scales width based on phrase duration.
-        - beat_width_px: pixels per beat horizontally
-        - fig_height_px: total height in pixels
-        """
-        if not notes:
-            return None
-        min_note, max_note = note_range
-        note_span = max_note - min_note + 1
-        duration = max(note.start_time + note.duration for note in notes)
-        # Calculate width and height in inches (for 100 dpi)
-        fig_width_px = max(duration * beat_width_px, min_fig_width_px)
-        fig_width = fig_width_px / 100
-        fig_height = fig_height_px / 100
-        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-        ax.set_xlim(0, max(duration, 1.0))  # avoid zero-width view
-        ax.set_ylim(min_note - 1, max_note + 1)
-        ax.set_xlabel("Time (beats)")
-        ax.set_ylabel("MIDI Pitch")
-        ax.grid(True)
-        for note in notes:
-            rect = patches.Rectangle(
-                (note.start_time, note.pitch),
-                note.duration,
-                0.8,
-                linewidth=1,
-                edgecolor='black',
-                facecolor='skyblue'
-            )
-            ax.add_patch(rect)
-        plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.15)
-        buf = BytesIO()
-        plt.savefig(buf, format='png', dpi=100)
+        image = Image.open(buf).convert("RGB")
+        image_np = np.array(image)
         plt.close(fig)
-        buf.seek(0)
-        return Image.open(buf)
+        return image_np
 
     def save_selected_phrase(self, index_label):
         if not index_label:
@@ -241,6 +198,19 @@ class Continuator_gradio:
 
     def clear_last_phrase(self):
         self.continuator.clear_last_phrase()
+
+    def set_generate_length(self, choice):
+        self.continuator.generate_length = choice
+
+    def generate_from_memory(self, choice):
+        generated_sequence = self.continuator.sample_sequence(length=self.continuator.generate_length, constraints=None)
+        if generated_sequence is None:
+            print("no sequence generated")
+            return
+        sequence_to_render = generated_sequence[:]
+        rendered_sequence = self.continuator.realize_vp_sequence(sequence_to_render)
+        mido_sequence = self.continuator.create_mido_sequence(rendered_sequence)
+        self.listener.play_phrase(mido_sequence)
 
     # --- BUILD GRADIO UI ---
 
@@ -300,7 +270,13 @@ class Continuator_gradio:
                     file_input = gr.File(file_types=[".mid", ".midi"], label="Select MIDI file(s)",
                                          file_count="multiple")
                     load_button = gr.Button("🔄 Load MIDI files")
+                    generate_button = gr.Button("🪄 Generate")
+                    sequence_length_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
+                                                 label="Sequence length")
+                    sequence_length_slider.change(fn=self.set_generate_length, inputs=[sequence_length_slider])
+
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
+                    generate_button.click(fn=self.generate_from_memory, inputs=file_input)
 
                 with gr.TabItem("Parameters"):
                     learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode",

@@ -127,6 +127,8 @@ class Continuator2:
         self.transpose = transposition
         self.forget_past = False
         self.keep_last_n_melodies = 20
+        # for generation from midifiles
+        self.generate_length = 10
         if midi_file is not None:
             self.learn_file(midi_file, transposition)
 
