@@ -9,5 +9,6 @@ if __name__ == '__main__':
     vo = Variable_order_Markov(char_seq, None, 3)
     seq = vo.sample_sequence(140, constraints={0: vo.get_viewpoint('.'), 139: vo.get_viewpoint('.')})
     result = ''.join(seq)
+    # Removes spaces before punctuation
     result = re.sub(r"\s([?.!,:;”])", r"\1", result)
     print(result)  # Removes spaces before punctuation

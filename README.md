@@ -46,7 +46,7 @@ python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 
 
 ## Usage in Python
-See example folder for examples with ints, characters, words and chords.
+See "examples" folder for ints, characters, words and chord sequence generation examples.
 
 ```python
 import ctor.continuator
