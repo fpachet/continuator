@@ -129,8 +129,8 @@ class Realized_Chord:
                     pending_note.set_duration(duration)
                     pending_notes[msg.note] = None
                     pending_start_times[msg.note] = 0
-        # sets the note status w/r their neighbors
         return np.array(notes)
+
     @classmethod
     def create_chords(cls, midi_file):
         notes = cls.extract_notes(midi_file)
