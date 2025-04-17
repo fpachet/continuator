@@ -129,9 +129,7 @@ class Continuator_gradio:
         index = int(index_label.split()[0]) - 1
         phrase = self.continuator.get_phrase(index)
         # Draw piano roll and return as base64 image
-        # image_b64 = self.draw_piano_roll(phrase)
-        image_b64 = self.generate_pianoroll_image(phrase)
-        return image_b64
+        return self.generate_pianoroll_image(phrase)
 
     def generate_pianoroll_image(self, notes, beat_resolution=16, figsize=(10, 6)):
         """
@@ -142,13 +140,10 @@ class Continuator_gradio:
         """
         if not notes:
             return
-
         # Determine the total number of time steps
         end_times = [note.start_time + note.duration for note in notes]
         total_beats = max(end_times)
         total_time_steps = int(np.ceil(total_beats * beat_resolution))
-
-        # Initialize pianoroll array (we'll plot it, not return this)
         pianoroll = np.zeros((128, total_time_steps), dtype=int)
 
         for note in notes:
@@ -234,7 +229,6 @@ class Continuator_gradio:
         self.write_messages_to_midi(midi_messages, filename)
         return filename
 
-
     # --- BUILD GRADIO UI ---
 
     def launch(self):
@@ -302,7 +296,6 @@ class Continuator_gradio:
                     sequence_length_slider.change(fn=self.set_generate_length, inputs=[sequence_length_slider])
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
                     generated_sequence_state = gr.State()
-                    # generate_button.click(fn=self.generate_from_memory, outputs=generated_sequence_state).then(fn=self.generate_pianoroll_image, inputs=generated_sequence_state,outputs=generated_phrase_output)
                 generate_button.click(
                     fn=self.generate_from_memory,
                     outputs=generated_sequence_state
@@ -327,7 +320,6 @@ class Continuator_gradio:
                     keep_last_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
                                                  label="Keep only N last inputs")
                     keep_last_slider.change(fn=self.set_keep_last, inputs=[keep_last_slider])
-
         demo.launch()
 
 
