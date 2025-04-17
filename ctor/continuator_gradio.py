@@ -18,7 +18,7 @@ class Continuator_gradio:
     continuator = Continuator2()
 
     def list_midi_ports(self):
-
+        # this does not work, mido ports are somehow called only once with gradio
         # input_ports = mido.get_input_names()
         # output_ports = mido.get_output_names()
         # return input_ports, output_ports
@@ -134,6 +134,9 @@ class Continuator_gradio:
         Returns:
             A NumPy array (H x W x 3) suitable for gr.Image.
         """
+        if not notes:
+            return
+
         # Determine the total number of time steps
         end_times = [note.start_time + note.duration for note in notes]
         total_beats = max(end_times)
@@ -217,6 +220,15 @@ class Continuator_gradio:
         self.listener.play_phrase(mido_sequence)
         return rendered_sequence
 
+    def save_generated_as_midi_file(self, sequence):
+        if sequence is None:
+            return
+        midi_messages = self.continuator.create_mido_sequence(sequence)
+        filename = f"generated_phrase.mid"
+        self.write_messages_to_midi(midi_messages, filename)
+        return filename
+
+
     # --- BUILD GRADIO UI ---
 
     def launch(self):
@@ -279,12 +291,24 @@ class Continuator_gradio:
                     sequence_length_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
                                                  label="Sequence length")
                     generated_phrase_output = gr.Image(label="🎹 Piano Roll", type="pil")
+                    midi_download_output = gr.File(label="⬇️ Download MIDI")
 
                     sequence_length_slider.change(fn=self.set_generate_length, inputs=[sequence_length_slider])
                     load_button.click(fn=self.open_midi_files, inputs=file_input)
                     generated_sequence_state = gr.State()
-                    generate_button.click(fn=self.generate_from_memory, outputs=generated_sequence_state).then(fn=self.generate_pianoroll_image, inputs=generated_sequence_state,outputs=generated_phrase_output)
-
+                    # generate_button.click(fn=self.generate_from_memory, outputs=generated_sequence_state).then(fn=self.generate_pianoroll_image, inputs=generated_sequence_state,outputs=generated_phrase_output)
+                generate_button.click(
+                    fn=self.generate_from_memory,
+                    outputs=generated_sequence_state
+                ).then(
+                    fn=self.generate_pianoroll_image,
+                    inputs=generated_sequence_state,
+                    outputs=generated_phrase_output
+                ).then(
+                    fn=self.save_generated_as_midi_file,
+                    inputs=generated_sequence_state,
+                    outputs=midi_download_output
+                )
                 with gr.TabItem("Parameters"):
                     learn_choice = gr.Radio(choices=["Learn input", "Don't learn input"], label="Learn mode",
                                             value="Learn input")

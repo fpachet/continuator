@@ -221,6 +221,8 @@ class Variable_order_Markov:
     def sample_sequence(self, length, constraints=None):
         # if length is negative, stops when reaching the provided end_viewpoint
         # if nb_sequences is positive, stops after nb_sequences occurrences of the end_vp
+        if len(self.input_sequences) == 0:
+            return None
         pgm = self.build_bp_graph(length)
         start_vp = None
         if constraints is not None:
