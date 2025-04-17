@@ -25,4 +25,6 @@ sequence_to_render = generated_sequence[0:-1]
 rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
 
 # save the generated sequence
-generator.save_midi(rendered_sequence, "../data/ctor2_output.mid", tempo=-1)
+generator.save_midi(rendered_sequence, "../data/output.mid", tempo=-1)
+
+print("created file: ../data/output.mid")
