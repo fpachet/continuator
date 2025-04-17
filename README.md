@@ -14,7 +14,7 @@ It is inspired from the following papers:
 
 - Efficient yet simple implementation of variable-order markov model
 - Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
-- Sampling is a combination of Markov with a belief propagation system that enforce positional constraints (that are duly retro propagated)
+- Sampling is a combination of Markov with a belief propagation system that enforces positional constraints (that are duly retro propagated)
 - Many tricks here and there to maximize musical quality
 
 ## Authors
