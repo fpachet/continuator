@@ -1,3 +1,9 @@
+"""
+Copyright (c) 2025 Ynosound.
+All rights reserved.
+
+See LICENSE file in the project root for full license information.
+"""
 import re
 
 from ctor.variable_order_markov import Variable_order_Markov

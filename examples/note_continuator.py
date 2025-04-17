@@ -1,3 +1,10 @@
+"""
+Copyright (c) 2025 Ynosound.
+All rights reserved.
+
+See LICENSE file in the project root for full license information.
+"""
+
 from ctor.continuator import Continuator2
 
 # Initialize the model

@@ -1,4 +1,3 @@
-# midi_ports_poll.py
 import mido
 import json
 
