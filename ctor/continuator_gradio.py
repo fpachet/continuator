@@ -30,6 +30,8 @@ class Continuator_gradio:
         # return input_ports, output_ports
         result = subprocess.run(["python", "midi_ports_poll.py"], capture_output=True, text=True)
         ports = json.loads(result.stdout)
+        print("STDOUT:", result.stdout)
+        print("STDERR:", result.stderr)
         return ports["inputs"], ports["outputs"]
 
     def refresh_ports(self):

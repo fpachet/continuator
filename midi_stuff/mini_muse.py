@@ -96,11 +96,65 @@ class Realized_Chord:
     def __init__(self, notes):
         self.notes = notes
 
+    def get_highest_pitch(self):
+        highest = 0
+        for note in self.notes:
+            highest = max(highest, note.pitch)
+        return highest
+
+    def get_lowest_pitch(self):
+        lowest = 128
+        for note in self.notes:
+            lowest = min(lowest, note.pitch)
+        return lowest
+
     def append(self, note):
         self.notes.append(note)
 
     def get_nb_notes(self):
         return len(self.notes)
+
+    def transpose_by(self, i):
+        transposed_notes = [n.transpose(i) for n in self.notes]
+        return Realized_Chord(transposed_notes)
+
+    def create_mido_sequence(self):
+        mid = mido.MidiFile()
+        track = mido.MidiTrack()
+        mid.tracks.append(track)
+        # create a new sequence with the right start_times
+        # create all mido messages and sort them
+        mido_sequence = []
+        for note in self.notes:
+            try:
+                mido_sequence.append(
+                    mido.Message(
+                        "note_on",
+                        note=note.pitch,
+                        velocity=note.velocity,
+                        time=note.start_time,
+                    )
+                )
+            except:
+                print("Something went wrong")
+            mido_sequence.append(
+                mido.Message(
+                    "note_off",
+                    note=note.pitch,
+                    velocity=0,
+                    time=note.start_time + note.duration,
+                )
+            )
+        mido_sequence.sort(key=lambda messg: messg.time)
+        current_time = 0
+        # converts beats into ticks, assuming 480 ticks per second
+        for msg in mido_sequence:
+            delta_in_beats = msg.time - current_time
+            delta_in_ticks = int(mid.ticks_per_beat * delta_in_beats)
+            msg.time = delta_in_ticks
+            track.append(msg)
+            current_time += delta_in_beats
+        return mid
 
     @classmethod
     def extract_notes(cls, midi_file):
@@ -132,7 +186,7 @@ class Realized_Chord:
         return np.array(notes)
 
     @classmethod
-    def create_chords(cls, midi_file):
+    def create_chords(cls, midi_file, transpose=False):
         notes = cls.extract_notes(midi_file)
         chords = []
         current_chord = Realized_Chord([])
@@ -148,4 +202,11 @@ class Realized_Chord:
                 max_time_current_chord = max(max_time_current_chord, note.get_end_time())
         if current_chord.get_nb_notes() > 0:
             chords.append(current_chord)
+
+        if transpose:
+            transposed = []
+            for i in range(-5, 7):
+                if i != 0:
+                    transposed = transposed + [ch.transpose_by(i) for ch in chords]
+            chords = chords + transposed
         return chords
