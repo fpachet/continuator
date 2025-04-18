@@ -6,7 +6,9 @@ See LICENSE file in the project root for full license information.
 """
 
 import json
+import os
 import subprocess
+import sys
 
 import gradio as gr
 import mido
@@ -28,7 +30,11 @@ class Continuator_gradio:
         # input_ports = mido.get_input_names()
         # output_ports = mido.get_output_names()
         # return input_ports, output_ports
-        result = subprocess.run(["python", "midi_ports_poll.py"], capture_output=True, text=True)
+
+        script_path = os.path.join(os.path.dirname(__file__), "midi_ports_poll.py")
+        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+
+        # result = subprocess.run(["python3", "midi_ports_poll.py"], capture_output=True, text=True)
         ports = json.loads(result.stdout)
         print("STDOUT:", result.stdout)
         print("STDERR:", result.stderr)
