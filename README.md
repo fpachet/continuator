@@ -10,6 +10,12 @@ It is inspired from the following papers:
 - Pachet, F., Roy, P. and Barbieri, G. Finite-Length Markov Processes with Constraints. Proceedings of the 22nd International Joint Conference on Artificial Intelligence (IJCAI), pages 635-642, Barcelona, Spain, July 2011
 - Roy, P. and Pachet, F. Enforcing Meter in Finite-Length Markov Sequences. 27th Conference on Artificial Intelligence (AAAI 2013), Bellevue, Washington (USA), June 2013
 
+Two reasons why this kind of approach remains interesting, in spite of the existence of more powerful sequence prediction algorithms such as transformers:
+- you can learn **online** and even real time (not the cas with transformers)
+- you need **fewer** data to produce interesting material. Try the example with Bach prelude in C for instance.
+- you can **control** the generation, notably with positional constraints like in this project. More complex constraints like meter can also be implemented (with polynomial complexity)
+
+
 ## Features
 
 - Efficient yet simple implementation of variable-order markov model

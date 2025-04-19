@@ -30,14 +30,11 @@ class Continuator_gradio:
         # input_ports = mido.get_input_names()
         # output_ports = mido.get_output_names()
         # return input_ports, output_ports
-
         script_path = os.path.join(os.path.dirname(__file__), "midi_ports_poll.py")
         result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
-
-        # result = subprocess.run(["python3", "midi_ports_poll.py"], capture_output=True, text=True)
         ports = json.loads(result.stdout)
-        print("STDOUT:", result.stdout)
-        print("STDERR:", result.stderr)
+        # print("STDOUT:", result.stdout)
+        # print("STDERR:", result.stderr)
         return ports["inputs"], ports["outputs"]
 
     def refresh_ports(self):
