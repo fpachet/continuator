@@ -91,6 +91,8 @@ class Continuator2:
 
     def learn_phrase(self, note_sequence, transposition):
         # should I forget some phrases ?
+        if len(note_sequence) == 0:
+            return
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
             self.clear_first_n_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
         all_pitches = [note.pitch for note in note_sequence]

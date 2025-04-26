@@ -22,8 +22,15 @@ from io import BytesIO
 from PIL import Image
 
 class Continuator_gradio:
-    listener = None
-    continuator = Continuator2()
+
+    def __init__(self):
+        self.continuator = Continuator2()
+        self.listener = None
+        input_ports, output_ports = self.list_midi_ports()
+        if input_ports and output_ports:
+            self.start_midi_listener(input_ports[0], output_ports[0])
+        else:
+            print("no input or output port available")
 
     def list_midi_ports(self):
         # this does not work, mido ports are somehow called only once with gradio
