@@ -40,7 +40,7 @@ class Continuator_gradio:
         script_path = os.path.join(os.path.dirname(__file__), "midi_ports_poll.py")
         result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
         ports = json.loads(result.stdout)
-        # print("STDOUT:", result.stdout)
+        print("STDOUT:", result.stdout)
         # print("STDERR:", result.stderr)
         return ports["inputs"], ports["outputs"]
 
