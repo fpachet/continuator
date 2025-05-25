@@ -156,7 +156,7 @@ class Variable_order_Markov:
         probability_vector = np.array([priors[key] for key in sorted_keys])
         return probability_vector
 
-    def sample_zero_order(self, k):
+    def sample_zero_order(self, k, constraints=None):
         priors = self.get_priors()
         return random.choices(self.get_all_unique_viewpoints_except_paddings(), weights=priors, k=k)
 

@@ -218,6 +218,13 @@ class Continuator2:
         """
         return self.vom.sample_sequence(length, constraints=constraints)
 
+    def sample_sequence_0(self, length=50, constraints=None):
+        """
+        :param length:
+        :type constraints: dict
+        """
+        return self.vom.sample_zero_order(length, constraints=constraints)
+
     def realize_vp_sequence(self, vp_seq):
         print(f"realize sequence of {len(vp_seq)} viewpoints")
         note_sequence = []
