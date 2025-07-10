@@ -25,6 +25,7 @@ class MidiPhraseListener:
         self.on_phrase_callback = on_phrase_callback
 
         # Threading
+        self.stop_when_user_plays = True
         self.lock = threading.Lock()
         self.running = False
         self.timer_thread = threading.Thread(target=self._check_phrase_end, daemon=True)
@@ -82,6 +83,8 @@ class MidiPhraseListener:
     def _handle_message(self, msg):
         now = time.time()
         with self.lock:
+            if msg.type not in ['note_on', 'note_off']:
+                return  # ignore timing/clock/etc.
             self.last_event_time = now
             # Compute delta from previous message
             if self.last_msg_time is None:
@@ -110,7 +113,7 @@ class MidiPhraseListener:
             time.sleep(0.05)
 
     def _on_phrase_complete(self, mido_sequence):
-        print("\nPhrase complete. Playing back...\n")
+        print("\nPhrase complete\n")
         real_mido = []
         for msg, delta in mido_sequence:
             msg.time = delta
@@ -124,6 +127,7 @@ class MidiPhraseListener:
 
     def play_phrase(self, mido_sequence):
         self.stop_playing = False
+        print('play')
         pending_note_ons_played_sequence = []
         for msg in mido_sequence:
             if self.stop_playing:

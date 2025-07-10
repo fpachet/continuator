@@ -27,6 +27,7 @@ from midi_stuff.mini_muse import Note
 - Realization of viewpoints is performed with dynamic programming, à la HMM
 - Representation of polyphony is different from original Continuator. Clusters are not considered, only notes.
 They have a "status" describing how they were played originally, which is preserved at sampling. This enables more creativity for chords.
+- TODO: retrain periodically with computed viewpoints (bin quartiles for durations and velocity)
 - TODO: audio synthesis with Dawdreamer
 - TODO: add database storage of real time performances
 - TODO: data augmentation with inversions, negative harmony, etc.
@@ -51,7 +52,8 @@ class Continuator2:
 
     @staticmethod
     def get_viewpoint(note):
-        vp = tuple([note.pitch, int(note.duration / 5), note.overlaps_left(), note.overlaps_right()])
+        nb_beats_per_bin = 1
+        vp = tuple([note.pitch, int(note.duration / nb_beats_per_bin), note.overlaps_left(), note.overlaps_right()])
         # vp = tuple([note.pitch, (int)(note.duration / 10)])
         return vp
 
@@ -89,8 +91,46 @@ class Continuator2:
         notes_original = self.extract_notes(midi_file)
         self.learn_phrase(notes_original, transposition)
 
+    import numpy as np
+
+    def quantile_bins(self, values, N):
+        """
+        Compute bin edges that split the input values into N bins
+        with approximately equal number of points (quantiles).
+
+        Args:
+            values: list or array of numerical values (e.g., durations or velocities)
+            N: number of desired bins
+
+        Returns:
+            bin_edges: list of N+1 edges that define the bin intervals
+        """
+        values = np.array(values)
+        quantiles = np.linspace(0, 1, N + 1)
+        bin_edges = np.quantile(values, quantiles)
+        return bin_edges.tolist()
+
+
+    def get_all_input_durations(self):
+        all_durations = []
+        for note_seq in self.vom.input_sequences:
+            all_durations = all_durations + [n.duration for n in note_seq]
+        return all_durations
+
+    def compute_viewpoints(self, note_sequence):
+        all_durations = self.get_all_input_durations()
+        all_durations = all_durations + [n.duration for n in note_sequence]
+        all_durations.sort()
+        print(self.vom.all_unique_viewpoints)
+        print(self.quantile_bins(all_durations, 2))
+
+    def retrain_all(self):
+        self.compute_viewpoints()
+        self.vom.retrain_all()
+
     def learn_phrase(self, note_sequence, transposition):
         # should I forget some phrases ?
+        self.compute_viewpoints(note_sequence)
         if len(note_sequence) == 0:
             return
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
@@ -106,6 +146,7 @@ class Continuator2:
             transposed = self.transpose_notes(note_sequence, t)
             # learns one more sequence
             self.vom.learn_sequence(transposed)
+
 
     def learn_files(self, files, transposition=False):
         # suppose at least one file has been learned already
@@ -384,7 +425,6 @@ class Continuator2:
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
-
 
 if __name__ == '__main__':
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"

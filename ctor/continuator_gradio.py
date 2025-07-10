@@ -126,6 +126,9 @@ class Continuator_gradio:
 
     def update_phrase_dropdown(self):
         choices = self.continuator.get_phrase_titles()
+        if not isinstance(choices, list):
+            print("⚠️ Warning: get_phrase_titles returned non-list:", choices)
+            choices = []
         return gr.update(choices=choices, value=choices[-1] if choices else None, label=f"{len(choices)} phrases")
 
     def show_phrase(self, index_label):
