@@ -81,10 +81,10 @@ class MidiPhraseListener:
         print("Stopped.")
 
     def _handle_message(self, msg):
-        now = time.time()
         with self.lock:
             if msg.type not in ['note_on', 'note_off']:
                 return  # ignore timing/clock/etc.
+            now = time.time()
             self.last_event_time = now
             # Compute delta from previous message
             if self.last_msg_time is None:
@@ -118,10 +118,6 @@ class MidiPhraseListener:
         for msg, delta in mido_sequence:
             msg.time = delta
             real_mido.append(msg)
-        # create proper sequence of messages
-        # for msg, delta in phrase:
-        #     time.sleep(msg.time)
-        #     self.outport.send(msg)
         if self.on_phrase_callback:
             self.on_phrase_callback(real_mido)
 

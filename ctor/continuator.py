@@ -121,8 +121,8 @@ class Continuator2:
         all_durations = self.get_all_input_durations()
         all_durations = all_durations + [n.duration for n in note_sequence]
         all_durations.sort()
-        print(self.vom.all_unique_viewpoints)
-        print(self.quantile_bins(all_durations, 2))
+        # print(self.vom.all_unique_viewpoints)
+        # print(self.quantile_bins(all_durations, 2))
 
     def retrain_all(self):
         self.compute_viewpoints()
