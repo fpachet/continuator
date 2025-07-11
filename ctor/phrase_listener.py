@@ -86,7 +86,6 @@ class MidiPhraseListener:
                 return  # ignore timing/clock/etc.
             now = time.time()
             self.last_event_time = now
-            print(msg, now)
             # Compute delta from previous message
             if self.last_msg_time is None:
                 delta = 0.0

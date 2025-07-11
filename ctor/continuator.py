@@ -168,10 +168,10 @@ class Continuator2:
             msg.time = start_time
         # joins note on and note off
         for msg in phrase:
-            if msg.type == "note_on":
+            if msg.type == "note_on" and msg.velocity > 0:
                 pending_notes[msg.note] = msg
             else:
-                if msg.type == "note_off":
+                if msg.type == "note_off" or (msg.type == 'note_on' and msg.velocity == 0):
                     note_on_msg = pending_notes[msg.note]
                     if note_on_msg is None:
                         print('problem')
