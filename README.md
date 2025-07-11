@@ -39,13 +39,22 @@ matplotlib
 1. clone the repository: 
 ```bash
 git clone https://github.com/fpachet/continuator.git
-```
-2. install with pip install:
-```bash
 cd continuator
-python3 -m venv venv && source venv/bin/activate && python3 -m pip install .
 ```
-3. launch and then click on the url displayed in the command line:
+2. create virtual environment and install dependencies:
+```bash
+python3 -m venv venv
+
+# On macOS/Linux
+source venv/bin/activate
+
+# On Windows (PowerShell)
+.\venv\Scripts\Activate.ps1
+
+python3 -m pip install .
+
+```
+3. launch and then click on the url displayed in the terminal:
 ```bash
    python3 -m ctor.continuator_gradio
 ```
