@@ -11,7 +11,7 @@ It is inspired from the following papers:
 - Roy, P. and Pachet, F. Enforcing Meter in Finite-Length Markov Sequences. 27th Conference on Artificial Intelligence (AAAI 2013), Bellevue, Washington (USA), June 2013
 
 Three reasons why this kind of approach remains interesting, in spite of the existence of more powerful sequence prediction algorithms such as transformers:
-- you can learn **online** and even real time (not the cas with transformers)
+- you can learn **online** and even real time (not the case with transformers)
 - you need **fewer** data to produce interesting material. Try the example with Bach prelude in C for instance.
 - you can **control** the generation, notably with positional constraints like in this project. More complex constraints like meter can also be implemented (with polynomial complexity)
 
