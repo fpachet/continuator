@@ -52,6 +52,8 @@ source venv/bin/activate
 .\venv\Scripts\Activate.ps1
 
 python3 -m pip install .
+# If this causes a problem like "error: externally managed environment", then try:
+# python3 -m pip install . --break-system-packages
 
 ```
 3. launch and then click on the url displayed in the terminal:
