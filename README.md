@@ -27,8 +27,7 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 - [François Pachet](https://github.com/fpachet)
 
 ### Dependencies
-
-The project requires the following Python packages:
+The project requires Python 3.11 at least, as well as the following packages:
 numpy~=2.2.3
 mido~=1.2.10
 gradio
