@@ -25,7 +25,6 @@ class MidiPhraseListener:
         self.on_phrase_callback = on_phrase_callback
 
         # Threading
-        self.stop_when_user_plays = True
         self.lock = threading.Lock()
         self.running = False
         self.timer_thread = threading.Thread(target=self._check_phrase_end, daemon=True)

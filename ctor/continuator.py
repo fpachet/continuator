@@ -174,7 +174,7 @@ class Continuator2:
                 if msg.type == "note_off" or (msg.type == 'note_on' and msg.velocity == 0):
                     note_on_msg = pending_notes[msg.note]
                     if note_on_msg is None:
-                        print('problem')
+                        print('⚠️ problem: note off does not match previous note on: ' + str(msg.note))
                     else:
                         start_time = note_on_msg.time * 2  # seconds to beat at 120 bpm
                         duration = (msg.time - note_on_msg.time) * 2
