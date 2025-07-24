@@ -32,7 +32,7 @@ class Continuator_gradio:
         else:
             print("no input or output port available")
 
-    def list_midi_ports(self):
+    def list_midi_ports_old(self):
         # this does not work, mido ports are somehow called only once with gradio
         # input_ports = mido.get_input_names()
         # output_ports = mido.get_output_names()
@@ -42,6 +42,22 @@ class Continuator_gradio:
         ports = json.loads(result.stdout)
         print("STDOUT:", result.stdout)
         # print("STDERR:", result.stderr)
+        return ports["inputs"], ports["outputs"]
+
+    def list_midi_ports(self):
+        script_path = os.path.join(os.path.dirname(__file__), "midi_ports_poll.py")
+        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+
+        print("STDOUT:", repr(result.stdout))
+        print("STDERR:", repr(result.stderr))
+
+        if result.returncode != 0:
+            raise RuntimeError(f"midi_ports_poll.py failed with code {result.returncode}: {result.stderr}")
+
+        if not result.stdout.strip():
+            raise RuntimeError("midi_ports_poll.py returned empty output")
+
+        ports = json.loads(result.stdout)
         return ports["inputs"], ports["outputs"]
 
     def refresh_ports(self):

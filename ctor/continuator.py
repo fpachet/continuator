@@ -12,6 +12,7 @@ import mido
 import random
 import time
 from difflib import SequenceMatcher
+import os
 
 from ctor.variable_order_markov import Variable_order_Markov
 from midi_stuff.mini_muse import Note
@@ -91,7 +92,16 @@ class Continuator2:
         notes_original = self.extract_notes(midi_file)
         self.learn_phrase(notes_original, transposition)
 
-    import numpy as np
+    def learn_folder(self, folder_path, transpose=False):
+        all_files = []
+        for root, _, files in os.walk(folder_path):
+            for fname in files:
+                if fname.lower().endswith((".mid", ".midi")):
+                    full_path = os.path.join(root, fname)
+                    all_files.append(full_path)
+                    self.learn_file(full_path, transpose)
+        return all_files
+
 
     def quantile_bins(self, values, N):
         """

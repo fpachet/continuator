@@ -47,7 +47,10 @@ python3 -m venv venv
 # On macOS/Linux
 source venv/bin/activate
 
-# On Windows (PowerShell)
+# On Windows (PowerShell):
+# You may need first to install Microsoft C++ Build Tools (a minimal Visual Studio subset that includes cl.exe, the C compiler).
+# Go to the official page.
+
 .\venv\Scripts\Activate.ps1
 
 python3 -m pip install .
