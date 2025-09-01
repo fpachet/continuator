@@ -103,7 +103,6 @@ class Variable_order_Markov:
         return vps
 
     def index_of_vp(self, vp):
-        # TODO: faire une double dictionary: indexToVp et VP2Index
         # return self.all_unique_viewpoints.index(vp)
         return self.vp2index[vp]
 
