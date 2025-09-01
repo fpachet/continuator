@@ -31,18 +31,14 @@ class Variable_order_Markov:
         self.start_padding = _Start_vp()
         self.end_padding = _End_vp()
         self.kmax = kmax
-        self.input_sequences = []
-        self.all_unique_viewpoints = []
-        self.viewpoints_realizations = {}
-        self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
-        for k in range(self.kmax):
-            self.prefixes_to_continuations[k] = {}
+        self.clear_memory()
         if sequence_of_stuff is not None:
             self.learn_sequence(sequence_of_stuff)
 
     def clear_memory(self):
         self.input_sequences = []
         self.all_unique_viewpoints = []
+        self.vp2index = {}
         self.viewpoints_realizations = {}
         self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
         for k in range(self.kmax):
@@ -98,10 +94,7 @@ class Variable_order_Markov:
 
     def random_vp_with_probs(self, probs):
         idx = np.random.choice(len(probs), p=probs)
-        return self.get_all_unique_viewpoints()[idx]
-
-    def get_all_unique_viewpoints(self):
-        return self.all_unique_viewpoints
+        return self.all_unique_viewpoints[idx]
 
     def get_all_unique_viewpoints_except_paddings(self):
         vps = self.all_unique_viewpoints[:]
@@ -110,7 +103,9 @@ class Variable_order_Markov:
         return vps
 
     def index_of_vp(self, vp):
-        return self.all_unique_viewpoints.index(vp)
+        # TODO: faire une double dictionary: indexToVp et VP2Index
+        # return self.all_unique_viewpoints.index(vp)
+        return self.vp2index[vp]
 
     def build_vo_markov_model(self, real_sequence):
         """Builds a variable-order Markov model for max K order
@@ -119,8 +114,9 @@ class Variable_order_Markov:
         vp_sequence = [self.start_padding] + [self.get_viewpoint(obj) for obj in real_sequence] + [self.end_padding]
         # adds unique viewpoints if any
         for vp in vp_sequence:
-            if vp not in self.all_unique_viewpoints:
+            if vp not in self.vp2index:
                 self.all_unique_viewpoints.append(vp)
+                self.vp2index[vp] = len(self.all_unique_viewpoints) - 1
         # add the realization to the viewpoint's realizations
         sequence_index = len(self.input_sequences) - 1
         for i, vp in enumerate(vp_sequence[1:-1]):
@@ -184,14 +180,14 @@ class Variable_order_Markov:
     def get_first_order_matrix(self):
         # returns the matrix for first order Markov transitions
         # all states. This includes start and end padding states
-        keys = self.get_all_unique_viewpoints()
+        keys = self.all_unique_viewpoints
         result = np.zeros((len(keys), len(keys)))
         k0 = self.prefixes_to_continuations[0]
         for i_vp, vp in enumerate(keys):
             conts = k0[tuple([vp])]
             occurrences = Counter(conts)
             for vp2 in occurrences:
-                i_vp2 = keys.index(vp2)
+                i_vp2 = self.index_of_vp(vp2)
                 result[i_vp, i_vp2] = occurrences[vp2]
             result[i_vp] /= result[i_vp].sum()
         return result

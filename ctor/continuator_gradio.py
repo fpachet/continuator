@@ -83,7 +83,7 @@ class Continuator_gradio:
             listener = None
             return f"❌ Error: {e}"
 
-    # callback function called when a phrase is detected by the phrase_listenr
+    # callback function called when a phrase is detected by the phrase_listener
     def create_continuation(self, mido_sequence):
         # self.write_messages_to_midi(mido_sequence, 'midi_sequence.mid')
         phrase = self.continuator.get_phrase_from_mido(mido_sequence)

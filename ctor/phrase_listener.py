@@ -81,6 +81,9 @@ class MidiPhraseListener:
 
     def _handle_message(self, msg):
         with self.lock:
+            if msg.type == 'control_change':
+                self.handle_control_change(msg)
+                return
             if msg.type not in ['note_on', 'note_off']:
                 return  # ignore timing/clock/etc.
             now = time.time()
@@ -142,6 +145,10 @@ class MidiPhraseListener:
                 if msg.note in pending_note_ons_played_sequence:
                     pending_note_ons_played_sequence.remove(msg.note)
             self.outport.send(msg)
+
+    def handle_control_change(self, msg):
+        if msg.control == 64:
+            print('control change: ' + str(msg.value))
 
 
 if __name__ == "__main__":
