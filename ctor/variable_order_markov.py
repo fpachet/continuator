@@ -100,10 +100,8 @@ class Variable_order_Markov:
         return self.all_unique_viewpoints[idx]
 
     def get_all_unique_viewpoints_except_paddings(self):
-        vps = self.all_unique_viewpoints[:]
-        vps.remove(self.start_padding)
-        vps.remove(self.end_padding)
-        return vps
+        sp, ep = self.start_padding, self.end_padding
+        return [vp for vp in self.all_unique_viewpoints if vp not in (sp, ep)]
 
     def index_of_vp(self, vp):
         # return self.all_unique_viewpoints.index(vp)
