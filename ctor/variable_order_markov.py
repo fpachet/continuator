@@ -43,6 +43,7 @@ class Variable_order_Markov:
         self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
+        self.first_order_matrix = None
 
     def clear_first_N_phrases(self, n):
         if not self.input_sequences:
@@ -66,6 +67,7 @@ class Variable_order_Markov:
             self.learn_sequence(seq)
 
     def learn_sequence(self, sequence_of_stuff):
+        self.first_order_matrix = None
         self.input_sequences.append(sequence_of_stuff)
         self.build_vo_markov_model(sequence_of_stuff)
 
@@ -176,7 +178,7 @@ class Variable_order_Markov:
 
     add_viewpoint_realization = add_viewpoint_realization_old
 
-    def get_first_order_matrix(self):
+    def get_first_order_matrix_old(self):
         # returns the matrix for first order Markov transitions
         # all states. This includes start and end padding states
         keys = self.all_unique_viewpoints
@@ -189,6 +191,37 @@ class Variable_order_Markov:
                 i_vp2 = self.index_of_vp(vp2)
                 result[i_vp, i_vp2] = occurrences[vp2]
             result[i_vp] /= result[i_vp].sum()
+        return result
+
+    def get_first_order_matrix(self):
+        """
+        Build the first-order Markov transition matrix P where P[i, j] = Pr(state_j | state_i).
+        - Reuses self.vp2index for fast column indexing.
+        - Uses np.bincount to fill each row in one shot.
+        - Preserves the original row order: enumerate(self.all_unique_viewpoints).
+        - caches the matrix once computed. This is reset when a new sequence is learned
+        """
+        if self.first_order_matrix is not None:
+            return self.first_order_matrix
+        keys = self.all_unique_viewpoints
+        n = len(keys)
+        counts = np.zeros((n, n), dtype=np.int64)
+        k0_get = self.prefixes_to_continuations[0].get
+        vp2idx = self.vp2index  # viewpoint -> column index
+        for i, vp in enumerate(keys):
+            conts = k0_get((vp,), ())
+            if not conts:
+                continue
+            # Map continuations to indices (skip unknowns defensively)
+            cont_idx = [vp2idx[c] for c in conts if c in vp2idx]
+            if not cont_idx:
+                continue
+            counts[i] = np.bincount(np.fromiter(cont_idx, dtype=np.int64), minlength=n)
+        # Normalize rows -> probabilities, guarding empty rows
+        row_sums = counts.sum(axis=1, keepdims=True)
+        result = np.zeros_like(counts, dtype=np.float64)
+        np.divide(counts, row_sums, out=result, where=row_sums > 0)
+        self.first_order_matrix = result
         return result
 
     def get_viewpoint(self, real_object):
