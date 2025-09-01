@@ -5,7 +5,7 @@ All rights reserved.
 See LICENSE file in the project root for full license information.
 """
 
-from collections import Counter
+from collections import Counter, defaultdict
 
 import numpy as np
 import random
@@ -39,8 +39,9 @@ class Variable_order_Markov:
         self.input_sequences = []
         self.all_unique_viewpoints = []
         self.vp2index = {}
-        self.viewpoints_realizations = {}
-        self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
+        self.viewpoints_realizations = defaultdict(list)
+        # self.prefixes_to_continuations = np.empty(self.kmax, dtype=object)
+        self.prefixes_to_continuations = np.array([{} for _ in range(self.kmax)], dtype=object)
         for k in range(self.kmax):
             self.prefixes_to_continuations[k] = {}
         self.first_order_matrix = None
@@ -116,30 +117,31 @@ class Variable_order_Markov:
         # adds unique viewpoints if any
         for vp in vp_sequence:
             if vp not in self.vp2index:
+                self.vp2index[vp] = len(self.all_unique_viewpoints)
                 self.all_unique_viewpoints.append(vp)
-                self.vp2index[vp] = len(self.all_unique_viewpoints) - 1
         # add the realization to the viewpoint's realizations
         sequence_index = len(self.input_sequences) - 1
         for i, vp in enumerate(vp_sequence[1:-1]):
-            if vp not in self.viewpoints_realizations:
-                self.viewpoints_realizations[vp] = []
             self.add_viewpoint_realization(i, sequence_index, vp)
+
         # populate the prefixes_to_continuations with vp contexts to vps
-        for k in range(self.kmax):
-            prefixes_to_cont_k = self.prefixes_to_continuations[k]
-            for i in range(len(vp_sequence) - k):
-                if i < k + 1:
-                    continue
-                current_ctx = tuple(vp_sequence[i - k - 1: i])
-                if current_ctx not in prefixes_to_cont_k:
-                    prefixes_to_cont_k[current_ctx] = []
-                prefixes_to_cont_k[current_ctx].append(vp_sequence[i])
-            self.prefixes_to_continuations[k] = prefixes_to_cont_k
+        n = len(vp_sequence)
+        kmax_eff = min(self.kmax, n - 1)
+        for i, x in enumerate(vp_sequence):
+            # i must satisfy: i >= k+1 and i < n-k  ⇒  k <= i-1 and k <= n-i-1
+            kmax_i = min(kmax_eff - 1, i - 1, n - i - 1)
+            if kmax_i < 0:
+                continue
+            for k in range(kmax_i + 1):
+                ctx = tuple(vp_sequence[i - k - 1: i])
+                lst = self.prefixes_to_continuations[k].get(ctx)
+                if lst is None:
+                    self.prefixes_to_continuations[k][ctx] = [x]
+                else:
+                    lst.append(x)
+
         # special case for the endVp, which has no continuation, but should be in the list for consistency
-        end_tuple = tuple([self.end_padding])
-        if end_tuple not in self.prefixes_to_continuations[0]:
-            # ends goes to end
-            self.prefixes_to_continuations[0][end_tuple] = [self.end_padding]
+        self.prefixes_to_continuations[0][(self.end_padding,)] = [self.end_padding]
 
     # returns the priors for all viewpoints (except start and end)
     def get_priors(self):
