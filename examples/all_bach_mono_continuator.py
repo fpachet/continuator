@@ -5,6 +5,7 @@ All rights reserved.
 See LICENSE file in the project root for full license information.
 """
 import random
+import time
 
 from muses.base.temporals import Piece
 
@@ -16,7 +17,11 @@ if __name__ == '__main__':
     # Initialize the model
     folder_path = "../data/bachmono"
     generator = Continuator2(None,3, transposition=False)
+    t0 = time.time_ns()
+    print(f"learn folder {folder_path}")
     generator.learn_folder(folder_path)
+    print('learned')
+    print((time.time_ns() - t0)/ 1_000_000)
 
     # generate the viewpoint sequence:
     generated_sequence = generator.sample_sequence(length=100)
