@@ -41,7 +41,17 @@ class Continuator2:
 
     def __init__(self, midi_file: object = None, kmax: int = 5, transposition: bool = False) -> None:
         self.learn_input = True
-        self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
+        # self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
+        self.vom = Variable_order_Markov(
+            sequence_of_stuff=None,
+            vp_lambda=self.get_viewpoint,  # identity viewpoint
+            kmax=4,
+            decay_fast_half_life=10,  # forget half the influence every ~10 events
+            decay_slow_half_life=80,  # for 'middle' band if you test it later
+            seed=0
+        )
+        self.vom.set_period_mode("late")  # 'late' uses recent (fast-decayed) counts
+
         self.tempo_msgs = []
         self.transpose = transposition
         self.forget_past = False
