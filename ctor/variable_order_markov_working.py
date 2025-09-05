@@ -11,7 +11,7 @@ import numpy as np
 import random
 from difflib import SequenceMatcher
 
-from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionError
+from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionErrorInBP
 
 
 class _Start_vp:
@@ -249,7 +249,7 @@ class Variable_order_Markov:
         # with BP
         try:
             vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
-        except NoSolutionError:
+        except NoSolutionErrorInBP:
             return None
         return vp_seq
 
@@ -268,7 +268,7 @@ class Variable_order_Markov:
                 start_vp = constraints[0]
         try:
             vp_seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm)
-        except NoSolutionError:
+        except NoSolutionErrorInBP:
             print("too many constraints?")
             return None
         return vp_seq
@@ -317,7 +317,7 @@ class Variable_order_Markov:
                 vp = self.random_vp_with_probs(marginal_1)
                 current_seq = [vp]
                 pgm.set_value('x1', self.index_of_vp(current_seq[0]))
-            except NoSolutionError:
+            except NoSolutionErrorInBP:
                 return None
         # generate the rest of the sequence
         first_order_matrix = self.get_first_order_matrix()
@@ -326,7 +326,7 @@ class Variable_order_Markov:
             try:
                 marginal_i = Messages().marginal(pgm_variable)
                 # if not self.is_ok(marginal_i):
-            except NoSolutionError:
+            except NoSolutionErrorInBP:
                 return None
             # compare with the markov transition matrix
             markov_proba = first_order_matrix[self.index_of_vp(current_seq[-1])]

@@ -92,7 +92,7 @@ class Continuator_gradio:
         constraints = {}
         # constraints[0] = self.continuator.get_vp_for_pitch(62)
         constraints[len(phrase)] = self.continuator.get_end_vp()
-        generated_sequence = self.continuator.sample_sequence(length=len(phrase) + 1, constraints=constraints)
+        generated_sequence = self.continuator.sample_sequence(prefix = phrase, length=len(phrase) + 1, constraints=constraints)
         if generated_sequence is None:
             print("no solution gradio")
             return

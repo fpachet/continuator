@@ -115,7 +115,7 @@ class MidiPhraseListener:
             time.sleep(0.05)
 
     def _on_phrase_complete(self, mido_sequence):
-        print("\nPhrase complete\n")
+        # print("\nPhrase complete\n")
         real_mido = []
         for msg, delta in mido_sequence:
             msg.time = delta
@@ -125,7 +125,6 @@ class MidiPhraseListener:
 
     def play_phrase(self, mido_sequence):
         self.stop_playing = False
-        print('play')
         pending_note_ons_played_sequence = []
         for msg in mido_sequence:
             if self.stop_playing:

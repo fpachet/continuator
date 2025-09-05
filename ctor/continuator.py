@@ -50,7 +50,7 @@ class Continuator2:
             decay_slow_half_life=80,  # for 'middle' band if you test it later
             seed=0
         )
-        self.vom.set_period_mode("late")  # 'late' uses recent (fast-decayed) counts
+        # self.vom.set_period_mode("late")  # 'late' uses recent (fast-decayed) counts
 
         self.tempo_msgs = []
         self.transpose = transposition
@@ -156,8 +156,8 @@ class Continuator2:
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
             self.clear_first_n_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
         all_pitches = [note.pitch for note in note_sequence]
-        print(f"number of different pitches in train: {len(Counter(all_pitches))}")
-        print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
+        # print(f"number of different pitches in train: {len(Counter(all_pitches))}")
+        # print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
         # learns, possibly in 12 transpositions
         trange = range(0, 1)
         if transposition:
@@ -272,12 +272,12 @@ class Continuator2:
         path = pathlib.Path(path_string)
         return list(path.glob('*.mid')) + list(path.glob('*.midi'))
 
-    def sample_sequence(self, length=50, constraints=None):
+    def sample_sequence(self, prefix = None, length=50, constraints=None):
         """
         :param length:
         :type constraints: dict
         """
-        return self.vom.sample_sequence(length, constraints=constraints)
+        return self.vom.sample_sequence(length, prefix = prefix, constraints=constraints)
 
     def sample_sequence_0(self, length=50, constraints=None):
         """
@@ -287,7 +287,7 @@ class Continuator2:
         return self.vom.sample_zero_order(length, constraints=constraints)
 
     def realize_vp_sequence(self, vp_seq):
-        print(f"realize sequence of {len(vp_seq)} viewpoints")
+        # print(f"realize sequence of {len(vp_seq)} viewpoints")
         note_sequence = []
         for i, vp in enumerate(vp_seq):
             if i == 0:

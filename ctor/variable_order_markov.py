@@ -12,7 +12,8 @@ import numpy as np
 import random
 from difflib import SequenceMatcher
 
-from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionError
+from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionErrorInBP
+from ctor.markov_analysis import analyze_markov_chain
 
 
 # -----------------------------------------------------------------------------
@@ -308,6 +309,12 @@ class Variable_order_Markov:
 
         self.first_order_matrix = None
 
+        # shows an analysis of the markov chain
+        first_order = self.get_first_order_matrix_no_paddings()
+        # ma = analyze_markov_chain(first_order, tol=1e-12, compute_primitive=False, max_k=256)
+        # print(ma)
+
+
     # ------------------ priors / zero-order ------------------
 
     def get_priors(self):
@@ -394,6 +401,38 @@ class Variable_order_Markov:
         np.divide(counts, row_sums, out=result, where=row_sums > 0)
 
         self.first_order_matrix = result if self.period_mode == "full" else None
+        # ma = analyze_markov_chain(result, tol=1e-12, compute_primitive=False, max_k=256)
+        # print(ma)
+        return result
+
+    def get_first_order_matrix_no_paddings(self):
+        """
+        Build the order-1 transition matrix P[i, j] with the current period_mode.
+        Caches only in 'full' mode (time-invariant). Decayed/band views depend on 'now'.
+        """
+
+        keys = self.get_all_unique_viewpoints_except_paddings()
+        n = len(keys)
+        counts = np.zeros((n, n), dtype=float)
+        now = self.global_step if self.decay_freeze_at is None else self.decay_freeze_at
+
+        for i, vp in enumerate(keys):
+            mc = self.ctx_to_continuations.get((vp,), None)
+            if not mc:
+                continue
+            w = mc.weights(now, self.period_mode)
+            if not w:
+                continue
+            row = counts[i]
+            for j, c in w.items():
+                # if j > n, it means it is a start or end vp, so should skip
+                if j < n:
+                    row[j] = float(c)
+
+        # Normalize rows
+        row_sums = counts.sum(axis=1, keepdims=True)
+        result = np.zeros_like(counts)
+        np.divide(counts, row_sums, out=result, where=row_sums > 0)
         return result
 
     # ------------------ viewpoints & sampling ------------------
@@ -413,33 +452,190 @@ class Variable_order_Markov:
         start = random.choice(starting_conts)
         return start
 
-    def sample_sequence_that_ends(self, start_vp, length=50):
-        pgm = self.build_bp_graph(length)
-        pgm.set_value('x1', self.index_of_vp(start_vp))
-        pgm.set_value('x' + str(length + 2), self.index_of_vp(self.end_padding))
-        try:
-            vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
-        except NoSolutionError:
-            return None
-        return vp_seq
+    # def sample_sequence_that_ends(self, start_vp, length=50):
+    #     pgm = self.build_bp_graph(length)
+    #     pgm.set_value('x1', self.index_of_vp(start_vp))
+    #     pgm.set_value('x' + str(length + 2), self.index_of_vp(self.end_padding))
+    #     try:
+    #         vp_seq = self.sample_vp_sequence_with_bp(start_vp, length, pgm)
+    #     except NoSolutionError:
+    #         return None
+    #     return vp_seq
 
-    def sample_sequence(self, length, constraints=None):
-        if len(self.input_sequences) == 0:
-            return None
-        pgm = self.build_bp_graph(length)
+    from typing import Dict, Optional
+    # assumes: from ctor.belief_propag import NoSolutionError
+
+    def sample_sequence_old(
+            self,
+            length: int,
+            prefix=None,
+            constraints: Optional[Dict[int, object]] = None,
+            *,
+            relax_prefix_on_fail: bool = True,
+            relax_pos0_on_fail: bool = True,
+            raise_on_fail: bool = False,
+    ):
+        """
+        Sample a viewpoint sequence of given `length`.
+
+        Parameters
+        ----------
+        prefix : sequence of notes/viewpoints forming the *last played* phrase.
+                 Used only to derive a soft start bias (start_vp = viewpoint of prefix[-1]).
+        constraints : dict[int -> viewpoint]
+            Hard constraints at positions (0-based). Values are viewpoint objects (NOT indices).
+
+        Relaxation logic (if NoSolutionError):
+          1) Try with all constraints + soft start bias from prefix (or from constraints[0] if present).
+          2) If fail and relax_prefix_on_fail: retry with start bias removed.
+          3) If still fail and relax_pos0_on_fail and 0 in constraints: drop the hard constraint at pos 0, keep bias off.
+        """
+
+        constraints = constraints or {}
+
+        def _build_graph(active_constraints: Dict[int, object]):
+            pgm = self.build_bp_graph(length)
+            for pos, vp in active_constraints.items():
+                var_name = f"x{pos + 1}"
+                pgm.set_value(var_name, self.index_of_vp(vp))  # vp -> index
+            return pgm
+
+        # Soft start bias from the prefix (viewpoint object), unless overridden by a hard constraint at pos 0
         start_vp = None
-        if constraints is not None:
-            for ct_pos, ct_vp in constraints.items():
-                var_name = "x" + str(ct_pos + 1)
-                pgm.set_value(var_name, self.index_of_vp(ct_vp))
+        if prefix:
+            start_vp = self.get_viewpoint(prefix[-1])
+        else:
             if 0 in constraints:
-                start_vp = constraints[0]
+                start_vp = constraints[0]  # hard constraint at pos0 overrides the soft bias
+
+        last_error = None
+
+        # Attempt 1: all constraints + (maybe) start bias
         try:
-            vp_seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm)
-        except NoSolutionError:
-            print("too many constraints?")
-            return None
-        return vp_seq
+            pgm = _build_graph(constraints)
+            seq = self.sample_vp_sequence_with_bp(length, start_vp, pgm)
+            if seq is not None:
+                if prefix:
+                    return seq[1:]
+                else:
+                    return seq
+        except NoSolutionErrorInBP as e:
+            last_error = e
+
+        if prefix:
+            print('give up prefix constraint (continuation)')
+        # Attempt 2: relax the prefix bias only
+        if relax_prefix_on_fail and start_vp is not None:
+            try:
+                pgm = _build_graph(constraints)
+                seq = self.sample_vp_sequence_with_bp(length, None, pgm)
+                if seq is not None:
+                    return seq
+            except NoSolutionErrorInBP as e:
+                last_error = e
+
+        print('give up start sequence constraint')
+        # Attempt 3: also drop the hard constraint at position 0 (if any)
+        if relax_pos0_on_fail and 0 in constraints:
+            try:
+                loosened = {k: v for k, v in constraints.items() if k != 0}
+                pgm = _build_graph(loosened)
+                seq = self.sample_vp_sequence_with_bp(length, None, pgm)
+                if seq is not None:
+                    return seq
+            except NoSolutionErrorInBP as e:
+                last_error = e
+
+        if raise_on_fail:
+            raise NoSolutionErrorInBP("No solution after relaxing prefix bias and pos0 constraint.") from last_error
+        return None
+
+    def sample_sequence(
+            self,
+            length: int,
+            prefix=None,
+            constraints: Optional[Dict[int, object]] = None,
+            *,
+            relax_prefix_on_fail: bool = True,
+            relax_pos0_on_fail: bool = True,
+            raise_on_fail: bool = False,
+    ):
+        """
+        Sample a viewpoint sequence of given `length`.
+
+        Parameters
+        ----------
+        prefix : sequence of notes/viewpoints forming the *last played* phrase.
+                 Used only to derive a soft start bias (start_vp = viewpoint of prefix[-1]).
+        constraints : dict[int -> viewpoint]
+            Hard constraints at positions (0-based). Values are viewpoint objects (NOT indices).
+
+        Relaxation logic (if NoSolutionError):
+          1) Try with all constraints + soft start bias from prefix (or from constraints[0] if present).
+          2) If fail and relax_prefix_on_fail: retry with start bias removed.
+          3) If still fail and relax_pos0_on_fail and 0 in constraints: drop the hard constraint at pos 0, keep bias off.
+        """
+
+        constraints = constraints or {}
+
+        def _build_graph(graph_length, active_constraints: Dict[int, object]):
+            pgm = self.build_bp_graph(graph_length)
+            for pos, vp in active_constraints.items():
+                var_name = f"x{pos + 1}"
+                pgm.set_value(var_name, self.index_of_vp(vp))  # vp -> index
+            return pgm
+
+        # Soft start bias from the prefix (viewpoint object), unless overridden by a hard constraint at pos 0
+        start_vp = None
+        if prefix:
+            # Attempt 1: all constraints + start bias and translate constraints by 1 and length + 1
+            translated_constraints = {}
+            for key in constraints:
+                translated_constraints[key+1]= constraints[key]
+            start_vp = self.get_viewpoint(prefix[-1])
+            last_error = None
+            try:
+                pgm = _build_graph(length + 1, translated_constraints)
+                seq = self.sample_vp_sequence_with_bp(length + 1, start_vp, pgm)
+                if seq is not None:
+                    return seq[1:]
+                # returns the sequence except the prefix
+            except NoSolutionErrorInBP as e:
+                last_error = e
+
+        print('give up prefix constraint (continuation)')
+        # Attempt 2: relax the prefix bias only
+        if relax_prefix_on_fail:
+            try:
+                translated_constraints = {}
+                for key in constraints:
+                    translated_constraints[key + 1] = constraints[key]
+                pgm = _build_graph(length +1, translated_constraints)
+                if 1 in constraints:
+                    start_vp = constraints[1]
+                else:
+                    start_vp = self.start_padding
+                seq = self.sample_vp_sequence_with_bp(length + 1, start_vp, pgm)
+                if seq is not None:
+                    return seq[1:] # returns the sequence except the startvp
+            except NoSolutionErrorInBP as e:
+                last_error = e
+
+        print('give up start sequence constraint')
+        # Attempt 3: also drop the hard constraint at position 0 (if any)
+        if relax_pos0_on_fail and 0 in constraints:
+            try:
+                loosened = {k: v for k, v in constraints.items() if k != 0}
+                pgm = _build_graph(length, loosened)
+                seq = self.sample_vp_sequence_with_bp(length, None, pgm)
+                if seq is not None:
+                    return seq
+            except NoSolutionErrorInBP as e:
+                last_error = e
+
+        if raise_on_fail:
+            raise NoSolutionErrorInBP("No solution after relaxing prefix bias and pos0 constraint.") from last_error
+        return None
 
     # length of bp graph is length + 2: plus the start (possibly the end of an existing sequence) and plus the end viewpoint
     def build_bp_graph(self, length):
@@ -472,50 +668,55 @@ class Variable_order_Markov:
                 return False
         return True
 
-    def sample_vp_sequence_with_bp(self, length, start_vp, pgm):
+    def sample_vp_sequence_with_bp(self, length, first_vp, pgm):
         if length < 0:
-            print("impossible")
-        if start_vp is not None:
-            current_seq = [start_vp]
+            print(f"impossible to sample a sequence of length {length}")
+            return None
+
+        if first_vp is not None:
+            current_seq = [first_vp]
         else:
             try:
                 marginal_1 = Messages().marginal(pgm.variable_from_name('x1'))
                 vp = self.random_vp_with_probs(marginal_1)
                 current_seq = [vp]
-                pgm.set_value('x1', self.index_of_vp(current_seq[0]))
-            except NoSolutionError:
+            except NoSolutionErrorInBP:
                 return None
+        try:
+            pgm.set_value('x1', self.index_of_vp(current_seq[0]))
+        except NoSolutionErrorInBP:
+            return None
         # generate the rest of the sequence
         first_order_matrix = self.get_first_order_matrix()
         for i in range(length - 1):
             pgm_variable = pgm.variable_from_name('x' + str(i + 2))
             try:
                 marginal_i = Messages().marginal(pgm_variable)
-            except NoSolutionError:
+            except NoSolutionErrorInBP:
                 return None
             markov_proba = first_order_matrix[self.index_of_vp(current_seq[-1])]
             product_proba = marginal_i * markov_proba
             cont = self.get_continuation_with_bp(current_seq, product_proba)
-            if cont == -1:
+            if cont is None:
                 cont = self.random_initial_vp()
             current_seq.append(cont)
             pgm.set_value('x' + str(i + 2), self.index_of_vp(cont))
         return current_seq
 
-    def sample_vp_sequence(self, start_vp, length, end_vp):
-        current_seq = [start_vp]
+    def sample_vp_sequence(self, first_vp, length, last_vp):
+        current_seq = [first_vp]
         if length >= 0:
             for _ in range(length):
                 cont = self.get_continuation(current_seq)
-                if cont == -1:
+                if cont is None:
                     cont = self.random_initial_vp()
                 current_seq.append(cont)
             return current_seq
         while True:
             cont = self.get_continuation(current_seq)
-            if cont == -1:
+            if cont is None:
                 cont = self.random_initial_vp()
-            if cont == end_vp:
+            if cont == last_vp:
                 if cont != self.end_padding:
                     current_seq.append(cont)
                 return current_seq
@@ -549,7 +750,7 @@ class Variable_order_Markov:
             j = self.rng.choices(items, weights=weights, k=1)[0]
             return self.all_unique_viewpoints[j]
         print("no continuation found")
-        return -1
+        return None
 
     def get_continuation_with_bp(self, current_seq, probs):
         vp_to_skip = None
@@ -583,7 +784,7 @@ class Variable_order_Markov:
             j = self.rng.choices(items, weights=weights, k=1)[0]
             return self.all_unique_viewpoints[j]
         print("no continuation found")
-        return -1
+        return None
 
     def show_conts_structure(self):
         # counts per context length
