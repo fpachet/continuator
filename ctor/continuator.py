@@ -6,7 +6,6 @@ See LICENSE file in the project root for full license information.
 """
 
 import pathlib
-from collections import Counter
 import numpy as np
 import mido
 import random
@@ -39,13 +38,13 @@ They have a "status" describing how they were played originally, which is preser
 
 class Continuator2:
 
-    def __init__(self, midi_file: object = None, kmax: int = 5, transposition: bool = False) -> None:
+    def __init__(self, midi_file: object = None, kmax: int = 4, transposition: bool = False) -> None:
         self.learn_input = True
         # self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
         self.vom = Variable_order_Markov(
             sequence_of_stuff=None,
             vp_lambda=self.get_viewpoint,  # identity viewpoint
-            kmax=4,
+            kmax=kmax,
             decay_fast_half_life=10,  # forget half the influence every ~10 events
             decay_slow_half_life=80,  # for 'middle' band if you test it later
             seed=0
@@ -144,10 +143,6 @@ class Continuator2:
         # print(self.vom.all_unique_viewpoints)
         # print(self.quantile_bins(all_durations, 2))
 
-    def retrain_all(self):
-        self.compute_viewpoints()
-        self.vom.retrain_all()
-
     def learn_phrase(self, note_sequence, transposition):
         # should I forget some phrases ?
         self.compute_viewpoints(note_sequence)
@@ -155,7 +150,7 @@ class Continuator2:
             return
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
             self.clear_first_n_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
-        all_pitches = [note.pitch for note in note_sequence]
+        # all_pitches = [note.pitch for note in note_sequence]
         # print(f"number of different pitches in train: {len(Counter(all_pitches))}")
         # print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
         # learns, possibly in 12 transpositions
@@ -353,7 +348,6 @@ class Continuator2:
         cur_status = current_note.get_status_right()
         note_to_add_status = note_to_add.get_status_left()
         delta = current_note.duration + current_note.next_start_delta
-        # print(cur_status + '  ' + note_to_add_status)
         if cur_status == "inside":
             if note_to_add_status == "before":
                 return delta

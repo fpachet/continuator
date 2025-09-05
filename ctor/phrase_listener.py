@@ -124,6 +124,7 @@ class MidiPhraseListener:
             self.on_phrase_callback(real_mido)
 
     def play_phrase(self, mido_sequence):
+        print(f'playing phrase')
         self.stop_playing = False
         pending_note_ons_played_sequence = []
         for msg in mido_sequence:
@@ -145,6 +146,7 @@ class MidiPhraseListener:
                     pending_note_ons_played_sequence.remove(msg.note)
             self.outport.send(msg)
 
+    @staticmethod
     def handle_control_change(self, msg):
         if msg.control == 64:
             print('control change: ' + str(msg.value))

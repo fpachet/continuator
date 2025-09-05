@@ -11,6 +11,7 @@ from typing import Dict, Tuple, Optional
 import numpy as np
 import random
 from difflib import SequenceMatcher
+from line_profiler_pycharm import profile
 
 from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionErrorInBP
 from ctor.markov_analysis import analyze_markov_chain
@@ -167,7 +168,7 @@ class Variable_order_Markov:
         )
 
         # selectable "view" for reading transitions: 'full'|'late'|'middle'|'early'
-        self.period_mode: str = "full"
+        self.period_mode: str = "Full"
 
         # global clock for lazy decay
         self.global_step: int = 0
@@ -275,6 +276,7 @@ class Variable_order_Markov:
     def index_of_vp(self, vp):
         return self.vp2index[vp]
 
+    @profile
     def build_vo_markov_model(self, real_sequence):
         """Build/accumulate a VO-Markov model up to order kmax using one unified dict."""
         vp_seq = [self.start_padding] + [self.get_viewpoint(obj) for obj in real_sequence] + [self.end_padding]
@@ -310,7 +312,7 @@ class Variable_order_Markov:
         self.first_order_matrix = None
 
         # shows an analysis of the markov chain
-        first_order = self.get_first_order_matrix_no_paddings()
+        # first_order = self.get_first_order_matrix_no_paddings()
         # ma = analyze_markov_chain(first_order, tol=1e-12, compute_primitive=False, max_k=256)
         # print(ma)
 
@@ -587,30 +589,30 @@ class Variable_order_Markov:
 
         # Soft start bias from the prefix (viewpoint object), unless overridden by a hard constraint at pos 0
         start_vp = None
-        if prefix:
-            # Attempt 1: all constraints + start bias and translate constraints by 1 and length + 1
-            translated_constraints = {}
-            for key in constraints:
-                translated_constraints[key+1]= constraints[key]
-            start_vp = self.get_viewpoint(prefix[-1])
-            last_error = None
-            try:
-                pgm = _build_graph(length + 1, translated_constraints)
-                seq = self.sample_vp_sequence_with_bp(length + 1, start_vp, pgm)
-                if seq is not None:
-                    return seq[1:]
-                # returns the sequence except the prefix
-            except NoSolutionErrorInBP as e:
-                last_error = e
+        if prefix  is None:
+            pgm = _build_graph(length, constraints)
+            seq = self.sample_vp_sequence_with_bp(length, None, pgm)
+            return seq
+
+        # Attempt 1: all constraints + start bias and translate constraints by 1 and length + 1
+        translated_constraints = {k + 1: v for k, v in constraints.items()}
+        start_vp = self.get_viewpoint(prefix[-1])
+        last_error = None
+        try:
+            pgm = _build_graph(length + 1, translated_constraints)
+            seq = self.sample_vp_sequence_with_bp(length + 1, start_vp, pgm)
+            if seq is not None:
+                return seq[1:]
+            # returns the sequence except the prefix
+        except NoSolutionErrorInBP as e:
+            last_error = e
 
         print('give up prefix constraint (continuation)')
         # Attempt 2: relax the prefix bias only
         if relax_prefix_on_fail:
             try:
-                translated_constraints = {}
-                for key in constraints:
-                    translated_constraints[key + 1] = constraints[key]
-                pgm = _build_graph(length +1, translated_constraints)
+                translated_constraints = {k + 1: v for k, v in constraints.items()}
+                pgm = _build_graph(length + 1, translated_constraints)
                 if 1 in constraints:
                     start_vp = constraints[1]
                 else:
@@ -810,3 +812,19 @@ class Variable_order_Markov:
         for k in self.viewpoints_realizations:
             total += len(self.viewpoints_realizations[k])
         print(f"average nb of vp realizations: {total / voc_size if voc_size else 0.0}")
+
+if __name__ == '__main__':
+    # computes chord sequences of length 8 starting and ending with, say, C and with a F#7 in the middle
+    with open('../data/chord_sequences.txt', 'r') as file:
+        seqs = file.readlines()[:200]
+    seqs = [seq.split(';')[1:-1] for seq in seqs]
+    seqs = [[chord.strip() for chord in seq] for seq in seqs]
+    vo = Variable_order_Markov(None, None, kmax=3)
+    for seq in seqs:
+        vo.learn_sequence(seq)
+
+    length = 8
+    for i in range(20):
+        seq = vo.sample_sequence(length, constraints={0: vo.get_viewpoint('C'), int(length/2): vo.get_viewpoint('F#7'), length - 1: vo.get_viewpoint('C')})
+        result = ' '.join(seq)
+        print(result)
