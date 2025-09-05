@@ -82,6 +82,9 @@ class Continuator2:
     def set_transpose(self, trans):
         self.transpose = trans
 
+    def set_decay_mode(self, choice):
+        self.vom.set_period_mode(choice)
+
     def get_phrase_titles(self):
         return [f"{i + 1} phrase with {len(phrase)} notes" for i, phrase in enumerate(self.vom.input_sequences)]
 
@@ -439,6 +442,8 @@ class Continuator2:
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
+
+
 
 if __name__ == '__main__':
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"

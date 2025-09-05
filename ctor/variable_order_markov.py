@@ -168,7 +168,7 @@ class Variable_order_Markov:
         )
 
         # selectable "view" for reading transitions: 'full'|'late'|'middle'|'early'
-        self.period_mode: str = "Full"
+        self.period_mode: str = "full"
 
         # global clock for lazy decay
         self.global_step: int = 0
@@ -243,7 +243,7 @@ class Variable_order_Markov:
 
     @staticmethod
     def is_starting_address(note_address):
-        # Kept your original semantics
+        # 0 is the start_padding, 1 is the first actual item
         return note_address[1] == 1
 
     def is_ending_address(self, note_address):
