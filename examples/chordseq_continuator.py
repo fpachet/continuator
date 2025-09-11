@@ -17,6 +17,12 @@ if __name__ == '__main__':
     for seq in seqs:
         vo.learn_sequence(seq)
 
+    length = 4
+    for i in range(20):
+        seq = vo.sample_sequence(length, constraints={0: vo.get_viewpoint('C'), length - 1: vo.get_viewpoint('C')})
+        result = ' '.join(seq)
+        print(result)
+
     length = 8
     for i in range(20):
         seq = vo.sample_sequence(length, constraints={0: vo.get_viewpoint('C'), int(length/2): vo.get_viewpoint('F#7'), length - 1: vo.get_viewpoint('C')})

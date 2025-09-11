@@ -92,7 +92,7 @@ class Continuator_gradio:
         constraints = {}
         # constraints[0] = self.continuator.get_vp_for_pitch(62)
         constraints[len(phrase)] = self.continuator.get_end_vp()
-        generated_sequence = self.continuator.sample_sequence(length=len(phrase) + 1, constraints=constraints)
+        generated_sequence = self.continuator.sample_sequence(prefix = phrase, length=len(phrase) + 1, constraints=constraints)
         if generated_sequence is None:
             print("no solution gradio")
             return
@@ -216,6 +216,9 @@ class Continuator_gradio:
 
     def set_learn_input(self, choice):
         self.continuator.set_learn_input(choice == "Learn input")
+
+    def set_decay_mode(self, choice):
+        self.continuator.set_decay_mode(choice)
 
     def set_transpose(self, choice):
         self.continuator.set_transpose(choice == "Transpose")
@@ -351,6 +354,9 @@ class Continuator_gradio:
                     keep_last_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
                                                  label="Keep only N last inputs")
                     keep_last_slider.change(fn=self.set_keep_last, inputs=[keep_last_slider])
+                    decay_mode_choice = gr.Radio(choices=["full", "late", "middle", "early"], label="Decay Mode",
+                                            value="Full")
+                    decay_mode_choice.change(fn=self.set_decay_mode, inputs=decay_mode_choice)
         demo.launch()
 
 

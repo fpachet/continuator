@@ -6,7 +6,6 @@ See LICENSE file in the project root for full license information.
 """
 
 import pathlib
-from collections import Counter
 import numpy as np
 import mido
 import random
@@ -39,9 +38,19 @@ They have a "status" describing how they were played originally, which is preser
 
 class Continuator2:
 
-    def __init__(self, midi_file: object = None, kmax: int = 5, transposition: bool = False) -> None:
+    def __init__(self, midi_file: object = None, kmax: int = 4, transposition: bool = False) -> None:
         self.learn_input = True
-        self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
+        # self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)
+        self.vom = Variable_order_Markov(
+            sequence_of_stuff=None,
+            vp_lambda=self.get_viewpoint,  # identity viewpoint
+            kmax=kmax,
+            decay_fast_half_life=10,  # forget half the influence every ~10 events
+            decay_slow_half_life=80,  # for 'middle' band if you test it later
+            seed=0
+        )
+        # self.vom.set_period_mode("late")  # 'late' uses recent (fast-decayed) counts
+
         self.tempo_msgs = []
         self.transpose = transposition
         self.forget_past = False
@@ -72,6 +81,9 @@ class Continuator2:
 
     def set_transpose(self, trans):
         self.transpose = trans
+
+    def set_decay_mode(self, choice):
+        self.vom.set_period_mode(choice)
 
     def get_phrase_titles(self):
         return [f"{i + 1} phrase with {len(phrase)} notes" for i, phrase in enumerate(self.vom.input_sequences)]
@@ -134,10 +146,6 @@ class Continuator2:
         # print(self.vom.all_unique_viewpoints)
         # print(self.quantile_bins(all_durations, 2))
 
-    def retrain_all(self):
-        self.compute_viewpoints()
-        self.vom.retrain_all()
-
     def learn_phrase(self, note_sequence, transposition):
         # should I forget some phrases ?
         self.compute_viewpoints(note_sequence)
@@ -145,9 +153,9 @@ class Continuator2:
             return
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
             self.clear_first_n_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
-        all_pitches = [note.pitch for note in note_sequence]
-        print(f"number of different pitches in train: {len(Counter(all_pitches))}")
-        print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
+        # all_pitches = [note.pitch for note in note_sequence]
+        # print(f"number of different pitches in train: {len(Counter(all_pitches))}")
+        # print(f"min pitch: {min(all_pitches)}, max pitch: {max(all_pitches)}")
         # learns, possibly in 12 transpositions
         trange = range(0, 1)
         if transposition:
@@ -262,12 +270,12 @@ class Continuator2:
         path = pathlib.Path(path_string)
         return list(path.glob('*.mid')) + list(path.glob('*.midi'))
 
-    def sample_sequence(self, length=50, constraints=None):
+    def sample_sequence(self, prefix = None, length=50, constraints=None):
         """
         :param length:
         :type constraints: dict
         """
-        return self.vom.sample_sequence(length, constraints=constraints)
+        return self.vom.sample_sequence(length, prefix = prefix, constraints=constraints)
 
     def sample_sequence_0(self, length=50, constraints=None):
         """
@@ -277,7 +285,7 @@ class Continuator2:
         return self.vom.sample_zero_order(length, constraints=constraints)
 
     def realize_vp_sequence(self, vp_seq):
-        print(f"realize sequence of {len(vp_seq)} viewpoints")
+        # print(f"realize sequence of {len(vp_seq)} viewpoints")
         note_sequence = []
         for i, vp in enumerate(vp_seq):
             if i == 0:
@@ -343,7 +351,6 @@ class Continuator2:
         cur_status = current_note.get_status_right()
         note_to_add_status = note_to_add.get_status_left()
         delta = current_note.duration + current_note.next_start_delta
-        # print(cur_status + '  ' + note_to_add_status)
         if cur_status == "inside":
             if note_to_add_status == "before":
                 return delta
@@ -435,6 +442,8 @@ class Continuator2:
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
+
+
 
 if __name__ == '__main__':
     # midi_file_path = "../../data/Ravel_jeaux_deau.mid"

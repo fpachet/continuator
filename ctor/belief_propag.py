@@ -2,7 +2,7 @@ import numpy as np
 from collections import namedtuple
 
 
-class NoSolutionError(Exception):
+class NoSolutionErrorInBP(Exception):
     def __init__(self, message):
         self.message = message
 
@@ -292,7 +292,7 @@ class Messages(object):
         # At this point, we can normalize this distribution
         somme = np.sum(unnorm_p)
         if somme == 0:
-            raise NoSolutionError("marginals are nan")
+            raise NoSolutionErrorInBP("marginals are nan")
         return unnorm_p / somme
 
     def variable_to_factor_messages(self, variable, factor):
