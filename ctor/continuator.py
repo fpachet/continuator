@@ -190,10 +190,10 @@ class Continuator2:
                 pending_notes[msg.note] = msg
             else:
                 if msg.type == "note_off" or (msg.type == 'note_on' and msg.velocity == 0):
-                    note_on_msg = pending_notes[msg.note]
-                    if note_on_msg is None:
+                    if msg.note not in pending_notes:
                         print('⚠️ problem: note off does not match previous note on: ' + str(msg.note))
                     else:
+                        note_on_msg = pending_notes[msg.note]
                         start_time = note_on_msg.time * 2  # seconds to beat at 120 bpm
                         duration = (msg.time - note_on_msg.time) * 2
                         new_note = Note(note_on_msg.note, note_on_msg.velocity, duration, start_time)
