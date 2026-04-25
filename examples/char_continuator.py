@@ -4,12 +4,14 @@ All rights reserved.
 
 See LICENSE file in the project root for full license information.
 """
+from pathlib import Path
 import re
 
 from ctor.variable_order_markov import Variable_order_Markov
 
 if __name__ == '__main__':
-    with open('../data/proust_debut.txt', 'r') as file:
+    data_path = Path(__file__).resolve().parents[1] / "data" / "proust_debut.txt"
+    with open(data_path, 'r') as file:
         recherche = file.read().rstrip()
     char_seq = list(recherche)
     vo = Variable_order_Markov(char_seq, None, 3)

@@ -9,7 +9,7 @@ description = "A project implementing a constrainable continuator."
 authors = [
     { name = "François Pachet", email = "pachet@ynosound.com" },
 ]
-requires-python=">=3.8"
+requires-python=">=3.11"
 license = { file = "LICENSE" }
 dependencies = [
     "numpy",
@@ -25,4 +25,4 @@ include = [
     "/data",
 ]
 [tool.hatch.build.targets.wheel]
-packages = ["ctor"]
+packages = ["ctor", "midi_stuff", "utils"]

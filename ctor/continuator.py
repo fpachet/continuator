@@ -277,6 +277,14 @@ class Continuator2:
         """
         return self.vom.sample_sequence(length, prefix = prefix, constraints=constraints)
 
+    def continue_until_end(self, prefix=None, min_length=1, max_length=64, end_vp=None):
+        return self.vom.continue_until_end(
+            prefix=prefix,
+            min_length=min_length,
+            max_length=max_length,
+            end_vp=end_vp,
+        )
+
     def sample_sequence_0(self, length=50, constraints=None):
         """
         :param length:

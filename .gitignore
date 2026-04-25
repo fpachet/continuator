@@ -1,4 +1,4 @@
-git# Python
+# Python
 *.py[cod]
 __pycache__/
 *.so
@@ -54,5 +54,25 @@ data/generated_melody.mid
 *.pclprof
 
 data/all_chords_C.txt
+
+# Generated MIDI / DAW outputs
+/bach_all_mono_ctor.mid
+/ctor/generated_phrase.mid
+/data/output*.mid
+/data/ctor2_output.mid
+/data/ctor2_keith_K7.mid
+/data/gorman.mid
+/data/prelude_0.mid
+/data/prelude_1.mid
+/data/prelude_3.mid
+/data/prelude_nano_gpt_stretched.mid
+/data/prelude_nanogpt_realized.mid
+/data/prelude_zero.mid
+/examples/pi_music.mid
+/examples/pi_music_harmo.mid
+
+# Local Logic projects
+/continuator.logicx/
+/examples/pi_festum_jingle.logicx/
 
 old/

@@ -96,6 +96,18 @@ rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
 generator.save_midi(rendered_sequence, "../../data/constrained_prelude.mid", tempo=-1)
 ```
 
+### Generation APIs
+
+There are three related generation modes:
+
+- `sample_sequence(length, constraints=...)` generates a fixed-length sequence.
+- `continue_sequence(prefix, length, constraints=...)` generates a fixed-length continuation. The prefix is conditioning context only and is not included in the returned sequence.
+- `continue_until_end(prefix=..., min_length=..., max_length=...)` generates a variable-length continuation that stops when the end viewpoint is first reached.
+
+Constraints are always indexed over the returned generated sequence, not over the prefix plus the generated sequence. For example, in `continue_sequence(prefix=[1, 2], length=3, constraints={0: 3})`, position `0` refers to the first generated element after the prefix.
+
+The current constrained sampler uses an iterative forward-backward pass on the first-order chain for feasibility and marginals, then combines that information with the variable-order continuation model during sampling.
+
 ## User interface
 Currently continuator can be run as:
 - python code on midi files (input and output)
@@ -111,4 +123,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
