@@ -153,13 +153,13 @@ from ctor.continuator import Continuator2
 For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@codex-constraint-solver-investigation
+continuator @ git+https://github.com/fpachet/continuator.git@v1.1.0
 ```
 
-For production, prefer a release tag or commit SHA rather than a moving branch name:
+During development, a commit SHA is also acceptable when you want to test a specific unreleased commit:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@v0.2.0
+continuator @ git+https://github.com/fpachet/continuator.git@2cb027b
 ```
 
 After that, `continuator_front` can remove its vendored Continuator source and import the installed package directly.
