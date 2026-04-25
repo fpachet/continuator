@@ -26,6 +26,9 @@ class Continuator_gradio:
     def __init__(self):
         self.continuator = Continuator2()
         self.listener = None
+        self.generation_mode = "Fixed length"
+        self.min_end_length = 4
+        self.max_end_length = 64
         input_ports, output_ports = self.list_midi_ports()
         if input_ports and output_ports:
             self.start_midi_listener(input_ports[0], output_ports[0])
@@ -89,17 +92,46 @@ class Continuator_gradio:
         phrase = self.continuator.get_phrase_from_mido(mido_sequence)
         if self.continuator.get_learn_input():
             self.continuator.learn_phrase(phrase, self.continuator.transpose)
-        constraints = {}
-        # constraints[0] = self.continuator.get_vp_for_pitch(62)
-        constraints[len(phrase)] = self.continuator.get_end_vp()
-        generated_sequence = self.continuator.sample_sequence(prefix = phrase, length=len(phrase) + 1, constraints=constraints)
+        generated_sequence = self.generate_continuation_for_phrase(phrase)
         if generated_sequence is None:
             print("no solution gradio")
             return
-        sequence_to_render = generated_sequence[:-1]
+        sequence_to_render = self.sequence_without_terminal_end(generated_sequence)
         rendered_sequence = self.continuator.realize_vp_sequence(sequence_to_render)
         mido_sequence = self.continuator.create_mido_sequence(rendered_sequence)
-        self.listener.play_phrase(mido_sequence)
+        if self.listener is not None:
+            self.listener.play_phrase(mido_sequence)
+
+    def generate_continuation_for_phrase(self, phrase):
+        if self.generation_mode == "Until end":
+            return self.continuator.continue_until_end(
+                prefix=phrase,
+                min_length=self.min_end_length,
+                max_length=max(self.min_end_length, self.max_end_length),
+            )
+        constraints = {len(phrase): self.continuator.get_end_vp()}
+        return self.continuator.continue_sequence(
+            phrase,
+            length=len(phrase) + 1,
+            constraints=constraints,
+        )
+
+    def generate_from_memory_viewpoints(self):
+        if self.generation_mode == "Until end":
+            return self.continuator.continue_until_end(
+                prefix=None,
+                min_length=self.min_end_length,
+                max_length=max(self.min_end_length, self.max_end_length),
+            )
+        return self.continuator.sample_sequence(
+            length=self.continuator.generate_length,
+            constraints=None,
+        )
+
+    def sequence_without_terminal_end(self, generated_sequence):
+        if generated_sequence and generated_sequence[-1] == self.continuator.get_end_vp():
+            return generated_sequence[:-1]
+        return generated_sequence
 
     def write_messages_to_midi(self, messages, filename="output.mid", ticks_per_beat=480):
         mid = mido.MidiFile(ticks_per_beat=ticks_per_beat)
@@ -244,15 +276,25 @@ class Continuator_gradio:
     def set_generate_length(self, choice):
         self.continuator.generate_length = choice
 
+    def set_generation_mode(self, choice):
+        self.generation_mode = choice
+
+    def set_min_end_length(self, choice):
+        self.min_end_length = int(choice)
+
+    def set_max_end_length(self, choice):
+        self.max_end_length = int(choice)
+
     def generate_from_memory(self):
-        generated_sequence = self.continuator.sample_sequence(length=self.continuator.generate_length, constraints=None)
+        generated_sequence = self.generate_from_memory_viewpoints()
         if generated_sequence is None:
             print("no sequence generated")
             return []
-        sequence_to_render = generated_sequence[:]
+        sequence_to_render = self.sequence_without_terminal_end(generated_sequence)
         rendered_sequence = self.continuator.realize_vp_sequence(sequence_to_render)
         mido_sequence = self.continuator.create_mido_sequence(rendered_sequence)
-        self.listener.play_phrase(mido_sequence)
+        if self.listener is not None:
+            self.listener.play_phrase(mido_sequence)
         return rendered_sequence
 
     def save_generated_as_midi_file(self, sequence):
@@ -357,6 +399,18 @@ class Continuator_gradio:
                     decay_mode_choice = gr.Radio(choices=["full", "late", "middle", "early"], label="Decay Mode",
                                             value="Full")
                     decay_mode_choice.change(fn=self.set_decay_mode, inputs=decay_mode_choice)
+                    generation_mode_choice = gr.Radio(
+                        choices=["Fixed length", "Until end"],
+                        label="Generation mode",
+                        value="Fixed length"
+                    )
+                    generation_mode_choice.change(fn=self.set_generation_mode, inputs=generation_mode_choice)
+                    min_end_length_slider = gr.Slider(minimum=1, maximum=200, step=1, value=self.min_end_length,
+                                                      label="Minimum length until end")
+                    max_end_length_slider = gr.Slider(minimum=1, maximum=500, step=1, value=self.max_end_length,
+                                                      label="Maximum length until end")
+                    min_end_length_slider.change(fn=self.set_min_end_length, inputs=[min_end_length_slider])
+                    max_end_length_slider.change(fn=self.set_max_end_length, inputs=[max_end_length_slider])
         demo.launch()
 
 
