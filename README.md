@@ -20,7 +20,7 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 
 - Efficient yet simple implementation of variable-order markov model
 - Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
-- Sampling is a combination of Markov with a belief propagation system that enforces positional constraints (that are duly retro propagated)
+- Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain, while keeping the older recursive BP code as a reference/test path.
 - Many tricks here and there to maximize musical quality
 
 ## Authors
@@ -107,6 +107,39 @@ There are three related generation modes:
 Constraints are always indexed over the returned generated sequence, not over the prefix plus the generated sequence. For example, in `continue_sequence(prefix=[1, 2], length=3, constraints={0: 3})`, position `0` refers to the first generated element after the prefix.
 
 The current constrained sampler uses an iterative forward-backward pass on the first-order chain for feasibility and marginals, then combines that information with the variable-order continuation model during sampling.
+
+The legacy dictionary format for constraints is still supported:
+
+```python
+constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
+sequence = generator.sample_sequence(length=20, constraints=constraints)
+```
+
+For new code, a small constraint builder is also available:
+
+```python
+from ctor.constraints import ConstraintProblem
+
+constraints = ConstraintProblem(length=20)
+constraints.at(0).equals(generator.get_vp_for_pitch(62))
+constraints.at(19).equals(generator.get_end_vp())
+
+sequence = generator.sample_sequence(length=20, constraints=constraints)
+```
+
+### Migration notes
+
+For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:
+
+- Existing calls to `sample_sequence(length=..., constraints=...)` still work.
+- Use `continue_sequence(prefix, length=..., constraints=...)` for fixed-length real-time continuations after a played phrase.
+- Use `continue_until_end(prefix=..., min_length=..., max_length=...)` when the continuation should decide its own length but end on the model's end viewpoint.
+
+The generated continuation returned by `continue_sequence` and `continue_until_end` excludes the prefix. This is useful for MIDI playback because the UI should play only the newly generated material.
+
+The Gradio interface now exposes both fixed-length generation and "until end" generation. Internally it calls the new `Continuator2` continuation methods rather than constructing the old BP graph directly.
+
+The old recursive BP implementation remains in the project for comparison tests and reference, but it is no longer the default generation path.
 
 ## User interface
 Currently continuator can be run as:
