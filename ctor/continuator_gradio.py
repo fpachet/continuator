@@ -484,12 +484,12 @@ class Continuator_gradio:
 
     # --- BUILD GRADIO UI ---
 
-    def launch(self):
+    def launch(self, **launch_kwargs):
         css = """
         #app-title { margin-bottom: 0.25rem; }
         .compact-row button { min-width: 9rem; }
         """
-        with gr.Blocks(title="Continuator") as demo:
+        with gr.Blocks(title="Continuator", theme=gr.themes.Soft(), css=css) as demo:
             gr.Markdown("## Continuator", elem_id="app-title")
             with gr.Row():
                 status_box = gr.Textbox(label="Status", value=self.initial_status, lines=3, interactive=False, scale=3)
@@ -619,7 +619,7 @@ class Continuator_gradio:
             if hasattr(gr, "Timer"):
                 timer = gr.Timer(value=2)
                 timer.tick(fn=self.sync_ui_state, inputs=phrase_selector, outputs=[listener_box, memory_box, phrase_selector])
-        demo.launch(theme=gr.themes.Soft(), css=css)
+        return demo.launch(**launch_kwargs)
 
 
 # --- LAUNCH ---

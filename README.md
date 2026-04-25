@@ -162,7 +162,7 @@ from ctor.continuator import Continuator2
 For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@v1.2.0
+continuator @ git+https://github.com/fpachet/continuator.git@v1.2.1
 ```
 
 The base package intentionally does not install `gradio`, `matplotlib`, or `python-rtmidi`. Hosted front ends such as `continuator_front` should depend on those packages only if they use them directly.

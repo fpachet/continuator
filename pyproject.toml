@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "continuator"
-version = "1.2.0"
+version = "1.2.1"
 description = "A project implementing a constrainable continuator."
 authors = [
     { name = "François Pachet", email = "pachet@ynosound.com" },
