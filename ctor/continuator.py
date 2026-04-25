@@ -277,6 +277,13 @@ class Continuator2:
         """
         return self.vom.sample_sequence(length, prefix = prefix, constraints=constraints)
 
+    def continue_sequence(self, prefix, length=50, constraints=None):
+        return self.vom.continue_sequence(
+            prefix,
+            length=length,
+            constraints=constraints,
+        )
+
     def continue_until_end(self, prefix=None, min_length=1, max_length=64, end_vp=None):
         return self.vom.continue_until_end(
             prefix=prefix,

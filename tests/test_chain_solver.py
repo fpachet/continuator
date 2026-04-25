@@ -9,8 +9,10 @@ from ctor.chain_solver import (
     SparseForwardBackward,
     make_unary_potentials,
 )
+from ctor.continuator import Continuator2
 from ctor.constraints import ConstraintProblem
 from ctor.variable_order_markov import Variable_order_Markov
+from midi_stuff.mini_muse import Note
 
 
 def bp_marginals(vo, length, constraints):
@@ -147,6 +149,22 @@ class SparseForwardBackwardTest(unittest.TestCase):
         )
 
         self.assertEqual(sequence, [2, 3, vo.end_padding])
+
+    def test_continuator_wrapper_exposes_continue_sequence(self):
+        generator = Continuator2(None, kmax=3, transposition=False)
+        notes = [Note(60, 64, 1), Note(62, 64, 1), Note(64, 64, 1)]
+        generator.learn_phrase(notes, transposition=False)
+
+        sequence = generator.continue_sequence(
+            prefix=[notes[0]],
+            length=3,
+            constraints={0: generator.get_viewpoint(notes[1]), 2: generator.get_end_vp()},
+        )
+
+        self.assertEqual(
+            sequence,
+            [generator.get_viewpoint(notes[1]), generator.get_viewpoint(notes[2]), generator.get_end_vp()],
+        )
 
     def test_continue_sequence_uses_full_prefix_context_for_variable_order_choice(self):
         vo = Variable_order_Markov([1, 2, 3, 9, 2, 4], None, kmax=2, seed=0)
