@@ -27,11 +27,16 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 - [François Pachet](https://github.com/fpachet)
 
 ### Dependencies
-The project requires Python 3.11 at least, as well as the following packages:
-numpy~=2.2.3
-mido~=1.2.10
-gradio
-matplotlib
+The project requires Python 3.11 at least.
+
+The core package depends only on:
+- `numpy`
+- `mido`
+
+Optional features are installed with extras:
+- `continuator[gradio]` for the Gradio UI dependencies
+- `continuator[realtime-midi]` for live MIDI port support through `python-rtmidi`
+- `continuator[local-ui]` for both the Gradio UI and realtime MIDI support
 
 ## Installation
 
@@ -58,7 +63,11 @@ python3 -m pip install .
 # python3 -m pip install . --break-system-packages
 
 ```
-3. launch and then click on the url displayed in the terminal:
+3. To use the local Gradio/realtime MIDI interface, install the optional UI dependencies:
+```bash
+python3 -m pip install ".[local-ui]"
+```
+4. launch and then click on the url displayed in the terminal:
 ```bash
    python3 -m ctor.continuator_gradio
 ```
@@ -153,13 +162,15 @@ from ctor.continuator import Continuator2
 For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@v1.1.1
+continuator @ git+https://github.com/fpachet/continuator.git@v1.2.0
 ```
+
+The base package intentionally does not install `gradio`, `matplotlib`, or `python-rtmidi`. Hosted front ends such as `continuator_front` should depend on those packages only if they use them directly.
 
 During development, a commit SHA is also acceptable when you want to test a specific unreleased commit:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@2cb027b
+continuator @ git+https://github.com/fpachet/continuator.git@<commit-sha>
 ```
 
 After that, `continuator_front` can remove its vendored Continuator source and import the installed package directly.
