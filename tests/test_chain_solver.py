@@ -126,6 +126,13 @@ class SparseForwardBackwardTest(unittest.TestCase):
         sequence = vo.sample_sequence(500)
         self.assertEqual(len(sequence), 500)
 
+    def test_has_viewpoint_reports_vocabulary_membership(self):
+        vo = Variable_order_Markov([1, 2, 3], None, kmax=2, seed=0)
+
+        self.assertTrue(vo.has_viewpoint(1))
+        self.assertTrue(vo.has_viewpoint(vo.start_padding))
+        self.assertFalse(vo.has_viewpoint(99))
+
     def test_public_sampler_satisfies_constraint_problem(self):
         vo = Variable_order_Markov([1, 2, 3], None, kmax=2, seed=0)
         problem = ConstraintProblem(length=5)

@@ -281,6 +281,9 @@ class Variable_order_Markov:
     def index_of_vp(self, vp):
         return self.vp2index[vp]
 
+    def has_viewpoint(self, viewpoint):
+        return viewpoint in self.vp2index
+
     def build_vo_markov_model(self, real_sequence):
         """Build/accumulate a VO-Markov model up to order kmax using one unified dict."""
         vp_seq = [self.start_padding] + [self.get_viewpoint(obj) for obj in real_sequence] + [self.end_padding]

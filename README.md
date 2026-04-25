@@ -153,7 +153,7 @@ from ctor.continuator import Continuator2
 For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@v1.1.0
+continuator @ git+https://github.com/fpachet/continuator.git@v1.1.1
 ```
 
 During development, a commit SHA is also acceptable when you want to test a specific unreleased commit:
