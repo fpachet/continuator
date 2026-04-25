@@ -415,6 +415,7 @@ class Variable_order_Markov:
             prefix=None,
             constraints: Optional[Dict[int, object]] = None,
             *,
+            start_vp=None,
             relax_prefix_on_fail: bool = True,
             relax_pos0_on_fail: bool = True,
             raise_on_fail: bool = False,
@@ -426,6 +427,9 @@ class Variable_order_Markov:
         ----------
         prefix : sequence of notes/viewpoints forming the *last played* phrase.
                  Used as conditioning context only; it is not included in the return value.
+        start_vp : explicit viewpoint used as the hidden handoff state before
+                   the generated sequence. This is mainly for API
+                   compatibility with continuator_front.
         constraints : dict[int -> viewpoint]
             Hard constraints at generated positions (0-based). Values are viewpoint objects
             (NOT indices).
@@ -437,6 +441,16 @@ class Variable_order_Markov:
         """
 
         constraints = constraints or {}
+
+        if start_vp is not None:
+            return self.continue_from_viewpoint(
+                start_vp,
+                length,
+                constraints=constraints,
+                relax_prefix_on_fail=relax_prefix_on_fail,
+                relax_pos0_on_fail=relax_pos0_on_fail,
+                raise_on_fail=raise_on_fail,
+            )
 
         if prefix is not None:
             return self.continue_sequence(
@@ -454,6 +468,66 @@ class Variable_order_Markov:
             if raise_on_fail:
                 raise NoSolutionErrorInBP("No solution for constraints.") from e
             return None
+
+    def continue_from_viewpoint(
+            self,
+            start_vp,
+            length: int,
+            constraints: Optional[Dict[int, object]] = None,
+            *,
+            relax_prefix_on_fail: bool = True,
+            relax_pos0_on_fail: bool = True,
+            raise_on_fail: bool = False,
+    ):
+        """
+        Generate a fixed-length continuation after an explicit viewpoint.
+
+        The `start_vp` viewpoint is a hidden handoff state and is not included
+        in the returned sequence. Constraints are indexed over the returned
+        continuation.
+        """
+        constraints = constraints or {}
+        last_error = None
+
+        try:
+            seq = self.sample_vp_sequence_with_chain_solver(
+                length + 1,
+                start_vp,
+                constraints=shift_constraints(constraints, 1),
+                context_prefix=[start_vp],
+            )
+            if seq is not None:
+                return seq[1:]
+        except (KeyError, NoSolutionErrorInChainSolver) as e:
+            last_error = e
+
+        if relax_prefix_on_fail:
+            try:
+                seq = self.sample_vp_sequence_with_chain_solver(
+                    length + 1,
+                    self.start_padding,
+                    constraints=shift_constraints(constraints, 1),
+                )
+                if seq is not None:
+                    return seq[1:]
+            except NoSolutionErrorInChainSolver as e:
+                last_error = e
+
+        if relax_pos0_on_fail and has_constraint_at(constraints, 0):
+            try:
+                seq = self.sample_vp_sequence_with_chain_solver(
+                    length,
+                    None,
+                    constraints=without_constraint_at(constraints, 0),
+                )
+                if seq is not None:
+                    return seq
+            except NoSolutionErrorInChainSolver as e:
+                last_error = e
+
+        if raise_on_fail:
+            raise NoSolutionErrorInBP("No solution after relaxing start viewpoint.") from last_error
+        return None
 
     def continue_sequence(
             self,

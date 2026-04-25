@@ -132,6 +132,7 @@ sequence = generator.sample_sequence(length=20, constraints=constraints)
 For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:
 
 - Existing calls to `sample_sequence(length=..., constraints=...)` still work.
+- Existing client code that passes `sample_sequence(..., start_vp=...)` is supported for compatibility with `continuator_front`; `start_vp` is treated as a hidden handoff viewpoint and is not included in the returned sequence.
 - Use `continue_sequence(prefix, length=..., constraints=...)` for fixed-length real-time continuations after a played phrase.
 - Use `continue_until_end(prefix=..., min_length=..., max_length=...)` when the continuation should decide its own length but end on the model's end viewpoint.
 
@@ -140,6 +141,28 @@ The generated continuation returned by `continue_sequence` and `continue_until_e
 The Gradio interface now exposes both fixed-length generation and "until end" generation. Internally it calls the new `Continuator2` continuation methods rather than constructing the old BP graph directly.
 
 The old recursive BP implementation remains in the project for comparison tests and reference, but it is no longer the default generation path.
+
+### Importing from another project
+
+This repository can be installed as a package named `continuator`. The importable modules keep their existing names, so client code can still use imports such as:
+
+```python
+from ctor.continuator import Continuator2
+```
+
+For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
+
+```text
+continuator @ git+https://github.com/fpachet/continuator.git@codex-constraint-solver-investigation
+```
+
+For production, prefer a release tag or commit SHA rather than a moving branch name:
+
+```text
+continuator @ git+https://github.com/fpachet/continuator.git@v0.2.0
+```
+
+After that, `continuator_front` can remove its vendored Continuator source and import the installed package directly.
 
 ## User interface
 Currently continuator can be run as:

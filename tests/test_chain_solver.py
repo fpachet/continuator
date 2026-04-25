@@ -150,6 +150,17 @@ class SparseForwardBackwardTest(unittest.TestCase):
 
         self.assertEqual(sequence, [2, 3, vo.end_padding])
 
+    def test_sample_sequence_accepts_explicit_start_viewpoint(self):
+        vo = Variable_order_Markov([1, 2, 3], None, kmax=3, seed=0)
+
+        sequence = vo.sample_sequence(
+            length=3,
+            start_vp=1,
+            constraints={2: vo.end_padding},
+        )
+
+        self.assertEqual(sequence, [2, 3, vo.end_padding])
+
     def test_continuator_wrapper_exposes_continue_sequence(self):
         generator = Continuator2(None, kmax=3, transposition=False)
         notes = [Note(60, 64, 1), Note(62, 64, 1), Note(64, 64, 1)]
@@ -159,6 +170,23 @@ class SparseForwardBackwardTest(unittest.TestCase):
             prefix=[notes[0]],
             length=3,
             constraints={0: generator.get_viewpoint(notes[1]), 2: generator.get_end_vp()},
+        )
+
+        self.assertEqual(
+            sequence,
+            [generator.get_viewpoint(notes[1]), generator.get_viewpoint(notes[2]), generator.get_end_vp()],
+        )
+
+    def test_continuator_wrapper_accepts_explicit_start_viewpoint(self):
+        generator = Continuator2(None, kmax=3, transposition=False)
+        notes = [Note(60, 64, 1), Note(62, 64, 1), Note(64, 64, 1)]
+        generator.learn_phrase(notes, transposition=False)
+
+        sequence = generator.sample_sequence(
+            length=3,
+            start_vp=generator.get_viewpoint(notes[0]),
+            constraints={2: generator.get_end_vp()},
+            relax_prefix_on_fail=False,
         )
 
         self.assertEqual(

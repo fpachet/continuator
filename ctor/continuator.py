@@ -270,18 +270,46 @@ class Continuator2:
         path = pathlib.Path(path_string)
         return list(path.glob('*.mid')) + list(path.glob('*.midi'))
 
-    def sample_sequence(self, prefix = None, length=50, constraints=None):
+    def sample_sequence(
+            self,
+            prefix=None,
+            length=50,
+            constraints=None,
+            start_vp=None,
+            relax_prefix_on_fail=True,
+            relax_pos0_on_fail=True,
+            raise_on_fail=False,
+    ):
         """
         :param length:
         :type constraints: dict
         """
-        return self.vom.sample_sequence(length, prefix = prefix, constraints=constraints)
+        return self.vom.sample_sequence(
+            length,
+            prefix=prefix,
+            constraints=constraints,
+            start_vp=start_vp,
+            relax_prefix_on_fail=relax_prefix_on_fail,
+            relax_pos0_on_fail=relax_pos0_on_fail,
+            raise_on_fail=raise_on_fail,
+        )
 
-    def continue_sequence(self, prefix, length=50, constraints=None):
+    def continue_sequence(
+            self,
+            prefix,
+            length=50,
+            constraints=None,
+            relax_prefix_on_fail=True,
+            relax_pos0_on_fail=True,
+            raise_on_fail=False,
+    ):
         return self.vom.continue_sequence(
             prefix,
             length=length,
             constraints=constraints,
+            relax_prefix_on_fail=relax_prefix_on_fail,
+            relax_pos0_on_fail=relax_pos0_on_fail,
+            raise_on_fail=raise_on_fail,
         )
 
     def continue_until_end(self, prefix=None, min_length=1, max_length=64, end_vp=None):
