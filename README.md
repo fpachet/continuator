@@ -20,18 +20,23 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 
 - Efficient yet simple implementation of variable-order markov model
 - Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
-- Sampling is a combination of Markov with a belief propagation system that enforces positional constraints (that are duly retro propagated)
+- Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain, while keeping the older recursive BP code as a reference/test path.
 - Many tricks here and there to maximize musical quality
 
 ## Authors
 - [François Pachet](https://github.com/fpachet)
 
 ### Dependencies
-The project requires Python 3.11 at least, as well as the following packages:
-numpy~=2.2.3
-mido~=1.2.10
-gradio
-matplotlib
+The project requires Python 3.11 at least.
+
+The core package depends only on:
+- `numpy`
+- `mido`
+
+Optional features are installed with extras:
+- `continuator[gradio]` for the Gradio UI dependencies
+- `continuator[realtime-midi]` for live MIDI port support through `python-rtmidi`
+- `continuator[local-ui]` for both the Gradio UI and realtime MIDI support
 
 ## Installation
 
@@ -58,7 +63,11 @@ python3 -m pip install .
 # python3 -m pip install . --break-system-packages
 
 ```
-3. launch and then click on the url displayed in the terminal:
+3. To use the local Gradio/realtime MIDI interface, install the optional UI dependencies:
+```bash
+python3 -m pip install ".[local-ui]"
+```
+4. launch and then click on the url displayed in the terminal:
 ```bash
    python3 -m ctor.continuator_gradio
 ```
@@ -96,6 +105,76 @@ rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
 generator.save_midi(rendered_sequence, "../../data/constrained_prelude.mid", tempo=-1)
 ```
 
+### Generation APIs
+
+There are three related generation modes:
+
+- `sample_sequence(length, constraints=...)` generates a fixed-length sequence.
+- `continue_sequence(prefix, length, constraints=...)` generates a fixed-length continuation. The prefix is conditioning context only and is not included in the returned sequence.
+- `continue_until_end(prefix=..., min_length=..., max_length=...)` generates a variable-length continuation that stops when the end viewpoint is first reached.
+
+Constraints are always indexed over the returned generated sequence, not over the prefix plus the generated sequence. For example, in `continue_sequence(prefix=[1, 2], length=3, constraints={0: 3})`, position `0` refers to the first generated element after the prefix.
+
+The current constrained sampler uses an iterative forward-backward pass on the first-order chain for feasibility and marginals, then combines that information with the variable-order continuation model during sampling.
+
+The legacy dictionary format for constraints is still supported:
+
+```python
+constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
+sequence = generator.sample_sequence(length=20, constraints=constraints)
+```
+
+For new code, a small constraint builder is also available:
+
+```python
+from ctor.constraints import ConstraintProblem
+
+constraints = ConstraintProblem(length=20)
+constraints.at(0).equals(generator.get_vp_for_pitch(62))
+constraints.at(19).equals(generator.get_end_vp())
+
+sequence = generator.sample_sequence(length=20, constraints=constraints)
+```
+
+### Migration notes
+
+For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:
+
+- Existing calls to `sample_sequence(length=..., constraints=...)` still work.
+- Existing client code that passes `sample_sequence(..., start_vp=...)` is supported for compatibility with `continuator_front`; `start_vp` is treated as a hidden handoff viewpoint and is not included in the returned sequence.
+- Use `continue_sequence(prefix, length=..., constraints=...)` for fixed-length real-time continuations after a played phrase.
+- Use `continue_until_end(prefix=..., min_length=..., max_length=...)` when the continuation should decide its own length but end on the model's end viewpoint.
+
+The generated continuation returned by `continue_sequence` and `continue_until_end` excludes the prefix. This is useful for MIDI playback because the UI should play only the newly generated material.
+
+The Gradio interface now exposes both fixed-length generation and "until end" generation. Internally it calls the new `Continuator2` continuation methods rather than constructing the old BP graph directly.
+
+The old recursive BP implementation remains in the project for comparison tests and reference, but it is no longer the default generation path.
+
+### Importing from another project
+
+This repository can be installed as a package named `continuator`. The importable modules keep their existing names, so client code can still use imports such as:
+
+```python
+from ctor.continuator import Continuator2
+```
+
+For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
+
+```text
+continuator @ git+https://github.com/fpachet/continuator.git@v1.2.1
+```
+
+The base package intentionally does not install `gradio`, `matplotlib`, or `python-rtmidi`. Hosted front ends such as `continuator_front` should depend on those packages only if they use them directly.
+
+During development, a commit SHA is also acceptable when you want to test a specific unreleased commit:
+
+```text
+continuator @ git+https://github.com/fpachet/continuator.git@<commit-sha>
+```
+
+After that, `continuator_front` can remove its vendored Continuator source and import the installed package directly.
+
 ## User interface
 Currently continuator can be run as:
 - python code on midi files (input and output)
@@ -111,4 +190,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-

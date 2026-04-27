@@ -4,18 +4,16 @@ All rights reserved.
 
 See LICENSE file in the project root for full license information.
 """
-import random
+from pathlib import Path
 import time
-
-from muses.base.temporals import Piece
 
 from ctor.continuator import Continuator2
 
-from midi_stuff.mini_muse import Note
-
 if __name__ == '__main__':
+    repo_root = Path(__file__).resolve().parents[1]
+
     # Initialize the model
-    folder_path = "../data/bachmono"
+    folder_path = repo_root / "data" / "bachmono"
     generator = Continuator2(None,3, transposition=False)
     t0 = time.time_ns()
     print(f"learn folder {folder_path}")
@@ -35,4 +33,4 @@ if __name__ == '__main__':
     rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
 
     # save the generated sequence
-    generator.save_midi(rendered_sequence, "../bach_all_mono_ctor.mid", tempo=-1)
+    generator.save_midi(rendered_sequence, repo_root / "bach_all_mono_ctor.mid", tempo=-1)
