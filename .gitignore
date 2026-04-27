@@ -50,6 +50,20 @@ MANIFEST
 *.log
 local_settings.py
 
+# Local experiment data and scratch work
+/data/local/*
+!/data/local/.gitkeep
+/data/generated/*
+!/data/generated/.gitkeep
+/experiments/*
+!/experiments/.gitkeep
+!/experiments/README.md
+
+# MIDI files are usually local datasets or generated outputs.
+*.mid
+!data/fixtures/**/*.mid
+!tests/fixtures/**/*.mid
+
 data/generated_melody.mid
 *.pclprof
 
