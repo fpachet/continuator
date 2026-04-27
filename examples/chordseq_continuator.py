@@ -4,14 +4,22 @@ All rights reserved.
 
 See LICENSE file in the project root for full license information.
 """
+import gzip
 from pathlib import Path
 
 from ctor.variable_order_markov import Variable_order_Markov
 
+
+def open_chord_sequences():
+    data_path = Path(__file__).resolve().parents[1] / "data" / "chord_sequences.txt"
+    if data_path.exists():
+        return open(data_path, "r", encoding="utf-8")
+    return gzip.open(f"{data_path}.gz", "rt", encoding="utf-8")
+
+
 if __name__ == '__main__':
     # computes chord sequences of length 8 starting and ending with, say, C and with a F#7 in the middle
-    data_path = Path(__file__).resolve().parents[1] / "data" / "chord_sequences.txt"
-    with open(data_path, 'r') as file:
+    with open_chord_sequences() as file:
         seqs = file.readlines()
     seqs = [seq.split(';')[1:-1] for seq in seqs]
     seqs = [[chord.strip() for chord in seq] for seq in seqs]
