@@ -181,7 +181,9 @@ Currently continuator can be run as:
 - real time midi with rt-midi on a local machine, command line
 - real time midi with rt-midi on a local machine, with a gradio interface from a browser
 
-A web client-server version will be available soon, as so far attempts at using gradio and javascript failed.
+A web client-server version is available on a Huggingface space at:
+https://huggingface.co/spaces/pachet/continuator_front
+
 
 ## Contributing
 
