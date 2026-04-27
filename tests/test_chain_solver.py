@@ -3,11 +3,10 @@ from unittest.mock import patch
 
 import numpy as np
 
-from ctor.belief_propag import Messages, NoSolutionErrorInBP
+from ctor.belief_propag import NoSolutionErrorInBP
 from ctor.chain_solver import (
     NoSolutionErrorInChainSolver,
     SparseForwardBackward,
-    make_unary_potentials,
 )
 from ctor.continuator import Continuator2
 from ctor.constraints import ConstraintProblem
@@ -15,49 +14,17 @@ from ctor.variable_order_markov import Variable_order_Markov
 from midi_stuff.mini_muse import Note
 
 
-def bp_marginals(vo, length, constraints):
-    pgm = vo.build_bp_graph(length)
-    for position, viewpoint in constraints.items():
-        pgm.set_value(f"x{position + 1}", vo.index_of_vp(viewpoint))
-    return np.array(
-        [
-            Messages().marginal(pgm.variable_from_name(f"x{position + 1}"))
-            for position in range(length)
-        ]
-    )
-
-
 def forward_backward_marginals(vo, length, constraints):
     return vo.chain_marginals(length, constraints=constraints)
 
 
+def assert_one_hot(distribution, index):
+    expected = np.zeros_like(distribution)
+    expected[index] = 1.0
+    np.testing.assert_allclose(distribution, expected, atol=1e-12, rtol=1e-12)
+
+
 class SparseForwardBackwardTest(unittest.TestCase):
-    def assert_marginals_match_bp(self, sequence, length, constraints):
-        vo = Variable_order_Markov(sequence, None, kmax=3, seed=0)
-        expected = bp_marginals(vo, length, constraints)
-        actual = forward_backward_marginals(vo, length, constraints)
-        np.testing.assert_allclose(actual, expected, atol=1e-12, rtol=1e-12)
-
-    def test_matches_recursive_bp_without_constraints(self):
-        self.assert_marginals_match_bp(
-            sequence=[1, 2, 3, 2, 3, 4],
-            length=5,
-            constraints={},
-        )
-
-    def test_matches_recursive_bp_with_middle_constraint(self):
-        self.assert_marginals_match_bp(
-            sequence=[1, 2, 3, 2, 3, 4, 3, 4, 5],
-            length=6,
-            constraints={2: 3},
-        )
-
-    def test_matches_recursive_bp_with_start_and_end_padding_constraints(self):
-        vo = Variable_order_Markov([1, 2, 3, 4], None, kmax=3, seed=0)
-        expected = bp_marginals(vo, 6, {0: vo.start_padding, 5: vo.end_padding})
-        actual = forward_backward_marginals(vo, 6, {0: vo.start_padding, 5: vo.end_padding})
-        np.testing.assert_allclose(actual, expected, atol=1e-12, rtol=1e-12)
-
     def test_transpose_convention_uses_previous_by_next_matrix(self):
         vo = Variable_order_Markov(["A", "B", "C"], None, kmax=2, seed=0)
         marginals = forward_backward_marginals(
@@ -72,34 +39,59 @@ class SparseForwardBackwardTest(unittest.TestCase):
             expected[vo.index_of_vp(viewpoint)] = 1.0
             np.testing.assert_allclose(marginals[position], expected, atol=1e-12, rtol=1e-12)
 
-    def test_impossible_constraints_fail_like_recursive_bp(self):
+    def test_sparse_sampler_returns_fully_constrained_path(self):
+        vo = Variable_order_Markov(["A", "B", "C"], None, kmax=2, seed=0)
+
+        sequence = vo.sample_sequence(
+            5,
+            constraints={
+                0: vo.start_padding,
+                1: "A",
+                2: "B",
+                3: "C",
+                4: vo.end_padding,
+            },
+            raise_on_fail=True,
+        )
+
+        self.assertEqual(sequence, [vo.start_padding, "A", "B", "C", vo.end_padding])
+
+    def test_sparse_marginals_are_one_hot_for_fully_constrained_path(self):
+        vo = Variable_order_Markov(["A", "B", "C"], None, kmax=2, seed=0)
+        expected_path = [vo.start_padding, "A", "B", "C", vo.end_padding]
+
+        marginals = vo.chain_marginals(
+            len(expected_path),
+            constraints={position: viewpoint for position, viewpoint in enumerate(expected_path)},
+        )
+
+        for position, viewpoint in enumerate(expected_path):
+            assert_one_hot(marginals[position], vo.index_of_vp(viewpoint))
+
+    def test_sparse_chain_rejects_impossible_constraints_directly(self):
         vo = Variable_order_Markov([1, 2, 3], None, kmax=2, seed=0)
         constraints = {0: vo.start_padding, 1: 3}
 
-        pgm = vo.build_bp_graph(3)
-        for position, viewpoint in constraints.items():
-            pgm.set_value(f"x{position + 1}", vo.index_of_vp(viewpoint))
-        with self.assertRaises(NoSolutionErrorInBP):
-            Messages().marginal(pgm.variable_from_name("x2"))
-
-        index_constraints = {
-            position: vo.index_of_vp(viewpoint)
-            for position, viewpoint in constraints.items()
-        }
-        unary = make_unary_potentials(
-            3,
-            vo.voc_size(),
-            forbidden_indices={vo.index_of_vp(vo.start_padding), vo.index_of_vp(vo.end_padding)},
-            constraints=index_constraints,
-        )
         with self.assertRaises(NoSolutionErrorInChainSolver):
-            SparseForwardBackward(vo.get_first_order_matrix()).forward_backward(unary)
+            vo.chain_marginals(3, constraints=constraints)
+
+        with self.assertRaises(NoSolutionErrorInBP):
+            vo.sample_sequence(3, constraints=constraints, raise_on_fail=True)
 
     def test_iterative_solver_handles_long_chains(self):
         vo = Variable_order_Markov([1, 2, 1, 2, 1, 2], None, kmax=2, seed=0)
         marginals = vo.chain_marginals(500)
         self.assertEqual(marginals.shape, (500, vo.voc_size()))
         np.testing.assert_allclose(marginals.sum(axis=1), np.ones(500), atol=1e-12, rtol=1e-12)
+
+    def test_sparse_marginals_are_normalized_and_exclude_padding_when_unconstrained(self):
+        vo = Variable_order_Markov([1, 2, 1, 3], None, kmax=2, seed=0)
+
+        marginals = vo.chain_marginals(10)
+
+        np.testing.assert_allclose(marginals.sum(axis=1), np.ones(10), atol=1e-12, rtol=1e-12)
+        np.testing.assert_allclose(marginals[:, vo.index_of_vp(vo.start_padding)], 0.0, atol=1e-12)
+        np.testing.assert_allclose(marginals[:, vo.index_of_vp(vo.end_padding)], 0.0, atol=1e-12)
 
     def test_constraint_problem_compiles_to_unary_masks(self):
         vo = Variable_order_Markov([1, 2, 3, 2, 3, 4], None, kmax=3, seed=0)
@@ -112,16 +104,16 @@ class SparseForwardBackwardTest(unittest.TestCase):
         self.assertEqual(set(allowed), {vo.index_of_vp(2), vo.index_of_vp(3)})
         np.testing.assert_allclose(unary[1, allowed], np.array([0.5, 0.5]))
 
-    def test_constraint_problem_equality_matches_legacy_bp(self):
+    def test_constraint_problem_equality_matches_legacy_dict_constraints(self):
         vo = Variable_order_Markov([1, 2, 3, 2, 3, 4], None, kmax=3, seed=0)
         problem = ConstraintProblem(length=5).at(2).equals(3)
 
         actual = vo.chain_marginals(problem.length, constraints=problem)
-        expected = bp_marginals(vo, problem.length, problem.to_legacy_constraints())
+        expected = vo.chain_marginals(problem.length, constraints=problem.to_legacy_constraints())
 
         np.testing.assert_allclose(actual, expected, atol=1e-12, rtol=1e-12)
 
-    def test_public_sampler_handles_long_chains_without_recursive_bp(self):
+    def test_public_sampler_handles_long_chains_without_legacy_graph_solver(self):
         vo = Variable_order_Markov([1, 2, 1, 2, 1, 2], None, kmax=2, seed=0)
         sequence = vo.sample_sequence(500)
         self.assertEqual(len(sequence), 500)
@@ -132,6 +124,20 @@ class SparseForwardBackwardTest(unittest.TestCase):
         self.assertTrue(vo.has_viewpoint(1))
         self.assertTrue(vo.has_viewpoint(vo.start_padding))
         self.assertFalse(vo.has_viewpoint(99))
+
+    def test_identity_viewpoint_does_not_store_realizations(self):
+        vo = Variable_order_Markov([1, 2, 1], None, kmax=2, seed=0)
+
+        self.assertEqual(dict(vo.viewpoints_realizations), {})
+        self.assertEqual(vo.vp_counts[1], 2)
+        self.assertEqual(vo.vp_counts[2], 1)
+        np.testing.assert_allclose(vo.get_priors(), np.array([2 / 3, 1 / 3]))
+
+    def test_computed_viewpoint_keeps_realizations(self):
+        vo = Variable_order_Markov(["aa", "b", "cc"], len, kmax=2, seed=0)
+
+        self.assertEqual(vo.get_realizations_for_vp(2), [(0, 0), (0, 2)])
+        self.assertEqual(vo.get_realizations_for_vp(1), [(0, 1)])
 
     def test_public_sampler_satisfies_constraint_problem(self):
         vo = Variable_order_Markov([1, 2, 3], None, kmax=2, seed=0)
@@ -145,6 +151,19 @@ class SparseForwardBackwardTest(unittest.TestCase):
         self.assertIsNotNone(sequence)
         self.assertTrue(vo.sequence_satisfies_constraints(sequence, problem))
         self.assertEqual(sequence, [vo.start_padding, 1, 2, 3, vo.end_padding])
+
+    def test_public_sampler_satisfies_constraint_problem_one_of(self):
+        vo = Variable_order_Markov([1, 2, 3, 2, 4], None, kmax=2, seed=0)
+        problem = ConstraintProblem(length=3)
+        problem.at(0).equals(1)
+        problem.at(1).one_of([2, 4])
+
+        sequence = vo.sample_sequence(problem.length, constraints=problem, raise_on_fail=True)
+
+        self.assertIsNotNone(sequence)
+        self.assertTrue(vo.sequence_satisfies_constraints(sequence, problem))
+        self.assertEqual(sequence[0], 1)
+        self.assertIn(sequence[1], [2, 4])
 
     def test_continue_sequence_indexes_constraints_over_generated_output(self):
         vo = Variable_order_Markov([1, 2, 3], None, kmax=3, seed=0)

@@ -11,7 +11,7 @@ from typing import Dict, Tuple, Optional
 import numpy as np
 import random
 
-from ctor.belief_propag import PGM, LabeledArray, Messages, NoSolutionErrorInBP
+from ctor.belief_propag import NoSolutionErrorInBP
 from ctor.chain_solver import NoSolutionErrorInChainSolver, SparseForwardBackward, make_unary_potentials
 from ctor.constraints import (
     ConstraintProblem,
@@ -151,9 +151,11 @@ class Variable_order_Markov:
         decay_fast_half_life: Optional[float] = None,
         decay_slow_half_life: Optional[float] = None,
         seed: Optional[int] = None,
+        store_realizations: Optional[bool] = None,
     ):
         # inputs
         self.viewpoint_lambda = vp_lambda
+        self.store_realizations = vp_lambda is not None if store_realizations is None else bool(store_realizations)
         self.start_padding = _Start_vp()
         self.end_padding = _End_vp()
         self.kmax = int(kmax)
@@ -208,6 +210,7 @@ class Variable_order_Markov:
         self.input_sequences = []
         self.all_unique_viewpoints = []
         self.vp2index = {}
+        self.vp_counts = Counter()
         self.viewpoints_realizations = defaultdict(list)
 
         # ✅ ONE unified dictionary for all context lengths:
@@ -297,7 +300,9 @@ class Variable_order_Markov:
         # realizations (keep your original addressing)
         sequence_index = len(self.input_sequences) - 1
         for i, vp in enumerate(vp_seq[1:-1]):
-            self.add_viewpoint_realization(i, sequence_index, vp)
+            self.vp_counts[vp] += 1
+            if self.store_realizations:
+                self.add_viewpoint_realization(i, sequence_index, vp)
 
         # contexts update (single pass)
         vp2idx = self.vp2index
@@ -321,9 +326,8 @@ class Variable_order_Markov:
     # ------------------ priors / zero-order ------------------
 
     def get_priors(self):
-        key_counts = {key: len(continuations) for key, continuations in self.viewpoints_realizations.items()}
-        total_count = sum(key_counts.values())
-        priors = {key: count / total_count for key, count in key_counts.items()} if total_count > 0 else {}
+        total_count = sum(self.vp_counts.values())
+        priors = {key: count / total_count for key, count in self.vp_counts.items()} if total_count > 0 else {}
         sorted_keys = self.get_all_unique_viewpoints_except_paddings()
         probability_vector = np.array([priors.get(key, 0.0) for key in sorted_keys], dtype=float)
         return probability_vector
@@ -679,30 +683,6 @@ class Variable_order_Markov:
 
         return None
 
-    # length of bp graph is length + 2: plus the start (possibly the end of an existing sequence) and plus the end viewpoint
-    def build_bp_graph(self, length):
-        string = ""
-        for i in range(length):
-            string = string + "p(x" + str(i + 1) + ")"
-        for i in range(2, length + 1):
-            string = string + "p(x" + str(i) + "|x" + str(i - 1) + ")"
-        pgm = PGM.from_string(string)
-        mat = LabeledArray(np.array(self.get_first_order_matrix()).transpose(), ["x2", "x1"], )
-        m = self.voc_size()
-        data_dict = {}
-        for i in range(length):
-            variable_dist = np.random.uniform(1 / m, 1 / m, m)
-            # should avoid start and end values
-            variable_dist[self.index_of_vp(self.start_padding)] = 0
-            variable_dist[self.index_of_vp(self.end_padding)] = 0
-            variable_dist /= variable_dist.sum()
-            data_dict["p(x" + str(i + 1) + ")"] = LabeledArray(np.array(variable_dist), ["x" + str(i + 1)])
-            data_dict["p(x" + str(i + 2) + "|x" + str(i + 1) + ")"] = LabeledArray(
-                mat.array, ["x" + str(i + 2), "x" + str(i + 1)]
-            )
-        pgm.set_data(data_dict)
-        return pgm
-
     def build_unary_potentials(self, length, constraints=None):
         constraints = constraints or {}
         allowed_indices_by_position = {}
@@ -730,41 +710,6 @@ class Variable_order_Markov:
         unary_potentials = self.build_unary_potentials(length, constraints=constraints)
         solver = SparseForwardBackward(self.get_first_order_matrix())
         return solver.forward_backward(unary_potentials).marginals
-
-    def sample_vp_sequence_with_bp(self, length, first_vp, pgm):
-        if length < 0:
-            print(f"impossible to sample a sequence of length {length}")
-            return None
-
-        if first_vp is not None:
-            current_seq = [first_vp]
-        else:
-            try:
-                marginal_1 = Messages().marginal(pgm.variable_from_name('x1'))
-                vp = self.random_vp_with_probs(marginal_1)
-                current_seq = [vp]
-            except NoSolutionErrorInBP:
-                return None
-        try:
-            pgm.set_value('x1', self.index_of_vp(current_seq[0]))
-        except NoSolutionErrorInBP:
-            return None
-        # generate the rest of the sequence
-        first_order_matrix = self.get_first_order_matrix()
-        for i in range(length - 1):
-            pgm_variable = pgm.variable_from_name('x' + str(i + 2))
-            try:
-                marginal_i = Messages().marginal(pgm_variable)
-            except NoSolutionErrorInBP:
-                return None
-            markov_proba = first_order_matrix[self.index_of_vp(current_seq[-1])]
-            product_proba = marginal_i * markov_proba
-            cont = self.get_continuation_with_bp(current_seq, product_proba)
-            if cont is None:
-                cont = self.random_initial_vp()
-            current_seq.append(cont)
-            pgm.set_value('x' + str(i + 2), self.index_of_vp(cont))
-        return current_seq
 
     def sample_vp_sequence_with_chain_solver(self, length, first_vp=None, constraints=None, context_prefix=None):
         if length < 0:
@@ -932,10 +877,13 @@ class Variable_order_Markov:
             max_size = max(max_size, csz)
         print(f"voc size: {voc_size}")
         print(f"min order 1 size: {min_size}, max: {max_size}")
-        total = 0
-        for k in self.viewpoints_realizations:
-            total += len(self.viewpoints_realizations[k])
-        print(f"average nb of vp realizations: {total / voc_size if voc_size else 0.0}")
+        if self.store_realizations:
+            total = 0
+            for k in self.viewpoints_realizations:
+                total += len(self.viewpoints_realizations[k])
+            print(f"average nb of vp realizations: {total / voc_size if voc_size else 0.0}")
+        else:
+            print("vp realizations: disabled")
 
 if __name__ == '__main__':
     # computes chord sequences of length 8 starting and ending with, say, C and with a F#7 in the middle

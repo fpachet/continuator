@@ -184,11 +184,11 @@ def make_unary_potentials(
     constraints: dict[int, int] | None = None,
 ) -> np.ndarray:
     """
-    Build unary potentials matching Variable_order_Markov.build_bp_graph().
+    Build unary potentials for constrained Markov-chain inference.
 
     Unconstrained positions are uniform over all states except forbidden indices.
-    Constrained positions are one-hot, even if the constrained value is normally
-    forbidden. This matches PGM.set_value(), which replaces the unary factor.
+    Constrained positions are one-hot, even if the constrained value would
+    normally be forbidden.
     """
 
     if length < 0:
