@@ -1,6 +1,6 @@
 # A Python implementation of a constrainable Continuator
 
-A reimplementation of the Continuator system, using a combination of variable-order Markov model and belief propagation to enforce positional constraints.
+A reimplementation of the Continuator system, using a combination of variable-order Markov modeling and exact finite-chain inference to enforce positional constraints.
 Note that this is the only system, to my knowledge, able to produce controllable sequences (with guarantees) with unary/positional constraints.
 These are extremely powerful and can turn seemingly "random" walks into actual music with intention.
 
@@ -20,7 +20,7 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 
 - Efficient yet simple implementation of variable-order markov model
 - Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
-- Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain, while keeping the older recursive BP code as a reference/test path.
+- Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain.
 - Many tricks here and there to maximize musical quality
 
 ## Authors
@@ -147,9 +147,9 @@ For front-end integrations, prefer the high-level `Continuator2` methods in `cto
 
 The generated continuation returned by `continue_sequence` and `continue_until_end` excludes the prefix. This is useful for MIDI playback because the UI should play only the newly generated material.
 
-The Gradio interface now exposes both fixed-length generation and "until end" generation. Internally it calls the new `Continuator2` continuation methods rather than constructing the old BP graph directly.
+The Gradio interface exposes both fixed-length generation and "until end" generation. Internally it calls the high-level `Continuator2` continuation methods.
 
-The old recursive BP implementation remains in the project for comparison tests and reference, but it is no longer the default generation path.
+Identity viewpoint models, such as integers, characters, and words, no longer store realization address lists because generated viewpoints are already the realized objects.
 
 ### Importing from another project
 
@@ -162,7 +162,7 @@ from ctor.continuator import Continuator2
 For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@v1.2.1
+continuator @ git+https://github.com/fpachet/continuator.git@v1.2.2
 ```
 
 The base package intentionally does not install `gradio`, `matplotlib`, or `python-rtmidi`. Hosted front ends such as `continuator_front` should depend on those packages only if they use them directly.
