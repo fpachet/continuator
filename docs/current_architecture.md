@@ -52,7 +52,8 @@ The repository currently uses `ctor` as its import package.
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
 | `ctor/continuator.py` | MIDI-facing `Continuator2` facade over `Variable_order_Markov`. |
-| `ctor/context_bp_continuator.py` | Experimental MIDI-facing context-BP facade; keeps classic storage for realization. |
+| `ctor/context_bp_continuator.py` | Experimental MIDI-facing context-BP facade; separate from `Continuator2`. |
+| `ctor/midi/` | Shared MIDI/viewpoint/realization utilities for MIDI-facing facades. |
 | `midi_stuff/mini_muse.py` | Lightweight `Note` representation used by the MIDI layer. |
 | `ctor/ui/gradio_app.py` | Local Gradio UI around `Continuator2`. |
 | `ctor/continuator_gradio.py` | Compatibility entry point for the Gradio UI. |
@@ -218,15 +219,24 @@ stable for external clients such as `continuator_front`.
 
 Defined in `ctor/context_bp_continuator.py`.
 
-This is the first MIDI-facing experiment using the new context-BP core. It
-subclasses `Continuator2` to reuse MIDI parsing, phrase handling, and
-realization, but learns each phrase into two stores:
+This is the first MIDI-facing experiment using the new context-BP core. It no
+longer subclasses `Continuator2`; instead it uses shared MIDI helpers from
+`ctor.midi` and learns each phrase into two stores:
 
 - `context_model`: `ContextBPModel` used for viewpoint generation.
 - `vom`: classic `Variable_order_Markov` used for viewpoint realizations.
 
 This keeps the external `Continuator2` API unchanged while giving the new core
 a practical MIDI test path.
+
+### `MidiContinuatorBase`
+
+Defined in `ctor/midi/base.py`.
+
+This contains shared MIDI application behavior such as MIDI file parsing,
+MIDI-message conversion, phrase metadata, default note viewpoints, transposition,
+and viewpoint realization back to `Note` objects. It is intentionally model
+agnostic: concrete facades supply the learning and generation engine.
 
 ### `Note`
 

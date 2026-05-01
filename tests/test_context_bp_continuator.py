@@ -20,6 +20,11 @@ class ContextBPContinuatorTest(unittest.TestCase):
 
         self.assertEqual(sequence, [continuator.get_viewpoint(phrase[2])])
 
+    def test_context_bp_continuator_does_not_subclass_classic_continuator(self):
+        from ctor.continuator import Continuator2
+
+        self.assertFalse(issubclass(ContextBPContinuator, Continuator2))
+
     def test_until_end_uses_context_boundary_and_realizes_notes(self):
         continuator = ContextBPContinuator(kmax=3)
         phrase = make_phrase([60, 62, 64])

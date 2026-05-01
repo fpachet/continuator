@@ -37,7 +37,8 @@ The experimental MIDI-facing context-BP class is also separate:
 from ctor.context_bp_continuator import ContextBPContinuator
 ```
 
-Neither one changes the existing `Continuator2` compatibility surface.
+It is no longer a subclass of `Continuator2`. Neither one changes the existing
+`Continuator2` compatibility surface.
 
 ## `Continuator2`
 

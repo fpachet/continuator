@@ -44,6 +44,7 @@ class PublicApiTest(unittest.TestCase):
         from ctor.constraints import ConstraintProblem
         from ctor.context_bp_continuator import ContextBPContinuator
         from ctor.engines import make_sequence_engine
+        from ctor.midi import MidiContinuatorBase
         from ctor.variable_order_markov import Variable_order_Markov
 
         self.assertTrue(issubclass(NoSolutionErrorInBP, Exception))
@@ -51,6 +52,7 @@ class PublicApiTest(unittest.TestCase):
         self.assertIsNotNone(ConstraintProblem)
         self.assertIsNotNone(ContextBPContinuator)
         self.assertIsNotNone(make_sequence_engine)
+        self.assertIsNotNone(MidiContinuatorBase)
         self.assertIsNotNone(Variable_order_Markov)
 
     def test_legacy_import_wrappers_still_work(self):

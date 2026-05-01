@@ -160,10 +160,16 @@ Key public methods:
 
 Experimental MIDI Continuator facade. It keeps the classic
 `Variable_order_Markov` store for MIDI realization, but delegates viewpoint
-generation to `ContextBPModel`.
+generation to `ContextBPModel`. It does not subclass `Continuator2`.
 
 Use this class for context-BP MIDI experiments while leaving `Continuator2`
 stable for existing clients.
+
+### `ctor.midi.MidiContinuatorBase`
+
+Shared MIDI helper base for MIDI-facing facades. It contains MIDI parsing,
+MIDI writing, phrase conversion, default note viewpoint extraction,
+transposition helpers, and viewpoint-to-note realization.
 
 ### `midi_stuff.mini_muse.Note`
 

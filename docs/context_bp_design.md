@@ -80,7 +80,9 @@ from ctor.context_bp_continuator import ContextBPContinuator
 ```
 
 It uses `ContextBPModel` for viewpoint generation and keeps a classic
-`Variable_order_Markov` store for note realization.
+`Variable_order_Markov` store for note realization. It does not inherit from
+`Continuator2`; both MIDI facades can use model-agnostic utilities from
+`ctor.midi`.
 
 ## Until-End Generation
 

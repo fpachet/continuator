@@ -2,31 +2,41 @@ from __future__ import annotations
 
 from typing import Any
 
-from ctor.continuator import Continuator2
 from ctor.core import ContextBPModel
+from ctor.midi import MidiContinuatorBase
+from ctor.variable_order_markov import Variable_order_Markov
 
 
-class ContextBPContinuator(Continuator2):
+class ContextBPContinuator(MidiContinuatorBase):
     """
     Experimental MIDI Continuator using context-BP for viewpoint generation.
 
-    The classic `Variable_order_Markov` store is still maintained for MIDI note
-    realization. This keeps the experiment separate from `Continuator2` while
-    allowing generated context-BP viewpoint sequences to be rendered.
+    The classic `Variable_order_Markov` store is maintained only as a MIDI
+    realization memory. This class deliberately does not inherit from
+    `Continuator2`; both facades use shared MIDI utilities instead.
     """
 
     def __init__(self, midi_file: object = None, kmax: int = 4, transposition: bool = False) -> None:
         self.kmax = int(kmax)
-        super().__init__(midi_file=None, kmax=kmax, transposition=transposition)
+        self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
+        self.initialize_midi_state(transposition)
         if midi_file is not None:
             self.learn_file(midi_file, transposition)
+
+    def _new_realization_store(self) -> Variable_order_Markov:
+        return Variable_order_Markov(
+            sequence_of_stuff=None,
+            vp_lambda=self.get_viewpoint,
+            kmax=self.kmax,
+            seed=0,
+        )
 
     def _new_context_model(self) -> ContextBPModel:
         return ContextBPModel(kmax=self.kmax, viewpoint_fn=self.get_viewpoint, seed=0)
 
     def _relearn_sequences(self, sequences: list[list[Any]]) -> None:
-        self.vom.clear_memory()
+        self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
         for sequence in sequences:
             material = list(sequence)
@@ -34,7 +44,7 @@ class ContextBPContinuator(Continuator2):
             self.context_model.learn_sequence(material)
 
     def clear_memory(self):
-        self.vom.clear_memory()
+        self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
 
     def clear_first_n_phrases(self, n):
@@ -108,10 +118,9 @@ class ContextBPContinuator(Continuator2):
             end_symbol=end_vp,
         )
 
-    def realize_vp_sequence(self, vp_seq):
-        sequence = [
+    def _realizable_viewpoint_sequence(self, vp_seq):
+        return [
             vp
             for vp in vp_seq
             if vp is not self.context_model.start_symbol and vp is not self.context_model.end_symbol
         ]
-        return super().realize_vp_sequence(sequence)
