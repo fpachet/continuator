@@ -10,11 +10,15 @@ if __name__ == "__main__":
     model = ContextBPModel(kmax=10, seed=0)
     model.learn_sequence(train_seq)
 
-    graph, _, _ = model.infer(21, constraints={9: 6, 20: model.end_symbol})
-    seq = model.sample_sequence(21, constraints={9: 6, 20: model.end_symbol})
+    result = model.sample_sequence_with_trace(21, constraints={9: 6, 20: model.end_symbol})
 
-    if not seq:
+    if not result:
         print("no solution")
     else:
-        print(f"constrained integer sequence, effective order {graph.kmax}:")
+        seq, trace = result
+        print("constrained integer sequence:")
         print(seq[:-1])
+        print("chosen graph orders:")
+        print([step.effective_order for step in trace])
+        print("chosen suffix orders:")
+        print([step.order for step in trace])

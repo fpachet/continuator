@@ -10,8 +10,8 @@ Experimental generic variable-order model with exact context-state
 forward-backward inference. It learns arbitrary symbolic sequences, compiles
 variable-order continuation counts into a sparse context graph, and samples
 fixed-length sequences with positional hard constraints over emitted symbols.
-Constrained inference tries the highest effective order first, then backs off
-toward order 1 until a feasible context graph is found.
+Constrained sampling uses stepwise order backoff, trying the longest feasible
+context at each emitted position.
 
 This is the first implementation of the new context-BP engine and currently
 lives beside the classic implementation.
@@ -22,8 +22,15 @@ Key public methods:
 - `infer(length, prefix=None, constraints=None)`
 - `symbol_marginals(length, prefix=None, constraints=None)`
 - `sample_sequence(length, prefix=None, constraints=None, raise_on_fail=False)`
+- `sample_sequence_with_trace(length, prefix=None, constraints=None, raise_on_fail=False)`
 - `continue_until_end(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `first_hit_lengths(prefix=None, min_length=1, max_length=64, end_symbol=None)`
+
+### `ctor.core.SampleStep`
+
+Dataclass used by `sample_sequence_with_trace`. It records the generated
+position, symbol, chosen suffix order, selected graph order, and context used
+for that step.
 
 ### `ctor.core.ContextBPResult`
 

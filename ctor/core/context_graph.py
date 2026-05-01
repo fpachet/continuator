@@ -10,6 +10,7 @@ class ContextEdge:
     dst: int
     symbol: int
     weight: float
+    order: int
 
 
 class ContextCounts:
@@ -51,6 +52,19 @@ class ContextCounts:
         if total <= 0:
             return {}
         return {symbol: count / total for symbol, count in counts.items()}
+
+    def continuation_distribution_with_order(
+        self,
+        context: tuple[int, ...],
+    ) -> tuple[dict[int, float], int | None]:
+        suffix = self.longest_available_suffix(context)
+        if suffix is None:
+            return {}, None
+        counts = self.counts[suffix]
+        total = sum(counts.values())
+        if total <= 0:
+            return {}, None
+        return {symbol: count / total for symbol, count in counts.items()}, len(suffix)
 
 
 class ContextGraph:
@@ -98,12 +112,18 @@ class ContextGraph:
         while queue:
             context = queue.popleft()
             src = graph.context_to_id[context]
-            distribution = counts.continuation_distribution(context)
+            distribution, order = counts.continuation_distribution_with_order(context)
             for symbol, weight in distribution.items():
                 dst_context = graph.next_context(context, symbol)
                 dst = add_context(dst_context)
                 graph.outgoing[src].append(
-                    ContextEdge(src=src, dst=dst, symbol=symbol, weight=float(weight))
+                    ContextEdge(
+                        src=src,
+                        dst=dst,
+                        symbol=symbol,
+                        weight=float(weight),
+                        order=order or 0,
+                    )
                 )
 
         return graph

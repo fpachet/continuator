@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import random
 from typing import Any, Callable, Hashable, Iterable, Mapping
 
 from ctor.constraints import ConstraintProblem
 from ctor.core.context_graph import ContextCounts, ContextGraph
-from ctor.core.inference import ContextBPResult, NoFeasibleSequenceError, forward_backward
+from ctor.core.inference import ContextBPResult, NoFeasibleSequenceError, backward_messages, forward_backward
 from ctor.core.vocabulary import Vocabulary
+
+
+@dataclass(frozen=True)
+class SampleStep:
+    position: int
+    symbol: Any
+    order: int
+    effective_order: int
+    context: tuple[Any, ...]
 
 
 class ContextBPModel:
@@ -31,6 +41,7 @@ class ContextBPModel:
         self.counts = ContextCounts(self.kmax)
         self.rng = random.Random(seed)
         self.input_sequences: list[list[Any]] = []
+        self.last_sample_trace: list[SampleStep] = []
 
     @property
     def start_symbol(self):
@@ -137,24 +148,17 @@ class ContextBPModel:
         raise_on_fail: bool = False,
     ) -> list[Any] | None:
         try:
-            graph, initial_state, inference = self.infer(
+            decoded = self._sample_with_stepwise_order_backoff(
                 length,
                 prefix=prefix,
                 constraints=constraints,
+                raise_on_fail=raise_on_fail,
             )
         except NoFeasibleSequenceError:
             if raise_on_fail:
                 raise
             return None
 
-        allowed = self._allowed_symbols_by_position(length, constraints)
-        decoded = self._sample_with_allowed(
-            graph,
-            initial_state,
-            inference,
-            allowed,
-            raise_on_fail=raise_on_fail,
-        )
         if decoded is None:
             return None
         if not self.sequence_satisfies_constraints(decoded, constraints):
@@ -162,6 +166,24 @@ class ContextBPModel:
                 raise NoFeasibleSequenceError("Sampled sequence violates constraints.")
             return None
         return decoded
+
+    def sample_sequence_with_trace(
+        self,
+        length: int,
+        *,
+        prefix: Iterable[Any] | None = None,
+        constraints: ConstraintProblem | Mapping[int, Any] | None = None,
+        raise_on_fail: bool = False,
+    ) -> tuple[list[Any], list[SampleStep]] | None:
+        sequence = self.sample_sequence(
+            length,
+            prefix=prefix,
+            constraints=constraints,
+            raise_on_fail=raise_on_fail,
+        )
+        if sequence is None:
+            return None
+        return sequence, list(self.last_sample_trace)
 
     def continue_until_end(
         self,
@@ -218,6 +240,81 @@ class ContextBPModel:
         )
         return list(weighted_lengths)
 
+    def _sample_with_stepwise_order_backoff(
+        self,
+        length: int,
+        *,
+        prefix: Iterable[Any] | None,
+        constraints: ConstraintProblem | Mapping[int, Any] | None,
+        raise_on_fail: bool,
+    ) -> list[Any] | None:
+        allowed = self._allowed_symbols_by_position(length, constraints)
+        order_data = {}
+        for order in self._orders_to_try():
+            graph = self.compile_graph(prefix=prefix, order=order)
+            order_data[order] = (
+                graph,
+                backward_messages(
+                    graph,
+                    length=length,
+                    allowed_symbols_by_position=allowed,
+                ),
+            )
+
+        history = [self.vocabulary.start_id]
+        if prefix is not None:
+            history.extend(self._encode_value(item) for item in prefix)
+
+        sequence: list[int] = []
+        trace: list[SampleStep] = []
+        for position in range(length):
+            chosen = None
+            max_context_order = min(self.kmax, len(history))
+            for order in range(max_context_order, 0, -1):
+                graph, backward = order_data[order]
+                context = tuple(history[-order:])
+                try:
+                    state = graph.state_id(context)
+                except KeyError:
+                    continue
+
+                candidates = []
+                weights = []
+                for edge in graph.outgoing[state]:
+                    if edge.symbol not in allowed[position]:
+                        continue
+                    weight = edge.weight * backward[position + 1, edge.dst]
+                    if weight <= 0:
+                        continue
+                    candidates.append(edge)
+                    weights.append(weight)
+                if candidates:
+                    edge = self.rng.choices(candidates, weights=weights, k=1)[0]
+                    chosen = graph, state, edge
+                    break
+
+            if chosen is None:
+                self.last_sample_trace = trace
+                if raise_on_fail:
+                    raise NoFeasibleSequenceError("No context path satisfies the constraints at any order.")
+                return None
+
+            graph, state, edge = chosen
+            sequence.append(edge.symbol)
+            trace.append(
+                SampleStep(
+                    position=position,
+                    symbol=self.vocabulary.decode(edge.symbol),
+                    order=edge.order,
+                    effective_order=graph.kmax,
+                    context=tuple(self.vocabulary.decode(symbol) for symbol in graph.contexts[state]),
+                )
+            )
+            history.append(edge.symbol)
+
+        self.last_sample_trace = trace
+        return [self.vocabulary.decode(symbol) for symbol in sequence]
+
     def _sample_with_allowed(
         self,
         graph: ContextGraph,
@@ -229,6 +326,7 @@ class ContextBPModel:
     ) -> list[Any] | None:
         state = initial_state
         sequence: list[int] = []
+        trace: list[SampleStep] = []
         for position in range(len(allowed)):
             candidates = []
             weights = []
@@ -246,8 +344,18 @@ class ContextBPModel:
                 return None
             edge = self.rng.choices(candidates, weights=weights, k=1)[0]
             sequence.append(edge.symbol)
+            trace.append(
+                SampleStep(
+                    position=position,
+                    symbol=self.vocabulary.decode(edge.symbol),
+                    order=edge.order,
+                    effective_order=graph.kmax,
+                    context=tuple(self.vocabulary.decode(symbol) for symbol in graph.contexts[state]),
+                )
+            )
             state = edge.dst
 
+        self.last_sample_trace = trace
         return [self.vocabulary.decode(symbol) for symbol in sequence]
 
     def _first_hit_path_data(

@@ -91,3 +91,33 @@ def forward_backward(
         symbol_marginals=symbol_marginals,
         path_mass=path_mass,
     )
+
+
+def backward_messages(
+    graph: ContextGraph,
+    *,
+    length: int,
+    allowed_symbols_by_position: list[set[int]],
+) -> np.ndarray:
+    if length < 0:
+        raise ValueError("length must be non-negative")
+    if len(allowed_symbols_by_position) != length:
+        raise ValueError("allowed_symbols_by_position must match length")
+
+    n_states = len(graph.contexts)
+    backward = np.zeros((length + 1, n_states), dtype=float)
+    backward[length] = 1.0
+
+    for position in range(length - 1, -1, -1):
+        allowed = allowed_symbols_by_position[position]
+        for state, edges in enumerate(graph.outgoing):
+            total = 0.0
+            for edge in edges:
+                if edge.symbol in allowed:
+                    total += edge.weight * backward[position + 1, edge.dst]
+            backward[position, state] = total
+        scale = backward[position].sum()
+        if scale > 0:
+            backward[position] /= scale
+
+    return backward

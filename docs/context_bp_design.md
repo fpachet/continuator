@@ -25,12 +25,21 @@ with the transition weight learned from the longest available suffix of the
 current context. Positional constraints apply to the emitted symbol labels on
 these edges.
 
-For constrained generation, the engine uses order backoff. It first tries exact
-context-BP at `kmax`; if no constrained path exists, it recompiles the context
-graph at `kmax - 1`, then `kmax - 2`, and so on down to order 1. The generated
-sequence therefore uses the highest order that is compatible with the
-constraints, rather than failing merely because the maximum context was too
-specific.
+For constrained sampling, the engine uses stepwise order backoff. It computes
+backward feasibility messages for each order from `kmax` down to 1. At each
+emitted position, the sampler tries the longest current context first and
+backs off only if that order has no continuation compatible with the remaining
+constraints. This lets the generated sequence use a high order where possible
+and a lower order only where constraints force it.
+
+`infer(...)` and `symbol_marginals(...)` still return exact BP results on one
+effective context graph: they try `kmax`, then `kmax - 1`, down to order 1,
+and return the highest globally feasible order.
+
+`sample_sequence_with_trace(...)` returns the generated sequence plus one
+`SampleStep` per emitted symbol. Each step records both the globally feasible
+graph order selected at that step and the actual suffix order that supplied the
+chosen transition. This is useful for diagnosing where the model is backing off.
 
 ## First Implementation
 
