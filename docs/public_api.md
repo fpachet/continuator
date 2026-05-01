@@ -6,12 +6,20 @@ surface for the current classic engine.
 
 ## Stable Imports
 
-These imports should continue to work:
+These compatibility imports should continue to work:
 
 ```python
 from ctor.continuator import ClassicContinuator
 from ctor.continuator import Continuator2
 from ctor.variable_order_markov import Variable_order_Markov
+from ctor.constraints import ConstraintProblem
+```
+
+New code may prefer the explicit package locations:
+
+```python
+from ctor.classic import ClassicContinuator, Continuator2, Variable_order_Markov
+from ctor.context_bp import ContextBPModel, ContextBPContinuator
 from ctor.constraints import ConstraintProblem
 ```
 
@@ -35,7 +43,7 @@ from ctor.engines import make_sequence_engine
 The experimental MIDI-facing context-BP class is also separate:
 
 ```python
-from ctor.context_bp_continuator import ContextBPContinuator
+from ctor.context_bp import ContextBPContinuator
 ```
 
 It is no longer a subclass of `Continuator2`. Neither one changes the existing

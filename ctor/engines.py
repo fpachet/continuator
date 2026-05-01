@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Callable, Iterable, Literal, Mapping
 
+from ctor.classic import Variable_order_Markov
 from ctor.constraints import ConstraintProblem
-from ctor.core import ContextBPModel
-from ctor.variable_order_markov import Variable_order_Markov
+from ctor.context_bp import ContextBPModel
 
 EngineKind = Literal["classic", "context_bp"]
 Constraints = ConstraintProblem | Mapping[int, Any] | None

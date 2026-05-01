@@ -2,7 +2,7 @@
 Integer sequence example using the experimental context-BP core.
 """
 
-from ctor.core import ContextBPModel
+from ctor.context_bp import ContextBPModel
 
 
 if __name__ == "__main__":

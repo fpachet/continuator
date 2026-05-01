@@ -1,7 +1,7 @@
 import unittest
 
 from ctor.constraints import ConstraintProblem
-from ctor.core import ContextBPModel, NoFeasibleSequenceError
+from ctor.context_bp import ContextBPModel, NoFeasibleSequenceError
 
 
 class ContextBPModelTest(unittest.TestCase):

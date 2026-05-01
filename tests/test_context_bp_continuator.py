@@ -1,6 +1,6 @@
 import unittest
 
-from ctor.context_bp_continuator import ContextBPContinuator
+from ctor.context_bp import ContextBPContinuator
 from midi_stuff.mini_muse import Note
 
 

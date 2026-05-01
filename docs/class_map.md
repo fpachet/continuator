@@ -4,7 +4,7 @@ This file is a concise class-level index for the current implementation.
 
 ## Generic Model and Inference
 
-### `ctor.core.ContextBPModel`
+### `ctor.context_bp.ContextBPModel`
 
 Experimental generic variable-order model with exact context-state
 forward-backward inference. It learns arbitrary symbolic sequences, compiles
@@ -26,13 +26,13 @@ Key public methods:
 - `continue_until_end(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `first_hit_lengths(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 
-### `ctor.core.SampleStep`
+### `ctor.context_bp.SampleStep`
 
 Dataclass used by `sample_sequence_with_trace`. It records the generated
 position, symbol, chosen suffix order, selected graph order, and context used
 for that step.
 
-### `ctor.core.ContextBPResult`
+### `ctor.context_bp.ContextBPResult`
 
 Dataclass containing context-BP messages, emitted-symbol marginals, and the
 total path mass for the constrained finite chain.
@@ -57,7 +57,7 @@ engine = make_sequence_engine("classic")
 engine = make_sequence_engine("context_bp")
 ```
 
-### `ctor.variable_order_markov.Variable_order_Markov`
+### `ctor.classic.variable_order_markov.Variable_order_Markov`
 
 Generic classic variable-order Markov model. It learns sequences of arbitrary
 objects or computed viewpoints, stores context continuation counts up to
@@ -77,12 +77,12 @@ Key public methods:
 - `get_first_order_matrix()`
 - `set_period_mode(mode)`
 
-### `ctor.variable_order_markov.LazyExpCounter`
+### `ctor.classic.variable_order_markov.LazyExpCounter`
 
 Per-key lazy exponential counter. It supports decayed weights without eagerly
 updating every key at each time step.
 
-### `ctor.variable_order_markov.MultiCounter`
+### `ctor.classic.variable_order_markov.MultiCounter`
 
 Continuation-count container for one context. It combines exact counts with
 fast and slow decayed counts and exposes `full`, `late`, `middle`, and `early`
@@ -139,7 +139,7 @@ Helper returned by `ConstraintProblem.at(position)`. It provides `equals` and
 
 ## MIDI Application Layer
 
-### `ctor.continuator.ClassicContinuator`
+### `ctor.classic.continuator.ClassicContinuator`
 
 High-level classic MIDI Continuator facade. It wraps a
 `Variable_order_Markov` configured with a MIDI-note viewpoint extractor and uses
@@ -157,12 +157,12 @@ Key public methods:
 - `realize_vp_sequence(vp_seq)`
 - `save_midi(sequence, output_file, tempo=120, sustain=False)`
 
-### `ctor.continuator.Continuator2`
+### `ctor.classic.continuator.Continuator2`
 
 Compatibility subclass of `ClassicContinuator`. Existing clients should keep
 using it; new code may prefer the explicit `ClassicContinuator` name.
 
-### `ctor.context_bp_continuator.ContextBPContinuator`
+### `ctor.context_bp.ContextBPContinuator`
 
 Experimental MIDI Continuator facade. It keeps the classic
 `Variable_order_Markov` store for MIDI realization, but delegates viewpoint
@@ -220,15 +220,19 @@ The older `ctor.markov_analysis` import remains as a compatibility wrapper.
 For the current generic model:
 
 ```python
-from ctor.variable_order_markov import Variable_order_Markov
+from ctor.classic import Variable_order_Markov
 from ctor.constraints import ConstraintProblem
 ```
 
 For the current MIDI Continuator:
 
 ```python
-from ctor.continuator import Continuator2
+from ctor.classic import ClassicContinuator
 ```
+
+Compatibility imports such as `from ctor.continuator import Continuator2`,
+`from ctor.variable_order_markov import Variable_order_Markov`, and
+`from ctor.core import ContextBPModel` remain supported.
 
 For direct sparse chain inference:
 

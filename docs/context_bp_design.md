@@ -43,7 +43,7 @@ chosen transition. This is useful for diagnosing where the model is backing off.
 
 ## First Implementation
 
-The first implementation lives under `ctor.core`:
+The implementation lives under `ctor.context_bp`:
 
 - `Vocabulary`: maps arbitrary symbols to integer ids.
 - `ContextCounts`: stores variable-order continuation counts.
@@ -76,7 +76,7 @@ API stays classic while the new core is compared on generic sequences.
 For MIDI experiments, use the separate `ContextBPContinuator` class:
 
 ```python
-from ctor.context_bp_continuator import ContextBPContinuator
+from ctor.context_bp import ContextBPContinuator
 ```
 
 It uses `ContextBPModel` for viewpoint generation and keeps a classic
@@ -102,3 +102,6 @@ from ctor.variable_order_markov import Variable_order_Markov
 ```
 
 continue to refer to the classic implementation.
+
+The old `ctor.core` import path remains as a compatibility wrapper for
+`ctor.context_bp`.

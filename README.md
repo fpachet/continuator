@@ -168,7 +168,7 @@ sequence = engine.continue_until_end(prefix=["C"], min_length=2, max_length=8)
 For MIDI experiments with the new core, use the separate experimental facade:
 
 ```python
-from ctor.context_bp_continuator import ContextBPContinuator
+from ctor.context_bp import ContextBPContinuator
 
 generator = ContextBPContinuator(kmax=4)
 ```
@@ -188,7 +188,8 @@ The generated continuation returned by `continue_sequence` and `continue_until_e
 `Continuator2` remains the compatibility entry point:
 
 ```python
-from ctor.continuator import ClassicContinuator, Continuator2
+from ctor.classic import ClassicContinuator
+from ctor.continuator import Continuator2
 ```
 
 The Gradio interface exposes both fixed-length generation and "until end" generation. Internally it calls the high-level `Continuator2` continuation methods.

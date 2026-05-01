@@ -46,13 +46,15 @@ The repository currently uses `ctor` as its import package.
 
 | Path | Role |
 | --- | --- |
-| `ctor/variable_order_markov.py` | Generic classic variable-order Markov model, learning, constrained sampling, decay modes, compatibility behavior. |
-| `ctor/core/` | Experimental generic context-BP core for exact variable-order constrained inference. |
+| `ctor/classic/variable_order_markov.py` | Generic classic variable-order Markov model, learning, constrained sampling, decay modes, compatibility behavior. |
+| `ctor/classic/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and compatibility `Continuator2`. |
+| `ctor/context_bp/` | Experimental context-BP implementation: generic model, inference, vocabulary, and MIDI facade. |
+| `ctor/core/` | Compatibility wrappers for the old context-BP core import path. |
 | `ctor/engines.py` | Small generic engine-selection adapters for comparing classic and context-BP models. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
-| `ctor/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and compatibility `Continuator2`. |
-| `ctor/context_bp_continuator.py` | Experimental MIDI-facing context-BP facade; separate from `Continuator2`. |
+| `ctor/continuator.py`, `ctor/variable_order_markov.py` | Compatibility aliases for classic implementation imports. |
+| `ctor/context_bp_continuator.py` | Compatibility wrapper for the context-BP MIDI facade. |
 | `ctor/midi/` | Shared MIDI/viewpoint/realization utilities for MIDI-facing facades. |
 | `midi_stuff/mini_muse.py` | Lightweight `Note` representation used by the MIDI layer. |
 | `ctor/ui/gradio_app.py` | Local Gradio UI around `Continuator2`. |
@@ -70,7 +72,7 @@ The repository currently uses `ctor` as its import package.
 
 ### `Variable_order_Markov`
 
-Defined in `ctor/variable_order_markov.py`.
+Defined in `ctor/classic/variable_order_markov.py`.
 
 This is the main generic model. It can learn sequences of arbitrary Python
 objects. If `vp_lambda` is `None`, objects are their own viewpoints. Otherwise,
@@ -188,7 +190,7 @@ only represent single-value equality constraints.
 
 ### `ClassicContinuator` and `Continuator2`
 
-Defined in `ctor/continuator.py`.
+Defined in `ctor/classic/continuator.py`.
 
 `ClassicContinuator` is the MIDI-facing facade for the classic engine. It owns
 a `Variable_order_Markov` whose viewpoint function maps each `Note` to:
@@ -222,7 +224,7 @@ stable for external clients such as `continuator_front`.
 
 ### `ContextBPContinuator`
 
-Defined in `ctor/context_bp_continuator.py`.
+Defined in `ctor/context_bp/continuator.py`.
 
 This is the first MIDI-facing experiment using the new context-BP core. It no
 longer subclasses `Continuator2`; instead it uses shared MIDI helpers from

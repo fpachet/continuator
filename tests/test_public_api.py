@@ -4,9 +4,11 @@ import unittest
 
 class PublicApiTest(unittest.TestCase):
     def test_continuator2_import_and_generation_signatures(self):
+        from ctor.classic import ClassicContinuator as PackageClassicContinuator
         from ctor.continuator import ClassicContinuator, Continuator2
         from ctor.midi import MidiContinuatorBase
 
+        self.assertIs(ClassicContinuator, PackageClassicContinuator)
         self.assertTrue(issubclass(ClassicContinuator, MidiContinuatorBase))
         self.assertTrue(issubclass(Continuator2, ClassicContinuator))
 
@@ -45,9 +47,11 @@ class PublicApiTest(unittest.TestCase):
     def test_core_public_imports(self):
         from ctor.belief_propag import NoSolutionErrorInBP
         from ctor.chain_solver import SparseForwardBackward
+        from ctor.classic import Variable_order_Markov as PackageVariableOrderMarkov
         from ctor.continuator import ClassicContinuator
         from ctor.constraints import ConstraintProblem
         from ctor.context_bp_continuator import ContextBPContinuator
+        from ctor.context_bp import ContextBPModel
         from ctor.engines import make_sequence_engine
         from ctor.midi import MidiContinuatorBase
         from ctor.variable_order_markov import Variable_order_Markov
@@ -60,6 +64,8 @@ class PublicApiTest(unittest.TestCase):
         self.assertIsNotNone(make_sequence_engine)
         self.assertIsNotNone(MidiContinuatorBase)
         self.assertIsNotNone(Variable_order_Markov)
+        self.assertIs(Variable_order_Markov, PackageVariableOrderMarkov)
+        self.assertIsNotNone(ContextBPModel)
 
     def test_legacy_import_wrappers_still_work(self):
         from ctor.dynaprog import VariableDomainSequenceOptimizer
