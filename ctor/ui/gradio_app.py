@@ -6,6 +6,7 @@ See LICENSE file in the project root for full license information.
 """
 
 import json
+import inspect
 import os
 import subprocess
 import sys
@@ -473,7 +474,7 @@ class Continuator_gradio:
         #app-title { margin-bottom: 0.25rem; }
         .compact-row button { min-width: 9rem; }
         """
-        with gr.Blocks(title="Continuator", theme=gr.themes.Soft(), css=css) as demo:
+        with gr.Blocks(title="Continuator") as demo:
             gr.Markdown("## Continuator", elem_id="app-title")
             with gr.Row():
                 status_box = gr.Textbox(label="Status", value=self.initial_status, lines=3, interactive=False, scale=3)
@@ -603,7 +604,14 @@ class Continuator_gradio:
             if hasattr(gr, "Timer"):
                 timer = gr.Timer(value=2)
                 timer.tick(fn=self.sync_ui_state, inputs=phrase_selector, outputs=[listener_box, memory_box, phrase_selector])
-        return demo.launch(**launch_kwargs)
+
+        launch_options = dict(launch_kwargs)
+        launch_parameters = inspect.signature(demo.launch).parameters
+        if "theme" in launch_parameters:
+            launch_options.setdefault("theme", gr.themes.Soft())
+        if "css" in launch_parameters:
+            launch_options.setdefault("css", css)
+        return demo.launch(**launch_options)
 
 
 # --- LAUNCH ---

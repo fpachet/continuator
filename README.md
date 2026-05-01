@@ -84,6 +84,10 @@ launch the UI implementation directly with:
 ```bash
    python3 -m ctor.ui.gradio_app
 ```
+If the default Gradio ports are already in use, set an explicit port:
+```bash
+   GRADIO_SERVER_PORT=8060 python3 -m ctor.continuator_gradio
+```
 
 
 ## Usage in Python

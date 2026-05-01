@@ -132,6 +132,12 @@ New code may prefer:
 python -m ctor.ui.gradio_app
 ```
 
+If the default Gradio ports are already in use, set an explicit port:
+
+```bash
+GRADIO_SERVER_PORT=8060 python -m ctor.continuator_gradio
+```
+
 ## Legacy Helpers
 
 Experimental helpers that are not part of the core runtime live under
