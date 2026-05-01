@@ -23,6 +23,13 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 - Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain.
 - Many tricks here and there to maximize musical quality
 
+## Architecture documentation
+
+The current implementation is documented in:
+
+- [`docs/current_architecture.md`](docs/current_architecture.md): overview of the classic engine, learning flow, constrained sampling, MIDI layer, and known design pressure points.
+- [`docs/class_map.md`](docs/class_map.md): concise class-level reference for the current code.
+
 ## Authors
 - [François Pachet](https://github.com/fpachet)
 
