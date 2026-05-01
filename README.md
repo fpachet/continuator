@@ -184,6 +184,13 @@ For front-end integrations, prefer the high-level `Continuator2` methods in `cto
 
 The generated continuation returned by `continue_sequence` and `continue_until_end` excludes the prefix. This is useful for MIDI playback because the UI should play only the newly generated material.
 
+`ClassicContinuator` is the explicit name for the same classic MIDI engine.
+`Continuator2` remains the compatibility entry point:
+
+```python
+from ctor.continuator import ClassicContinuator, Continuator2
+```
+
 The Gradio interface exposes both fixed-length generation and "until end" generation. Internally it calls the high-level `Continuator2` continuation methods.
 
 Identity viewpoint models, such as integers, characters, and words, no longer store realization address lists because generated viewpoints are already the realized objects.

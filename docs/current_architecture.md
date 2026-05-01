@@ -51,7 +51,7 @@ The repository currently uses `ctor` as its import package.
 | `ctor/engines.py` | Small generic engine-selection adapters for comparing classic and context-BP models. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
-| `ctor/continuator.py` | MIDI-facing `Continuator2` facade over `Variable_order_Markov`. |
+| `ctor/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and compatibility `Continuator2`. |
 | `ctor/context_bp_continuator.py` | Experimental MIDI-facing context-BP facade; separate from `Continuator2`. |
 | `ctor/midi/` | Shared MIDI/viewpoint/realization utilities for MIDI-facing facades. |
 | `midi_stuff/mini_muse.py` | Lightweight `Note` representation used by the MIDI layer. |
@@ -118,7 +118,8 @@ interface for generic sequence experiments:
 
 Use `make_sequence_engine("classic")` or
 `make_sequence_engine("context_bp")` when comparing the two generic models.
-`Continuator2` remains the classic MIDI facade for now.
+`ClassicContinuator` is the classic MIDI facade; `Continuator2` remains as a
+compatibility name for existing clients.
 
 ### `LazyExpCounter` and `MultiCounter`
 
@@ -185,12 +186,12 @@ constraints = {0: start_viewpoint, 19: end_viewpoint}
 `ConstraintProblem` can represent one-of constraints. The legacy dict format can
 only represent single-value equality constraints.
 
-### `Continuator2`
+### `ClassicContinuator` and `Continuator2`
 
 Defined in `ctor/continuator.py`.
 
-`Continuator2` is the MIDI-facing facade. It owns a `Variable_order_Markov`
-whose viewpoint function maps each `Note` to:
+`ClassicContinuator` is the MIDI-facing facade for the classic engine. It owns
+a `Variable_order_Markov` whose viewpoint function maps each `Note` to:
 
 ```python
 (pitch, duration_bin, overlaps_left, overlaps_right)
@@ -209,8 +210,12 @@ Main responsibilities:
 - Maintain practical UI settings such as forgetting old phrases, transposition,
   generation length, and decay mode.
 
-`Continuator2` is not the generic model. It is an application layer over the
-generic model.
+`Continuator2` is a compatibility subclass of `ClassicContinuator`. Existing
+front ends should continue importing `Continuator2`; new code can use the more
+explicit `ClassicContinuator` name.
+
+Neither class is the generic model. They are application layers over the
+classic generic model.
 
 See `docs/public_api.md` for the compatibility surface that should remain
 stable for external clients such as `continuator_front`.

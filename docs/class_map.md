@@ -139,10 +139,11 @@ Helper returned by `ConstraintProblem.at(position)`. It provides `equals` and
 
 ## MIDI Application Layer
 
-### `ctor.continuator.Continuator2`
+### `ctor.continuator.ClassicContinuator`
 
-High-level MIDI Continuator facade. It wraps a `Variable_order_Markov` configured
-with a MIDI-note viewpoint extractor.
+High-level classic MIDI Continuator facade. It wraps a
+`Variable_order_Markov` configured with a MIDI-note viewpoint extractor and uses
+shared MIDI utilities from `ctor.midi`.
 
 Key public methods:
 
@@ -155,6 +156,11 @@ Key public methods:
 - `continue_until_end(...)`
 - `realize_vp_sequence(vp_seq)`
 - `save_midi(sequence, output_file, tempo=120, sustain=False)`
+
+### `ctor.continuator.Continuator2`
+
+Compatibility subclass of `ClassicContinuator`. Existing clients should keep
+using it; new code may prefer the explicit `ClassicContinuator` name.
 
 ### `ctor.context_bp_continuator.ContextBPContinuator`
 

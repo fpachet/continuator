@@ -9,6 +9,7 @@ surface for the current classic engine.
 These imports should continue to work:
 
 ```python
+from ctor.continuator import ClassicContinuator
 from ctor.continuator import Continuator2
 from ctor.variable_order_markov import Variable_order_Markov
 from ctor.constraints import ConstraintProblem
@@ -43,7 +44,8 @@ It is no longer a subclass of `Continuator2`. Neither one changes the existing
 ## `Continuator2`
 
 `Continuator2` is the public MIDI-facing facade. It should remain importable
-from `ctor.continuator`.
+from `ctor.continuator`. It is now a compatibility subclass of
+`ClassicContinuator`, which is the explicit name for the classic MIDI engine.
 
 Constructor:
 

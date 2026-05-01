@@ -4,7 +4,11 @@ import unittest
 
 class PublicApiTest(unittest.TestCase):
     def test_continuator2_import_and_generation_signatures(self):
-        from ctor.continuator import Continuator2
+        from ctor.continuator import ClassicContinuator, Continuator2
+        from ctor.midi import MidiContinuatorBase
+
+        self.assertTrue(issubclass(ClassicContinuator, MidiContinuatorBase))
+        self.assertTrue(issubclass(Continuator2, ClassicContinuator))
 
         init_sig = inspect.signature(Continuator2)
         self.assertIn("midi_file", init_sig.parameters)
@@ -41,6 +45,7 @@ class PublicApiTest(unittest.TestCase):
     def test_core_public_imports(self):
         from ctor.belief_propag import NoSolutionErrorInBP
         from ctor.chain_solver import SparseForwardBackward
+        from ctor.continuator import ClassicContinuator
         from ctor.constraints import ConstraintProblem
         from ctor.context_bp_continuator import ContextBPContinuator
         from ctor.engines import make_sequence_engine
@@ -49,6 +54,7 @@ class PublicApiTest(unittest.TestCase):
 
         self.assertTrue(issubclass(NoSolutionErrorInBP, Exception))
         self.assertIsNotNone(SparseForwardBackward)
+        self.assertIsNotNone(ClassicContinuator)
         self.assertIsNotNone(ConstraintProblem)
         self.assertIsNotNone(ContextBPContinuator)
         self.assertIsNotNone(make_sequence_engine)
