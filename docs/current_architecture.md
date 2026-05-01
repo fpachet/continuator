@@ -66,6 +66,7 @@ The repository currently uses `ctor` as its import package.
 | `ctor/dynaprog.py`, `ctor/markov_analysis.py` | Compatibility wrappers for the legacy helper modules. |
 | `ctor/belief_propag.py` | Compatibility exception only; the old generic BP graph implementation has been removed. |
 | `examples/` | Basic examples for ints, chars, words, chord sequences, and notes. |
+| `examples/compare_classic_context_bp_midi.py` | MIDI comparison script for classic vs context-BP generations. |
 | `tests/test_chain_solver.py` | Current regression tests for sparse inference and high-level sampling behavior. |
 | `tests/test_public_api.py` | Compatibility tests for the public API used by external front ends. |
 
@@ -237,7 +238,9 @@ longer subclasses `Continuator2`; instead it uses shared MIDI helpers from
 This keeps the external `Continuator2` API unchanged while giving the new core
 a practical MIDI test path. The generic context-BP model defaults to the
 longest feasible context policy, while this MIDI facade uses the classic-style
-singleton-avoidance policy by default.
+singleton-avoidance policy by default. The context-BP facade can expose the
+last generation trace so external clients can inspect selected orders and
+singleton backoffs.
 
 ### `MidiContinuatorBase`
 

@@ -30,6 +30,24 @@ class ContextBPContinuatorTest(unittest.TestCase):
 
         self.assertIsInstance(continuator.context_model.order_policy, SingletonAvoidingBackoffPolicy)
 
+    def test_context_bp_continuator_exposes_generation_trace(self):
+        continuator = ContextBPContinuator(
+            kmax=2,
+            order_policy=SingletonAvoidingBackoffPolicy(acceptance_probability=1.0),
+        )
+        phrase = make_phrase([60, 62, 64])
+        continuator.learn_phrase(phrase, transposition=False)
+
+        result = continuator.continue_until_end_with_trace(prefix=phrase[:1], min_length=3, max_length=3)
+        self.assertIsNotNone(result)
+        sequence, trace = result
+        trace_payload = continuator.get_last_generation_trace()
+
+        self.assertEqual(sequence[-1], continuator.get_end_vp())
+        self.assertEqual(len(trace), len(sequence))
+        self.assertEqual(len(trace_payload), len(sequence))
+        self.assertIn("policy", trace_payload[0])
+
     def test_until_end_uses_context_boundary_and_realizes_notes(self):
         continuator = ContextBPContinuator(kmax=3)
         phrase = make_phrase([60, 62, 64])

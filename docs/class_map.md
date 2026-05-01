@@ -25,13 +25,17 @@ Key public methods:
 - `sample_sequence(length, prefix=None, constraints=None, raise_on_fail=False)`
 - `sample_sequence_with_trace(length, prefix=None, constraints=None, raise_on_fail=False)`
 - `continue_until_end(prefix=None, min_length=1, max_length=64, end_symbol=None)`
+- `continue_until_end_with_trace(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `first_hit_lengths(prefix=None, min_length=1, max_length=64, end_symbol=None)`
+- `last_sample_trace_as_dicts()`
 
 ### `ctor.context_bp.SampleStep`
 
 Dataclass used by `sample_sequence_with_trace`. It records the generated
 position, symbol, chosen suffix order, selected graph order, and context used
-for that step.
+for that step. It also records the order policy name, candidate orders,
+candidate counts, skipped singleton orders, skipped symbol, and whether the
+selected singleton was explicitly accepted.
 
 ### `ctor.context_bp.LongestFeasiblePolicy`
 
@@ -45,6 +49,14 @@ Classic Continuator-style practical policy. It usually skips higher-order
 contexts that have only one feasible continuation after BP/constraint
 filtering, suppresses that skipped symbol at intermediate lower orders when
 alternatives exist, and leaves order 1 as the final fallback.
+
+Constructor parameters:
+
+- `acceptance_probability`: optional fixed probability in `[0, 1]`; `None`
+  uses the classic `1 / (order + 1)` rule.
+- `min_singleton_order`: lowest context order eligible for singleton skipping.
+- `suppress_skipped_symbol`: whether to mask a skipped symbol at intermediate
+  lower orders when alternatives exist.
 
 ### `ctor.context_bp.ContextBPResult`
 
@@ -185,6 +197,9 @@ generation to `ContextBPModel`. It does not subclass `Continuator2`.
 Use this class for context-BP MIDI experiments while leaving `Continuator2`
 stable for existing clients. It uses `SingletonAvoidingBackoffPolicy` by
 default to preserve the classic Continuator's practical anti-copying behavior.
+It exposes `sample_sequence_with_trace`, `continue_until_end_with_trace`, and
+`get_last_generation_trace` for debugging the selected orders and singleton
+backoffs.
 
 ### `ctor.midi.MidiContinuatorBase`
 

@@ -50,6 +50,15 @@ from ctor.context_bp import ContextBPContinuator
 It is no longer a subclass of `Continuator2`. Neither one changes the existing
 `Continuator2` compatibility surface.
 
+`ContextBPContinuator` additionally exposes trace helpers for experimental
+front ends:
+
+```python
+sample_sequence_with_trace(...)
+continue_until_end_with_trace(...)
+get_last_generation_trace()
+```
+
 ## `Continuator2`
 
 `Continuator2` is the public MIDI-facing facade. It should remain importable

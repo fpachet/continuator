@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ctor.context_bp.model import ContextBPModel
-from ctor.context_bp.order_policy import SingletonAvoidingBackoffPolicy
+from ctor.context_bp.order_policy import OrderPolicy, SingletonAvoidingBackoffPolicy
 from ctor.midi import MidiContinuatorBase
 from ctor.classic.variable_order_markov import Variable_order_Markov
 
@@ -17,8 +17,15 @@ class ContextBPContinuator(MidiContinuatorBase):
     `Continuator2`; both facades use shared MIDI utilities instead.
     """
 
-    def __init__(self, midi_file: object = None, kmax: int = 4, transposition: bool = False) -> None:
+    def __init__(
+        self,
+        midi_file: object = None,
+        kmax: int = 4,
+        transposition: bool = False,
+        order_policy: OrderPolicy | None = None,
+    ) -> None:
         self.kmax = int(kmax)
+        self.order_policy = order_policy or SingletonAvoidingBackoffPolicy()
         self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
         self.initialize_midi_state(transposition)
@@ -38,7 +45,7 @@ class ContextBPContinuator(MidiContinuatorBase):
             kmax=self.kmax,
             viewpoint_fn=self.get_viewpoint,
             seed=0,
-            order_policy=SingletonAvoidingBackoffPolicy(),
+            order_policy=self.order_policy,
         )
 
     def _relearn_sequences(self, sequences: list[list[Any]]) -> None:
@@ -100,6 +107,24 @@ class ContextBPContinuator(MidiContinuatorBase):
             raise_on_fail=raise_on_fail,
         )
 
+    def sample_sequence_with_trace(
+        self,
+        prefix=None,
+        length=50,
+        constraints=None,
+        start_vp=None,
+        relax_prefix_on_fail=True,
+        relax_pos0_on_fail=True,
+        raise_on_fail=False,
+    ):
+        effective_prefix = [start_vp] if start_vp is not None else prefix
+        return self.context_model.sample_sequence_with_trace(
+            length=length,
+            prefix=effective_prefix,
+            constraints=constraints,
+            raise_on_fail=raise_on_fail,
+        )
+
     def continue_sequence(
         self,
         prefix,
@@ -123,6 +148,25 @@ class ContextBPContinuator(MidiContinuatorBase):
             max_length=max_length,
             end_symbol=end_vp,
         )
+
+    def continue_until_end_with_trace(
+        self,
+        prefix=None,
+        min_length=1,
+        max_length=64,
+        end_vp=None,
+        raise_on_fail=False,
+    ):
+        return self.context_model.continue_until_end_with_trace(
+            prefix=prefix,
+            min_length=min_length,
+            max_length=max_length,
+            end_symbol=end_vp,
+            raise_on_fail=raise_on_fail,
+        )
+
+    def get_last_generation_trace(self) -> list[dict[str, Any]]:
+        return self.context_model.last_sample_trace_as_dicts()
 
     def _realizable_viewpoint_sequence(self, vp_seq):
         return [

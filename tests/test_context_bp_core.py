@@ -17,7 +17,11 @@ class ContextBPModelTest(unittest.TestCase):
         self.assertEqual(sequence, [3])
 
     def test_singleton_avoiding_policy_backs_off_from_singleton_context(self):
-        model = ContextBPModel(kmax=2, seed=0, order_policy=SingletonAvoidingBackoffPolicy())
+        model = ContextBPModel(
+            kmax=2,
+            seed=0,
+            order_policy=SingletonAvoidingBackoffPolicy(acceptance_probability=0.0),
+        )
         model.learn_sequence([1, 2, 3])
         model.learn_sequence([9, 2, 4])
 
@@ -28,6 +32,31 @@ class ContextBPModelTest(unittest.TestCase):
         self.assertEqual(sequence, [4])
         self.assertEqual(trace[0].effective_order, 1)
         self.assertEqual(trace[0].order, 1)
+        self.assertEqual(trace[0].skipped_orders, (2,))
+        self.assertEqual(trace[0].skipped_symbol, 3)
+
+    def test_singleton_policy_can_accept_singletons(self):
+        model = ContextBPModel(
+            kmax=2,
+            seed=0,
+            order_policy=SingletonAvoidingBackoffPolicy(acceptance_probability=1.0),
+        )
+        model.learn_sequence([1, 2, 3])
+        model.learn_sequence([9, 2, 4])
+
+        result = model.sample_sequence_with_trace(length=1, prefix=[1, 2], raise_on_fail=True)
+        self.assertIsNotNone(result)
+        sequence, trace = result
+
+        self.assertEqual(sequence, [3])
+        self.assertEqual(trace[0].effective_order, 2)
+        self.assertTrue(trace[0].accepted_singleton)
+
+    def test_singleton_policy_validates_parameters(self):
+        with self.assertRaises(ValueError):
+            SingletonAvoidingBackoffPolicy(acceptance_probability=1.5)
+        with self.assertRaises(ValueError):
+            SingletonAvoidingBackoffPolicy(min_singleton_order=0)
 
     def test_symbol_marginals_are_exact_for_simple_branch(self):
         model = ContextBPModel(kmax=2, seed=0)
@@ -96,6 +125,19 @@ class ContextBPModelTest(unittest.TestCase):
             (model.start_symbol, "A"),
             (model.start_symbol, "A", "B"),
         ])
+        self.assertEqual(trace[0].policy, "longest_feasible")
+        self.assertEqual(trace[1].candidate_orders, (2, 1))
+
+    def test_last_sample_trace_as_dicts_is_json_friendly(self):
+        model = ContextBPModel(kmax=2, seed=0)
+        model.learn_sequence(["A"])
+
+        model.sample_sequence(length=2, constraints={1: model.end_symbol}, raise_on_fail=True)
+        trace = model.last_sample_trace_as_dicts()
+
+        self.assertEqual(trace[-1]["symbol"], "<END>")
+        self.assertEqual(trace[-1]["policy"], "longest_feasible")
+        self.assertIn("candidate_orders", trace[-1])
 
     def test_end_symbol_can_be_explicitly_constrained(self):
         model = ContextBPModel(kmax=2, seed=0)
@@ -143,6 +185,23 @@ class ContextBPModelTest(unittest.TestCase):
         sequence = model.continue_until_end(prefix=[1, 2], min_length=2, max_length=2)
 
         self.assertEqual(sequence, [3, model.end_symbol])
+
+    def test_continue_until_end_with_trace_uses_stepwise_order_policy(self):
+        model = ContextBPModel(
+            kmax=2,
+            seed=0,
+            order_policy=SingletonAvoidingBackoffPolicy(acceptance_probability=0.0),
+        )
+        model.learn_sequence([1, 2, 3])
+        model.learn_sequence([9, 2, 4])
+
+        result = model.continue_until_end_with_trace(prefix=[1, 2], min_length=2, max_length=2)
+        self.assertIsNotNone(result)
+        sequence, trace = result
+
+        self.assertEqual(sequence[-1], model.end_symbol)
+        self.assertEqual(trace[0].effective_order, 1)
+        self.assertEqual(trace[0].skipped_orders, (2,))
 
     def test_continue_until_end_supports_custom_target_symbol(self):
         model = ContextBPModel(kmax=2, seed=0)

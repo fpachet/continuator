@@ -51,7 +51,12 @@ class PublicApiTest(unittest.TestCase):
         from ctor.continuator import ClassicContinuator
         from ctor.constraints import ConstraintProblem
         from ctor.context_bp_continuator import ContextBPContinuator
-        from ctor.context_bp import ContextBPModel
+        from ctor.context_bp import (
+            ContextBPModel,
+            LongestFeasiblePolicy,
+            PolicyDecision,
+            SingletonAvoidingBackoffPolicy,
+        )
         from ctor.engines import make_sequence_engine
         from ctor.midi import MidiContinuatorBase
         from ctor.variable_order_markov import Variable_order_Markov
@@ -66,6 +71,9 @@ class PublicApiTest(unittest.TestCase):
         self.assertIsNotNone(Variable_order_Markov)
         self.assertIs(Variable_order_Markov, PackageVariableOrderMarkov)
         self.assertIsNotNone(ContextBPModel)
+        self.assertIsNotNone(LongestFeasiblePolicy)
+        self.assertIsNotNone(PolicyDecision)
+        self.assertIsNotNone(SingletonAvoidingBackoffPolicy)
 
     def test_legacy_import_wrappers_still_work(self):
         from ctor.dynaprog import VariableDomainSequenceOptimizer
