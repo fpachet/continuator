@@ -1,6 +1,6 @@
 import unittest
 
-from ctor.context_bp import ContextBPContinuator
+from ctor.context_bp import ContextBPContinuator, SingletonAvoidingBackoffPolicy
 from midi_stuff.mini_muse import Note
 
 
@@ -24,6 +24,11 @@ class ContextBPContinuatorTest(unittest.TestCase):
         from ctor.continuator import Continuator2
 
         self.assertFalse(issubclass(ContextBPContinuator, Continuator2))
+
+    def test_context_bp_continuator_uses_classic_singleton_avoidance(self):
+        continuator = ContextBPContinuator(kmax=2)
+
+        self.assertIsInstance(continuator.context_model.order_policy, SingletonAvoidingBackoffPolicy)
 
     def test_until_end_uses_context_boundary_and_realizes_notes(self):
         continuator = ContextBPContinuator(kmax=3)

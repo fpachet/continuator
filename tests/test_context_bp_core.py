@@ -1,7 +1,7 @@
 import unittest
 
 from ctor.constraints import ConstraintProblem
-from ctor.context_bp import ContextBPModel, NoFeasibleSequenceError
+from ctor.context_bp import ContextBPModel, NoFeasibleSequenceError, SingletonAvoidingBackoffPolicy
 
 
 class ContextBPModelTest(unittest.TestCase):
@@ -15,6 +15,19 @@ class ContextBPModelTest(unittest.TestCase):
 
         self.assertEqual(marginals, [{3: 1.0}])
         self.assertEqual(sequence, [3])
+
+    def test_singleton_avoiding_policy_backs_off_from_singleton_context(self):
+        model = ContextBPModel(kmax=2, seed=0, order_policy=SingletonAvoidingBackoffPolicy())
+        model.learn_sequence([1, 2, 3])
+        model.learn_sequence([9, 2, 4])
+
+        result = model.sample_sequence_with_trace(length=1, prefix=[1, 2], raise_on_fail=True)
+        self.assertIsNotNone(result)
+        sequence, trace = result
+
+        self.assertEqual(sequence, [4])
+        self.assertEqual(trace[0].effective_order, 1)
+        self.assertEqual(trace[0].order, 1)
 
     def test_symbol_marginals_are_exact_for_simple_branch(self):
         model = ContextBPModel(kmax=2, seed=0)

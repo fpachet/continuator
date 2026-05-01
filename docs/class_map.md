@@ -10,7 +10,8 @@ Experimental generic variable-order model with exact context-state
 forward-backward inference. It learns arbitrary symbolic sequences, compiles
 variable-order continuation counts into a sparse context graph, and samples
 fixed-length sequences with positional hard constraints over emitted symbols.
-Constrained sampling uses stepwise order backoff, trying the longest feasible
+Constrained sampling uses stepwise order backoff and an explicit order policy.
+By default it uses `LongestFeasiblePolicy`, which tries the longest feasible
 context at each emitted position.
 
 This is the first implementation of the new context-BP engine and currently
@@ -31,6 +32,19 @@ Key public methods:
 Dataclass used by `sample_sequence_with_trace`. It records the generated
 position, symbol, chosen suffix order, selected graph order, and context used
 for that step.
+
+### `ctor.context_bp.LongestFeasiblePolicy`
+
+Default generic context-BP order policy. It chooses the first feasible
+candidate set produced by the stepwise backoff search, i.e. the longest context
+compatible with the remaining constraints.
+
+### `ctor.context_bp.SingletonAvoidingBackoffPolicy`
+
+Classic Continuator-style practical policy. It usually skips higher-order
+contexts that have only one feasible continuation after BP/constraint
+filtering, suppresses that skipped symbol at intermediate lower orders when
+alternatives exist, and leaves order 1 as the final fallback.
 
 ### `ctor.context_bp.ContextBPResult`
 
@@ -169,7 +183,8 @@ Experimental MIDI Continuator facade. It keeps the classic
 generation to `ContextBPModel`. It does not subclass `Continuator2`.
 
 Use this class for context-BP MIDI experiments while leaving `Continuator2`
-stable for existing clients.
+stable for existing clients. It uses `SingletonAvoidingBackoffPolicy` by
+default to preserve the classic Continuator's practical anti-copying behavior.
 
 ### `ctor.midi.MidiContinuatorBase`
 

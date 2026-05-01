@@ -27,10 +27,19 @@ these edges.
 
 For constrained sampling, the engine uses stepwise order backoff. It computes
 backward feasibility messages for each order from `kmax` down to 1. At each
-emitted position, the sampler tries the longest current context first and
-backs off only if that order has no continuation compatible with the remaining
-constraints. This lets the generated sequence use a high order where possible
-and a lower order only where constraints force it.
+emitted position, the sampler builds the feasible candidate sets from longest
+to shortest context and delegates the final choice to an explicit order policy.
+
+The generic `ContextBPModel` defaults to `LongestFeasiblePolicy`: use the
+longest context that can still complete the remaining constraints. This keeps
+the generic core close to exact context-graph BP semantics.
+
+`SingletonAvoidingBackoffPolicy` reproduces the practical classic Continuator
+heuristic. After BP/constraint filtering, a higher-order context with a single
+continuation is usually skipped, and that skipped symbol is suppressed at
+intermediate lower orders when alternatives exist. Order 1 remains the fallback
+so generation can still proceed when the singleton is forced. The MIDI-facing
+`ContextBPContinuator` uses this policy by default.
 
 `infer(...)` and `symbol_marginals(...)` still return exact BP results on one
 effective context graph: they try `kmax`, then `kmax - 1`, down to order 1,
@@ -49,6 +58,8 @@ The implementation lives under `ctor.context_bp`:
 - `ContextCounts`: stores variable-order continuation counts.
 - `ContextGraph`: compiles counts into sparse context-state edges.
 - `forward_backward`: runs exact finite-chain inference on the context graph.
+- `LongestFeasiblePolicy` and `SingletonAvoidingBackoffPolicy`: choose among
+  per-step feasible context orders during sampling.
 - `ContextBPModel`: user-facing generic model with `learn_sequence`,
   `infer`, `symbol_marginals`, `sample_sequence`, and
   `continue_until_end`.

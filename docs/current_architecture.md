@@ -49,6 +49,7 @@ The repository currently uses `ctor` as its import package.
 | `ctor/classic/variable_order_markov.py` | Generic classic variable-order Markov model, learning, constrained sampling, decay modes, compatibility behavior. |
 | `ctor/classic/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and compatibility `Continuator2`. |
 | `ctor/context_bp/` | Experimental context-BP implementation: generic model, inference, vocabulary, and MIDI facade. |
+| `ctor/context_bp/order_policy.py` | Context-BP sampling policies, including longest-feasible and classic singleton-avoidance backoff. |
 | `ctor/core/` | Compatibility wrappers for the old context-BP core import path. |
 | `ctor/engines.py` | Small generic engine-selection adapters for comparing classic and context-BP models. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
@@ -234,7 +235,9 @@ longer subclasses `Continuator2`; instead it uses shared MIDI helpers from
 - `vom`: classic `Variable_order_Markov` used for viewpoint realizations.
 
 This keeps the external `Continuator2` API unchanged while giving the new core
-a practical MIDI test path.
+a practical MIDI test path. The generic context-BP model defaults to the
+longest feasible context policy, while this MIDI facade uses the classic-style
+singleton-avoidance policy by default.
 
 ### `MidiContinuatorBase`
 

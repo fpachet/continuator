@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from ctor.context_bp.model import ContextBPModel
+from ctor.context_bp.order_policy import SingletonAvoidingBackoffPolicy
 from ctor.midi import MidiContinuatorBase
 from ctor.classic.variable_order_markov import Variable_order_Markov
 
@@ -33,7 +34,12 @@ class ContextBPContinuator(MidiContinuatorBase):
         )
 
     def _new_context_model(self) -> ContextBPModel:
-        return ContextBPModel(kmax=self.kmax, viewpoint_fn=self.get_viewpoint, seed=0)
+        return ContextBPModel(
+            kmax=self.kmax,
+            viewpoint_fn=self.get_viewpoint,
+            seed=0,
+            order_policy=SingletonAvoidingBackoffPolicy(),
+        )
 
     def _relearn_sequences(self, sequences: list[list[Any]]) -> None:
         self.vom = self._new_realization_store()

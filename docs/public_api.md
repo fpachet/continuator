@@ -20,6 +20,7 @@ New code may prefer the explicit package locations:
 ```python
 from ctor.classic import ClassicContinuator, Continuator2, Variable_order_Markov
 from ctor.context_bp import ContextBPModel, ContextBPContinuator
+from ctor.context_bp import LongestFeasiblePolicy, SingletonAvoidingBackoffPolicy
 from ctor.constraints import ConstraintProblem
 ```
 

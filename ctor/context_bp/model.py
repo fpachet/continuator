@@ -7,6 +7,7 @@ from typing import Any, Callable, Hashable, Iterable, Mapping
 from ctor.constraints import ConstraintProblem
 from ctor.context_bp.context_graph import ContextCounts, ContextGraph
 from ctor.context_bp.inference import ContextBPResult, NoFeasibleSequenceError, backward_messages, forward_backward
+from ctor.context_bp.order_policy import CandidateSet, LongestFeasiblePolicy, OrderPolicy
 from ctor.context_bp.vocabulary import Vocabulary
 
 
@@ -32,11 +33,13 @@ class ContextBPModel:
         kmax: int = 5,
         viewpoint_fn: Callable[[Any], Hashable] | None = None,
         seed: int | None = None,
+        order_policy: OrderPolicy | None = None,
     ):
         if kmax < 1:
             raise ValueError("kmax must be at least 1")
         self.kmax = int(kmax)
         self.viewpoint_fn = viewpoint_fn
+        self.order_policy = order_policy or LongestFeasiblePolicy()
         self.vocabulary = Vocabulary()
         self.counts = ContextCounts(self.kmax)
         self.rng = random.Random(seed)
@@ -268,7 +271,7 @@ class ContextBPModel:
         sequence: list[int] = []
         trace: list[SampleStep] = []
         for position in range(length):
-            chosen = None
+            candidate_sets = []
             max_context_order = min(self.kmax, len(history))
             for order in range(max_context_order, 0, -1):
                 graph, backward = order_data[order]
@@ -289,17 +292,27 @@ class ContextBPModel:
                     candidates.append(edge)
                     weights.append(weight)
                 if candidates:
-                    edge = self.rng.choices(candidates, weights=weights, k=1)[0]
-                    chosen = graph, state, edge
-                    break
+                    candidate_sets.append(
+                        CandidateSet(
+                            order=order,
+                            graph=graph,
+                            state=state,
+                            edges=tuple(candidates),
+                            weights=tuple(weights),
+                        )
+                    )
 
+            chosen = self.order_policy.choose(candidate_sets, self.rng)
             if chosen is None:
                 self.last_sample_trace = trace
                 if raise_on_fail:
                     raise NoFeasibleSequenceError("No context path satisfies the constraints at any order.")
                 return None
 
-            graph, state, edge = chosen
+            candidate_set = chosen.candidate_set
+            graph = candidate_set.graph
+            state = candidate_set.state
+            edge = chosen.edge
             sequence.append(edge.symbol)
             trace.append(
                 SampleStep(
