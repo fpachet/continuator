@@ -51,13 +51,16 @@ The repository currently uses `ctor` as its import package.
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
 | `ctor/continuator.py` | MIDI-facing `Continuator2` facade over `Variable_order_Markov`. |
 | `midi_stuff/mini_muse.py` | Lightweight `Note` representation used by the MIDI layer. |
-| `ctor/continuator_gradio.py` | Local Gradio UI around `Continuator2`. |
+| `ctor/ui/gradio_app.py` | Local Gradio UI around `Continuator2`. |
+| `ctor/continuator_gradio.py` | Compatibility entry point for the Gradio UI. |
 | `ctor/phrase_listener.py` | Realtime MIDI phrase capture/playback helper. |
-| `ctor/dynaprog.py` | Generic variable-domain sequence optimizer, currently optional/experimental for realization. |
-| `ctor/markov_analysis.py` | Markov-chain diagnostics such as irreducibility and stationary distribution. |
+| `ctor/legacy/dynaprog.py` | Legacy variable-domain sequence optimizer, currently optional/experimental for realization. |
+| `ctor/legacy/markov_analysis.py` | Legacy Markov-chain diagnostics such as irreducibility and stationary distribution. |
+| `ctor/dynaprog.py`, `ctor/markov_analysis.py` | Compatibility wrappers for the legacy helper modules. |
 | `ctor/belief_propag.py` | Compatibility exception only; the old generic BP graph implementation has been removed. |
 | `examples/` | Basic examples for ints, chars, words, chord sequences, and notes. |
 | `tests/test_chain_solver.py` | Current regression tests for sparse inference and high-level sampling behavior. |
+| `tests/test_public_api.py` | Compatibility tests for the public API used by external front ends. |
 
 ## Core Classes
 
@@ -189,6 +192,9 @@ Main responsibilities:
 `Continuator2` is not the generic model. It is an application layer over the
 generic model.
 
+See `docs/public_api.md` for the compatibility surface that should remain
+stable for external clients such as `continuator_front`.
+
 ### `Note`
 
 Defined in `midi_stuff/mini_muse.py`.
@@ -314,8 +320,8 @@ These are not necessarily bugs, but they matter for future work:
   convenient but keeps hashing in important paths.
 - Realization storage is tied to the model class rather than a separate
   realization layer.
-- MIDI parsing, viewpoint design, generation policy, and rendering all live in
-  or near `Continuator2`.
+- MIDI parsing, viewpoint design, generation policy, and rendering still live
+  in or near `Continuator2`.
 - Some diagnostic behavior still uses `print`.
 - The public API keeps several compatibility paths that are useful but make the
   core harder to read.

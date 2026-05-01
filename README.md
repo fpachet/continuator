@@ -29,6 +29,7 @@ The current implementation is documented in:
 
 - [`docs/current_architecture.md`](docs/current_architecture.md): overview of the classic engine, learning flow, constrained sampling, MIDI layer, and known design pressure points.
 - [`docs/class_map.md`](docs/class_map.md): concise class-level reference for the current code.
+- [`docs/public_api.md`](docs/public_api.md): compatibility surface used by external front ends such as `continuator_front`.
 
 ## Authors
 - [François Pachet](https://github.com/fpachet)
@@ -77,6 +78,11 @@ python3 -m pip install ".[local-ui]"
 4. launch and then click on the url displayed in the terminal:
 ```bash
    python3 -m ctor.continuator_gradio
+```
+The compatibility command above is kept for existing users. New code may also
+launch the UI implementation directly with:
+```bash
+   python3 -m ctor.ui.gradio_app
 ```
 
 

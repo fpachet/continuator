@@ -114,24 +114,32 @@ viewpoints and reconstruct timing.
 Realtime MIDI helper that records incoming MIDI messages into phrases and can
 play phrases back through an output port.
 
-### `ctor.continuator_gradio.Continuator_gradio`
+### `ctor.ui.gradio_app.Continuator_gradio`
 
 Local Gradio UI wrapper around `Continuator2`, MIDI ports, phrase memory, piano
 roll display, and generation controls.
 
+The older `ctor.continuator_gradio.Continuator_gradio` import remains as a
+compatibility wrapper.
+
 ## Utilities and Experimental Helpers
 
-### `ctor.dynaprog.VariableDomainSequenceOptimizer`
+### `ctor.legacy.dynaprog.VariableDomainSequenceOptimizer`
 
 Generic dynamic-programming optimizer over a sequence of variable domains. It is
 currently available for realization experiments but is not the default MIDI
 realizer.
 
-### `ctor.markov_analysis.MarkovAnalysis`
+The older `ctor.dynaprog.VariableDomainSequenceOptimizer` import remains as a
+compatibility wrapper.
+
+### `ctor.legacy.markov_analysis.MarkovAnalysis`
 
 Dataclass returned by `analyze_markov_chain`. It stores Markov-chain diagnostics
 such as irreducibility, period, ergodicity, stationary distribution, strongly
 connected components, and optional primitive exponent.
+
+The older `ctor.markov_analysis` import remains as a compatibility wrapper.
 
 ## Practical Import Guide
 
@@ -156,3 +164,5 @@ from ctor.chain_solver import SparseForwardBackward
 
 For future redesign work, treat this current set of classes as the "classic"
 implementation to preserve and compare against.
+
+For external compatibility details, see `docs/public_api.md`.

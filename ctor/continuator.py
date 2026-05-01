@@ -9,7 +9,6 @@ import pathlib
 import numpy as np
 import mido
 import random
-import time
 from difflib import SequenceMatcher
 import os
 
@@ -140,6 +139,12 @@ class Continuator2:
         return all_durations
 
     def compute_viewpoints(self, note_sequence):
+        """
+        Placeholder for future adaptive viewpoint binning.
+
+        This currently has no side effects. It gathers durations that could be
+        used later for quantile-based duration or velocity viewpoints.
+        """
         all_durations = self.get_all_input_durations()
         all_durations = all_durations + [n.duration for n in note_sequence]
         all_durations.sort()
@@ -147,8 +152,9 @@ class Continuator2:
         # print(self.quantile_bins(all_durations, 2))
 
     def learn_phrase(self, note_sequence, transposition):
-        # should I forget some phrases ?
-        self.compute_viewpoints(note_sequence)
+        # TODO: update adaptive viewpoint quantizers here when duration,
+        # velocity, or articulation bins become active.
+        # self.compute_viewpoints(note_sequence)
         if len(note_sequence) == 0:
             return
         if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
@@ -343,8 +349,9 @@ class Continuator2:
                     continue
             note_sequence.append(random.choice(self.vom.viewpoints_realizations[vp]))
 
+        # TODO: use VariableDomainSequenceOptimizer to choose realizations with
+        # compatible overlap status instead of sampling each viewpoint locally.
         # domains = [self.viewpoints_realizations[vp] for vp in vp_seq]
-        # # # try to put together notes with compatible status @TODO
         # unary_cost = lambda i, real: 0
         # binary_cost = lambda i, real1, j, real2: (int)(not self.get_input_note(real1).is_compatible_with(self.get_input_note(real2)))
         # optimizer = VariableDomainSequenceOptimizer(domains, unary_cost, binary_cost)
@@ -485,45 +492,3 @@ class Continuator2:
             if nb_notes_common > best:
                 best = nb_notes_common
         return best
-
-
-
-if __name__ == '__main__':
-    # midi_file_path = "../../data/Ravel_jeaux_deau.mid"
-    # midi_file_path = "../../data/test_sequence_3notes.mid"
-    # midi_file_path = "../../data/test_sequence_arpeggios.mid"
-    # midi_file_path = "../../data/debussy_prelude.mid"
-    # midi_file_path = "../../data/prelude_c_expressive.mid"
-    # midi_file_path = "../../data/prelude_c_linear.mid"
-    # midi_file_path = "../../data/partita_piano_1/pr1_1_joined.mid"
-    # midi_file_path = "../../data/take6/A_quiet_place_joined.mid"
-    # midi_file_path = "../../data/prelude_c_expressive.mid"
-    midi_file_path = "../data/prelude_c.mid"
-    # midi_file_path = "../../data/bach_partita_mono.midi"
-    # midi_file_path = "../../data/keith/train/K7_MD.mid"
-    # midi_file_path = "../../../maestro-v3.0.0/2004/MIDI-Unprocessed_SMF_12_01_2004_01-05_ORIG_MID--AUDIO_12_R1_2004_03_Track03_wav--1.midi"
-    t0 = time.perf_counter_ns()
-    generator = Continuator2(midi_file_path, 4, transposition=False)
-    # matrix = generator.get_first_order_matrix()
-    # print(matrix.shape)
-    # t1 = time.perf_counter_ns()
-    # print(f"total time: {(t1 - t0) / 1000000}")
-    # Sampling a new sequence from the  model
-    constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
-    # constraints[0] = generator.get_start_vp()
-    generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
-    t1 = time.perf_counter_ns()
-    print(f"total time: {(t1 - t0) / 1_000_000}ms")
-    # print(f"generated sequence of length {len(generated_sequence)}")
-    sequence_to_render = generated_sequence[0:-1]
-    rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
-    generator.save_midi(rendered_sequence, "../data/ctor2_output.mid", tempo=-1, sustain=False)
-    # pmpr = generator.create_pr®etty_midi_pr(generated_sequence)
-    # generator.plot_piano_roll(pmpr)
-    # os.system("say sequence generated &")
-    # print("Generated Sequence:", generated_sequence)
-    # print("computing plagiarism:")
-    # print(
-    #     f"{generator.get_longest_subsequence_with_train(generated_sequence)} successive notes in commun with train"
-    # )
-    generator.vom.show_conts_structure()

@@ -39,6 +39,7 @@ include = [
     "/midi_stuff",
     "/utils",
     "/data",
+    "/examples",
     "/docs",
     "/AGENTS.md",
     "/README.md",

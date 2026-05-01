@@ -28,10 +28,15 @@ class MidiPhraseListener:
         self.lock = threading.Lock()
         self.running = False
         self.timer_thread = threading.Thread(target=self._check_phrase_end, daemon=True)
-        self.stop_playing = False
+        self._stop_playing = False
 
+    @property
     def stop_playing(self):
-        self.stop_playing = True
+        return self._stop_playing
+
+    @stop_playing.setter
+    def stop_playing(self, value):
+        self._stop_playing = bool(value)
 
     def set_input_port(self, port_name):
         with self.lock:
@@ -139,14 +144,13 @@ class MidiPhraseListener:
                         ))
                 return
             time.sleep(msg.time)
-            if msg.type == "note-on":
+            if msg.type == "note_on":
                 pending_note_ons_played_sequence.append(msg.note)
-            if msg.type == "note-off":
+            if msg.type == "note_off":
                 if msg.note in pending_note_ons_played_sequence:
                     pending_note_ons_played_sequence.remove(msg.note)
             self.outport.send(msg)
 
-    @staticmethod
     def handle_control_change(self, msg):
         if msg.control == 64:
             print('control change: ' + str(msg.value))

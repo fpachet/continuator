@@ -1,9 +1,7 @@
-import mido
-import json
+"""Compatibility entry point for MIDI port polling used by the Gradio UI."""
 
-ports = {
-    "inputs": mido.get_input_names(),
-    "outputs": mido.get_output_names()
-}
+from ctor.ui.midi_ports_poll import main
 
-print(json.dumps(ports))
+
+if __name__ == "__main__":
+    main()
