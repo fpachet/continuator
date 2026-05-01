@@ -58,6 +58,49 @@ class ContextBPModelTest(unittest.TestCase):
 
         self.assertEqual(sequence, ["A", model.end_symbol])
 
+    def test_continue_until_end_respects_length_window(self):
+        model = ContextBPModel(kmax=3, seed=0)
+        model.learn_sequence([1, 2, 3])
+
+        sequence = model.continue_until_end(prefix=[1], min_length=3, max_length=5)
+
+        self.assertEqual(sequence, [2, 3, model.end_symbol])
+        self.assertEqual(model.first_hit_lengths(prefix=[1], min_length=1, max_length=5), [3])
+
+    def test_continue_until_end_does_not_choose_end_before_min_length(self):
+        model = ContextBPModel(kmax=1, seed=0)
+        model.learn_sequence([1])
+        model.learn_sequence([1, 2])
+
+        sequence = model.continue_until_end(prefix=[1], min_length=2, max_length=2)
+
+        self.assertEqual(sequence, [2, model.end_symbol])
+
+    def test_continue_until_end_returns_none_when_only_early_end_exists(self):
+        model = ContextBPModel(kmax=1, seed=0)
+        model.learn_sequence([1])
+
+        sequence = model.continue_until_end(prefix=[1], min_length=2, max_length=3)
+
+        self.assertIsNone(sequence)
+
+    def test_continue_until_end_uses_full_prefix_context(self):
+        model = ContextBPModel(kmax=2, seed=0)
+        model.learn_sequence([1, 2, 3])
+        model.learn_sequence([9, 2, 4])
+
+        sequence = model.continue_until_end(prefix=[1, 2], min_length=2, max_length=2)
+
+        self.assertEqual(sequence, [3, model.end_symbol])
+
+    def test_continue_until_end_supports_custom_target_symbol(self):
+        model = ContextBPModel(kmax=2, seed=0)
+        model.learn_sequence(["A", "B", "C"])
+
+        sequence = model.continue_until_end(prefix=["A"], min_length=1, max_length=2, end_symbol="C")
+
+        self.assertEqual(sequence, ["B", "C"])
+
     def test_impossible_constraints_raise_when_requested(self):
         model = ContextBPModel(kmax=2, seed=0)
         model.learn_sequence(["A", "B"])

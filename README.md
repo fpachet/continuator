@@ -154,6 +154,17 @@ constraints.at(19).equals(generator.get_end_vp())
 sequence = generator.sample_sequence(length=20, constraints=constraints)
 ```
 
+The experimental generic context-BP engine can be selected explicitly without
+changing the MIDI-facing `Continuator2` API:
+
+```python
+from ctor.engines import make_sequence_engine
+
+engine = make_sequence_engine("context_bp", kmax=4)
+engine.learn_sequence(["C", "D", "E"])
+sequence = engine.continue_until_end(prefix=["C"], min_length=2, max_length=8)
+```
+
 ### Migration notes
 
 For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:

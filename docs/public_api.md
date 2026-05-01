@@ -25,6 +25,14 @@ from ctor.dynaprog import VariableDomainSequenceOptimizer
 from ctor.markov_analysis import MarkovAnalysis, analyze_markov_chain
 ```
 
+The experimental generic engine-selection API is available separately:
+
+```python
+from ctor.engines import make_sequence_engine
+```
+
+It is not yet part of the MIDI-facing `Continuator2` compatibility surface.
+
 ## `Continuator2`
 
 `Continuator2` is the public MIDI-facing facade. It should remain importable

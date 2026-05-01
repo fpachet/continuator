@@ -48,6 +48,7 @@ The repository currently uses `ctor` as its import package.
 | --- | --- |
 | `ctor/variable_order_markov.py` | Generic classic variable-order Markov model, learning, constrained sampling, decay modes, compatibility behavior. |
 | `ctor/core/` | Experimental generic context-BP core for exact variable-order constrained inference. |
+| `ctor/engines.py` | Small generic engine-selection adapters for comparing classic and context-BP models. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
 | `ctor/continuator.py` | MIDI-facing `Continuator2` facade over `Variable_order_Markov`. |
@@ -100,6 +101,22 @@ Important internal fields:
 The current implementation mixes model storage, sampling, fallback policy, and
 some user-facing compatibility concerns. This is useful for continuity but is
 also the main pressure point for future refactoring.
+
+### Generic Engine Adapters
+
+Defined in `ctor/engines.py`.
+
+`ClassicSequenceEngine` and `ContextBPSequenceEngine` provide a small shared
+interface for generic sequence experiments:
+
+- `learn_sequence`
+- `sample_sequence`
+- `continue_sequence`
+- `continue_until_end`
+
+Use `make_sequence_engine("classic")` or
+`make_sequence_engine("context_bp")` when comparing the two generic models.
+`Continuator2` remains the classic MIDI facade for now.
 
 ### `LazyExpCounter` and `MultiCounter`
 

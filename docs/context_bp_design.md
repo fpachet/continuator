@@ -34,11 +34,36 @@ The first implementation lives under `ctor.core`:
 - `ContextGraph`: compiles counts into sparse context-state edges.
 - `forward_backward`: runs exact finite-chain inference on the context graph.
 - `ContextBPModel`: user-facing generic model with `learn_sequence`,
-  `infer`, `symbol_marginals`, and `sample_sequence`.
+  `infer`, `symbol_marginals`, `sample_sequence`, and
+  `continue_until_end`.
 
 This first pass supports fixed-length generation with positional hard
-constraints. MIDI integration and until-end generation are intentionally left
-for later once the generic semantics are stable.
+constraints and variable-length first-hit generation to an end symbol. MIDI
+integration is intentionally left for later once the generic semantics are
+stable.
+
+## Engine Selection
+
+The classic and context-BP generic engines can be selected explicitly through
+`ctor.engines`:
+
+```python
+from ctor.engines import make_sequence_engine
+
+classic = make_sequence_engine("classic", kmax=4)
+context_bp = make_sequence_engine("context_bp", kmax=4)
+```
+
+This is deliberately not wired into `Continuator2` yet. The current MIDI-facing
+API stays classic while the new core is compared on generic sequences.
+
+## Until-End Generation
+
+`ContextBPModel.continue_until_end(...)` uses first-hit semantics: the target
+symbol is forbidden before the final generated position and forced at the final
+position. Feasible lengths inside the requested window are weighted by their
+exact path mass, then a fixed-length context-BP sample is drawn for the chosen
+length.
 
 ## Compatibility
 

@@ -16,6 +16,7 @@ class ContextBPResult:
     forward: np.ndarray
     backward: np.ndarray
     symbol_marginals: np.ndarray
+    path_mass: float
 
 
 def forward_backward(
@@ -35,6 +36,7 @@ def forward_backward(
     forward = np.zeros((length + 1, n_states), dtype=float)
     backward = np.zeros((length + 1, n_states), dtype=float)
     forward[0, initial_state] = 1.0
+    path_mass = 1.0
 
     for position in range(length):
         allowed = allowed_symbols_by_position[position]
@@ -48,6 +50,7 @@ def forward_backward(
         if total <= 0:
             raise NoFeasibleSequenceError("No context path satisfies the constraints.")
         forward[position + 1] /= total
+        path_mass *= float(total)
 
     backward[length] = 1.0
     for position in range(length - 1, -1, -1):
@@ -86,4 +89,5 @@ def forward_backward(
         forward=forward,
         backward=backward,
         symbol_marginals=symbol_marginals,
+        path_mass=path_mass,
     )

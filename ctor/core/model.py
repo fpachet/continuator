@@ -43,6 +43,13 @@ class ContextBPModel:
     def get_viewpoint(self, obj):
         return obj if self.viewpoint_fn is None else self.viewpoint_fn(obj)
 
+    def _encode_value(self, value: Any) -> int:
+        if value is self.vocabulary.start_symbol:
+            return self.vocabulary.start_id
+        if value is self.vocabulary.end_symbol:
+            return self.vocabulary.end_id
+        return self.vocabulary.encode(self.get_viewpoint(value))
+
     def learn_sequence(self, sequence: Iterable[Any]) -> None:
         material = list(sequence)
         self.input_sequences.append(material)
@@ -58,7 +65,7 @@ class ContextBPModel:
         else:
             prefix_items = list(prefix)
         context = [self.vocabulary.start_id]
-        context.extend(self.vocabulary.encode(self.get_viewpoint(item)) for item in prefix_items)
+        context.extend(self._encode_value(item) for item in prefix_items)
         return tuple(context[-self.kmax:])
 
     def compile_graph(self, *, prefix: Iterable[Any] | None = None) -> ContextGraph:
@@ -107,9 +114,88 @@ class ContextBPModel:
             return None
 
         allowed = self._allowed_symbols_by_position(length, constraints)
+        decoded = self._sample_with_allowed(
+            graph,
+            initial_state,
+            inference,
+            allowed,
+            raise_on_fail=raise_on_fail,
+        )
+        if decoded is None:
+            return None
+        if not self.sequence_satisfies_constraints(decoded, constraints):
+            if raise_on_fail:
+                raise NoFeasibleSequenceError("Sampled sequence violates constraints.")
+            return None
+        return decoded
+
+    def continue_until_end(
+        self,
+        prefix: Iterable[Any] | None = None,
+        *,
+        min_length: int = 1,
+        max_length: int = 64,
+        end_symbol: Any | None = None,
+        raise_on_fail: bool = False,
+    ) -> list[Any] | None:
+        """
+        Generate until the first hit of `end_symbol` inside a length window.
+
+        The prefix is conditioning context only and is not included in the
+        returned sequence. The returned sequence includes the end symbol.
+        """
+        graph, initial_state, weighted_lengths = self._first_hit_path_data(
+            prefix=prefix,
+            min_length=min_length,
+            max_length=max_length,
+            end_symbol=end_symbol,
+            raise_on_fail=raise_on_fail,
+        )
+        if not weighted_lengths:
+            return None
+
+        lengths = list(weighted_lengths)
+        weights = [weighted_lengths[length][0] for length in lengths]
+        chosen_length = self.rng.choices(lengths, weights=weights, k=1)[0]
+        _, allowed, inference = weighted_lengths[chosen_length]
+        return self._sample_with_allowed(
+            graph,
+            initial_state,
+            inference,
+            allowed,
+            raise_on_fail=raise_on_fail,
+        )
+
+    def first_hit_lengths(
+        self,
+        prefix: Iterable[Any] | None = None,
+        *,
+        min_length: int = 1,
+        max_length: int = 64,
+        end_symbol: Any | None = None,
+    ) -> list[int]:
+        """Return feasible first-hit lengths for the given prefix and target."""
+        _, _, weighted_lengths = self._first_hit_path_data(
+            prefix=prefix,
+            min_length=min_length,
+            max_length=max_length,
+            end_symbol=end_symbol,
+            raise_on_fail=False,
+        )
+        return list(weighted_lengths)
+
+    def _sample_with_allowed(
+        self,
+        graph: ContextGraph,
+        initial_state: int,
+        inference: ContextBPResult,
+        allowed: list[set[int]],
+        *,
+        raise_on_fail: bool,
+    ) -> list[Any] | None:
         state = initial_state
         sequence: list[int] = []
-        for position in range(length):
+        for position in range(len(allowed)):
             candidates = []
             weights = []
             for edge in graph.outgoing[state]:
@@ -128,12 +214,74 @@ class ContextBPModel:
             sequence.append(edge.symbol)
             state = edge.dst
 
-        decoded = [self.vocabulary.decode(symbol) for symbol in sequence]
-        if not self.sequence_satisfies_constraints(decoded, constraints):
+        return [self.vocabulary.decode(symbol) for symbol in sequence]
+
+    def _first_hit_path_data(
+        self,
+        *,
+        prefix: Iterable[Any] | None,
+        min_length: int,
+        max_length: int,
+        end_symbol: Any | None,
+        raise_on_fail: bool,
+    ) -> tuple[ContextGraph, int, dict[int, tuple[float, list[set[int]], ContextBPResult]]]:
+        if min_length < 1:
+            raise ValueError("min_length must be at least 1")
+        if max_length < min_length:
+            raise ValueError("max_length must be greater than or equal to min_length")
+
+        try:
+            target_id = self.vocabulary.end_id if end_symbol is None else self._encode_value(end_symbol)
+        except KeyError as e:
             if raise_on_fail:
-                raise NoFeasibleSequenceError("Sampled sequence violates constraints.")
-            return None
-        return decoded
+                raise NoFeasibleSequenceError("Unknown end symbol.") from e
+            graph = self.compile_graph(prefix=prefix)
+            return graph, graph.state_id(self.initial_context(prefix)), {}
+        if target_id == self.vocabulary.start_id:
+            raise ValueError("end_symbol cannot be the hidden start symbol")
+
+        graph = self.compile_graph(prefix=prefix)
+        initial_state = graph.state_id(self.initial_context(prefix))
+        reachable = graph.first_hit_reachable_to_symbol(target_id, max_length)
+        if not graph.can_reach_between(reachable, initial_state, min_length, max_length):
+            if raise_on_fail:
+                raise NoFeasibleSequenceError("End symbol is not reachable in the requested window.")
+            return graph, initial_state, {}
+
+        weighted_lengths: dict[int, tuple[float, list[set[int]], ContextBPResult]] = {}
+        for length in range(min_length, max_length + 1):
+            if initial_state not in reachable[length]:
+                continue
+            allowed = self._first_hit_allowed_symbols_by_position(length, target_id)
+            try:
+                inference = forward_backward(
+                    graph,
+                    initial_state=initial_state,
+                    length=length,
+                    allowed_symbols_by_position=allowed,
+                    vocab_size=len(self.vocabulary),
+                )
+            except NoFeasibleSequenceError:
+                continue
+            if inference.path_mass > 0:
+                weighted_lengths[length] = (inference.path_mass, allowed, inference)
+
+        if not weighted_lengths and raise_on_fail:
+            raise NoFeasibleSequenceError("No first-hit path satisfies the requested window.")
+        return graph, initial_state, weighted_lengths
+
+    def _first_hit_allowed_symbols_by_position(
+        self,
+        length: int,
+        target_id: int,
+    ) -> list[set[int]]:
+        if length < 1:
+            raise ValueError("length must be at least 1")
+        allowed = self._allowed_symbols_by_position(length, constraints=None)
+        for position in range(length - 1):
+            allowed[position].discard(target_id)
+        allowed[length - 1] = {target_id}
+        return allowed
 
     def symbol_marginals(
         self,
@@ -179,7 +327,7 @@ class ContextBPModel:
         for position, values in items:
             if position < 0 or position >= length:
                 raise IndexError(f"constraint position {position} is outside length {length}")
-            encoded_values = {self.vocabulary.encode(self.get_viewpoint(value)) for value in values}
+            encoded_values = {self._encode_value(value) for value in values}
             if not encoded_values:
                 raise ValueError(f"position {position} has an empty allowed set")
             allowed[position] = encoded_values

@@ -20,6 +20,28 @@ Key public methods:
 - `infer(length, prefix=None, constraints=None)`
 - `symbol_marginals(length, prefix=None, constraints=None)`
 - `sample_sequence(length, prefix=None, constraints=None, raise_on_fail=False)`
+- `continue_until_end(prefix=None, min_length=1, max_length=64, end_symbol=None)`
+- `first_hit_lengths(prefix=None, min_length=1, max_length=64, end_symbol=None)`
+
+### `ctor.engines.ClassicSequenceEngine`
+
+Thin generic adapter around `Variable_order_Markov`. It gives the classic
+engine the same basic method names as the experimental context-BP engine.
+
+### `ctor.engines.ContextBPSequenceEngine`
+
+Thin generic adapter around `ContextBPModel`.
+
+### `ctor.engines.make_sequence_engine`
+
+Factory for choosing the generic sequence engine explicitly:
+
+```python
+from ctor.engines import make_sequence_engine
+
+engine = make_sequence_engine("classic")
+engine = make_sequence_engine("context_bp")
+```
 
 ### `ctor.variable_order_markov.Variable_order_Markov`
 

@@ -115,3 +115,41 @@ class ContextGraph:
             return self.context_to_id[normalized]
         except KeyError as e:
             raise KeyError(f"Unknown context state: {normalized!r}") from e
+
+    def first_hit_reachable_to_symbol(self, target_symbol: int, max_steps: int) -> list[set[int]]:
+        """
+        Return states that can first emit `target_symbol` in exactly n steps.
+
+        The result at index `n` contains source state ids. Index 0 is always
+        empty because first hit is defined over emitted symbols.
+        """
+        if max_steps < 0:
+            raise ValueError("max_steps must be non-negative")
+        reachable: list[set[int]] = [set() for _ in range(max_steps + 1)]
+        for steps in range(1, max_steps + 1):
+            states = reachable[steps]
+            for state, edges in enumerate(self.outgoing):
+                for edge in edges:
+                    if steps == 1:
+                        if edge.symbol == target_symbol:
+                            states.add(state)
+                            break
+                    elif edge.symbol != target_symbol and edge.dst in reachable[steps - 1]:
+                        states.add(state)
+                        break
+        return reachable
+
+    @staticmethod
+    def can_reach_between(
+        reachable: list[set[int]],
+        state: int,
+        min_steps: int,
+        max_steps: int,
+    ) -> bool:
+        """Return whether `state` can first hit the target inside the window."""
+        if min_steps < 0:
+            raise ValueError("min_steps must be non-negative")
+        if max_steps < min_steps:
+            return False
+        capped_max = min(max_steps, len(reachable) - 1)
+        return any(state in reachable[steps] for steps in range(min_steps, capped_max + 1))

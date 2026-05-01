@@ -42,11 +42,13 @@ class PublicApiTest(unittest.TestCase):
         from ctor.belief_propag import NoSolutionErrorInBP
         from ctor.chain_solver import SparseForwardBackward
         from ctor.constraints import ConstraintProblem
+        from ctor.engines import make_sequence_engine
         from ctor.variable_order_markov import Variable_order_Markov
 
         self.assertTrue(issubclass(NoSolutionErrorInBP, Exception))
         self.assertIsNotNone(SparseForwardBackward)
         self.assertIsNotNone(ConstraintProblem)
+        self.assertIsNotNone(make_sequence_engine)
         self.assertIsNotNone(Variable_order_Markov)
 
     def test_legacy_import_wrappers_still_work(self):
