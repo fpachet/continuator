@@ -48,7 +48,10 @@ class ContextBPModel:
             return self.vocabulary.start_id
         if value is self.vocabulary.end_symbol:
             return self.vocabulary.end_id
-        return self.vocabulary.encode(self.get_viewpoint(value))
+        try:
+            return self.vocabulary.encode(value)
+        except KeyError:
+            return self.vocabulary.encode(self.get_viewpoint(value))
 
     def learn_sequence(self, sequence: Iterable[Any]) -> None:
         material = list(sequence)

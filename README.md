@@ -165,6 +165,14 @@ engine.learn_sequence(["C", "D", "E"])
 sequence = engine.continue_until_end(prefix=["C"], min_length=2, max_length=8)
 ```
 
+For MIDI experiments with the new core, use the separate experimental facade:
+
+```python
+from ctor.context_bp_continuator import ContextBPContinuator
+
+generator = ContextBPContinuator(kmax=4)
+```
+
 ### Migration notes
 
 For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:

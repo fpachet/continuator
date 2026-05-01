@@ -31,7 +31,13 @@ The experimental generic engine-selection API is available separately:
 from ctor.engines import make_sequence_engine
 ```
 
-It is not yet part of the MIDI-facing `Continuator2` compatibility surface.
+The experimental MIDI-facing context-BP class is also separate:
+
+```python
+from ctor.context_bp_continuator import ContextBPContinuator
+```
+
+Neither one changes the existing `Continuator2` compatibility surface.
 
 ## `Continuator2`
 

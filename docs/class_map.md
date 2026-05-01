@@ -23,6 +23,11 @@ Key public methods:
 - `continue_until_end(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `first_hit_lengths(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 
+### `ctor.core.ContextBPResult`
+
+Dataclass containing context-BP messages, emitted-symbol marginals, and the
+total path mass for the constrained finite chain.
+
 ### `ctor.engines.ClassicSequenceEngine`
 
 Thin generic adapter around `Variable_order_Markov`. It gives the classic
@@ -141,6 +146,15 @@ Key public methods:
 - `continue_until_end(...)`
 - `realize_vp_sequence(vp_seq)`
 - `save_midi(sequence, output_file, tempo=120, sustain=False)`
+
+### `ctor.context_bp_continuator.ContextBPContinuator`
+
+Experimental MIDI Continuator facade. It keeps the classic
+`Variable_order_Markov` store for MIDI realization, but delegates viewpoint
+generation to `ContextBPModel`.
+
+Use this class for context-BP MIDI experiments while leaving `Continuator2`
+stable for existing clients.
 
 ### `midi_stuff.mini_muse.Note`
 

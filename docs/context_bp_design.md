@@ -57,6 +57,15 @@ context_bp = make_sequence_engine("context_bp", kmax=4)
 This is deliberately not wired into `Continuator2` yet. The current MIDI-facing
 API stays classic while the new core is compared on generic sequences.
 
+For MIDI experiments, use the separate `ContextBPContinuator` class:
+
+```python
+from ctor.context_bp_continuator import ContextBPContinuator
+```
+
+It uses `ContextBPModel` for viewpoint generation and keeps a classic
+`Variable_order_Markov` store for note realization.
+
 ## Until-End Generation
 
 `ContextBPModel.continue_until_end(...)` uses first-hit semantics: the target

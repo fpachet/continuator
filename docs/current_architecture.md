@@ -52,6 +52,7 @@ The repository currently uses `ctor` as its import package.
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
 | `ctor/continuator.py` | MIDI-facing `Continuator2` facade over `Variable_order_Markov`. |
+| `ctor/context_bp_continuator.py` | Experimental MIDI-facing context-BP facade; keeps classic storage for realization. |
 | `midi_stuff/mini_muse.py` | Lightweight `Note` representation used by the MIDI layer. |
 | `ctor/ui/gradio_app.py` | Local Gradio UI around `Continuator2`. |
 | `ctor/continuator_gradio.py` | Compatibility entry point for the Gradio UI. |
@@ -212,6 +213,20 @@ generic model.
 
 See `docs/public_api.md` for the compatibility surface that should remain
 stable for external clients such as `continuator_front`.
+
+### `ContextBPContinuator`
+
+Defined in `ctor/context_bp_continuator.py`.
+
+This is the first MIDI-facing experiment using the new context-BP core. It
+subclasses `Continuator2` to reuse MIDI parsing, phrase handling, and
+realization, but learns each phrase into two stores:
+
+- `context_model`: `ContextBPModel` used for viewpoint generation.
+- `vom`: classic `Variable_order_Markov` used for viewpoint realizations.
+
+This keeps the external `Continuator2` API unchanged while giving the new core
+a practical MIDI test path.
 
 ### `Note`
 
