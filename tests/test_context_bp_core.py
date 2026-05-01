@@ -1,7 +1,12 @@
 import unittest
 
 from ctor.constraints import ConstraintProblem
-from ctor.context_bp import ContextBPModel, NoFeasibleSequenceError, SingletonAvoidingBackoffPolicy
+from ctor.context_bp import (
+    ContextBPModel,
+    LongestFeasiblePolicy,
+    NoFeasibleSequenceError,
+    SingletonAvoidingBackoffPolicy,
+)
 
 
 class ContextBPModelTest(unittest.TestCase):
@@ -51,6 +56,38 @@ class ContextBPModelTest(unittest.TestCase):
         self.assertEqual(sequence, [3])
         self.assertEqual(trace[0].effective_order, 2)
         self.assertTrue(trace[0].accepted_singleton)
+
+    def test_singleton_avoidance_preserves_constrained_feasibility(self):
+        training = [[1, 2, 3], [9, 2, 4]]
+
+        longest = ContextBPModel(kmax=2, seed=0, order_policy=LongestFeasiblePolicy())
+        singleton = ContextBPModel(
+            kmax=2,
+            seed=0,
+            order_policy=SingletonAvoidingBackoffPolicy(acceptance_probability=0.0),
+        )
+        for sequence in training:
+            longest.learn_sequence(sequence)
+            singleton.learn_sequence(sequence)
+        constraints = {0: 3, 1: longest.end_symbol}
+
+        longest_sequence = longest.sample_sequence(
+            length=2,
+            prefix=[1, 2],
+            constraints=constraints,
+            raise_on_fail=True,
+        )
+        singleton_sequence, singleton_trace = singleton.sample_sequence_with_trace(
+            length=2,
+            prefix=[1, 2],
+            constraints={0: 3, 1: singleton.end_symbol},
+            raise_on_fail=True,
+        )
+
+        self.assertEqual(longest_sequence, [3, longest.end_symbol])
+        self.assertEqual(singleton_sequence, [3, singleton.end_symbol])
+        self.assertEqual(singleton_trace[0].skipped_orders, (2,))
+        self.assertEqual(singleton_trace[1].skipped_orders, (2,))
 
     def test_singleton_policy_validates_parameters(self):
         with self.assertRaises(ValueError):
