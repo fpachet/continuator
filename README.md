@@ -30,6 +30,7 @@ The current implementation is documented in:
 - [`docs/current_architecture.md`](docs/current_architecture.md): overview of the classic engine, learning flow, constrained sampling, MIDI layer, and known design pressure points.
 - [`docs/class_map.md`](docs/class_map.md): concise class-level reference for the current code.
 - [`docs/public_api.md`](docs/public_api.md): compatibility surface used by external front ends such as `continuator_front`.
+- [`docs/context_bp_design.md`](docs/context_bp_design.md): notes on the experimental context-BP core.
 
 ## Authors
 - [François Pachet](https://github.com/fpachet)

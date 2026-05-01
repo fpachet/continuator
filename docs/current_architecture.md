@@ -47,6 +47,7 @@ The repository currently uses `ctor` as its import package.
 | Path | Role |
 | --- | --- |
 | `ctor/variable_order_markov.py` | Generic classic variable-order Markov model, learning, constrained sampling, decay modes, compatibility behavior. |
+| `ctor/core/` | Experimental generic context-BP core for exact variable-order constrained inference. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
 | `ctor/continuator.py` | MIDI-facing `Continuator2` facade over `Variable_order_Markov`. |
@@ -344,3 +345,6 @@ classic engine and add a new core with these boundaries:
 
 The current implementation should then remain available as the classic engine
 for comparison, compatibility, and musical regression testing.
+
+The first experimental version of this new core is documented in
+`docs/context_bp_design.md`.

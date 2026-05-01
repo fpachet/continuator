@@ -4,6 +4,23 @@ This file is a concise class-level index for the current implementation.
 
 ## Generic Model and Inference
 
+### `ctor.core.ContextBPModel`
+
+Experimental generic variable-order model with exact context-state
+forward-backward inference. It learns arbitrary symbolic sequences, compiles
+variable-order continuation counts into a sparse context graph, and samples
+fixed-length sequences with positional hard constraints over emitted symbols.
+
+This is the first implementation of the new context-BP engine and currently
+lives beside the classic implementation.
+
+Key public methods:
+
+- `learn_sequence(sequence)`
+- `infer(length, prefix=None, constraints=None)`
+- `symbol_marginals(length, prefix=None, constraints=None)`
+- `sample_sequence(length, prefix=None, constraints=None, raise_on_fail=False)`
+
 ### `ctor.variable_order_markov.Variable_order_Markov`
 
 Generic classic variable-order Markov model. It learns sequences of arbitrary

@@ -5,6 +5,7 @@ Before making architecture-level changes, read:
 - `docs/current_architecture.md`
 - `docs/class_map.md`
 - `docs/public_api.md`
+- `docs/context_bp_design.md`
 
 The current implementation should be treated as the "classic" Continuator
 engine. Preserve the existing public imports unless a migration is explicitly
