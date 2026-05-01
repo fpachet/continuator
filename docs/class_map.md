@@ -10,6 +10,8 @@ Experimental generic variable-order model with exact context-state
 forward-backward inference. It learns arbitrary symbolic sequences, compiles
 variable-order continuation counts into a sparse context graph, and samples
 fixed-length sequences with positional hard constraints over emitted symbols.
+Constrained inference tries the highest effective order first, then backs off
+toward order 1 until a feasible context graph is found.
 
 This is the first implementation of the new context-BP engine and currently
 lives beside the classic implementation.

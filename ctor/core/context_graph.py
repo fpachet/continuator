@@ -68,8 +68,14 @@ class ContextGraph:
         counts: ContextCounts,
         *,
         initial_contexts: list[tuple[int, ...]] | None = None,
+        max_order: int | None = None,
     ) -> "ContextGraph":
-        graph = cls(counts.kmax)
+        if max_order is None:
+            max_order = counts.kmax
+        if max_order < 1 or max_order > counts.kmax:
+            raise ValueError(f"max_order must be between 1 and {counts.kmax}")
+
+        graph = cls(max_order)
         queue: deque[tuple[int, ...]] = deque()
 
         def add_context(context: tuple[int, ...]) -> int:
@@ -84,7 +90,8 @@ class ContextGraph:
             return context_id
 
         for context in counts.counts:
-            add_context(context)
+            if len(context) <= graph.kmax:
+                add_context(context)
         for context in initial_contexts or []:
             add_context(context)
 

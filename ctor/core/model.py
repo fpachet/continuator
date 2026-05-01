@@ -62,19 +62,43 @@ class ContextBPModel:
         self.counts.update_sequence(encoded)
         self.counts.update_sequence([self.vocabulary.end_id, self.vocabulary.end_id])
 
-    def initial_context(self, prefix: Iterable[Any] | None = None) -> tuple[int, ...]:
+    def _effective_order(self, order: int | None = None) -> int:
+        if order is None:
+            return self.kmax
+        if order < 1 or order > self.kmax:
+            raise ValueError(f"order must be between 1 and {self.kmax}")
+        return int(order)
+
+    def _orders_to_try(self, order: int | None = None) -> range:
+        effective_order = self._effective_order(order)
+        return range(effective_order, 0, -1)
+
+    def initial_context(
+        self,
+        prefix: Iterable[Any] | None = None,
+        *,
+        order: int | None = None,
+    ) -> tuple[int, ...]:
+        effective_order = self._effective_order(order)
         if prefix is None:
             prefix_items = []
         else:
             prefix_items = list(prefix)
         context = [self.vocabulary.start_id]
         context.extend(self._encode_value(item) for item in prefix_items)
-        return tuple(context[-self.kmax:])
+        return tuple(context[-effective_order:])
 
-    def compile_graph(self, *, prefix: Iterable[Any] | None = None) -> ContextGraph:
+    def compile_graph(
+        self,
+        *,
+        prefix: Iterable[Any] | None = None,
+        order: int | None = None,
+    ) -> ContextGraph:
+        effective_order = self._effective_order(order)
         return ContextGraph.from_counts(
             self.counts,
-            initial_contexts=[self.initial_context(prefix)],
+            initial_contexts=[self.initial_context(prefix, order=effective_order)],
+            max_order=effective_order,
         )
 
     def infer(
@@ -83,19 +107,26 @@ class ContextBPModel:
         *,
         prefix: Iterable[Any] | None = None,
         constraints: ConstraintProblem | Mapping[int, Any] | None = None,
+        order: int | None = None,
     ) -> tuple[ContextGraph, int, ContextBPResult]:
-        graph = self.compile_graph(prefix=prefix)
-        initial_context = self.initial_context(prefix)
-        initial_state = graph.state_id(initial_context)
         allowed = self._allowed_symbols_by_position(length, constraints)
-        result = forward_backward(
-            graph,
-            initial_state=initial_state,
-            length=length,
-            allowed_symbols_by_position=allowed,
-            vocab_size=len(self.vocabulary),
-        )
-        return graph, initial_state, result
+        last_error = None
+        for effective_order in self._orders_to_try(order):
+            graph = self.compile_graph(prefix=prefix, order=effective_order)
+            initial_context = self.initial_context(prefix, order=effective_order)
+            initial_state = graph.state_id(initial_context)
+            try:
+                result = forward_backward(
+                    graph,
+                    initial_state=initial_state,
+                    length=length,
+                    allowed_symbols_by_position=allowed,
+                    vocab_size=len(self.vocabulary),
+                )
+                return graph, initial_state, result
+            except NoFeasibleSequenceError as e:
+                last_error = e
+        raise NoFeasibleSequenceError("No context path satisfies the constraints at any order.") from last_error
 
     def sample_sequence(
         self,
@@ -239,39 +270,48 @@ class ContextBPModel:
             if raise_on_fail:
                 raise NoFeasibleSequenceError("Unknown end symbol.") from e
             graph = self.compile_graph(prefix=prefix)
-            return graph, graph.state_id(self.initial_context(prefix)), {}
+            return graph, graph.state_id(self.initial_context(prefix, order=graph.kmax)), {}
         if target_id == self.vocabulary.start_id:
             raise ValueError("end_symbol cannot be the hidden start symbol")
 
-        graph = self.compile_graph(prefix=prefix)
-        initial_state = graph.state_id(self.initial_context(prefix))
-        reachable = graph.first_hit_reachable_to_symbol(target_id, max_length)
-        if not graph.can_reach_between(reachable, initial_state, min_length, max_length):
-            if raise_on_fail:
-                raise NoFeasibleSequenceError("End symbol is not reachable in the requested window.")
-            return graph, initial_state, {}
-
-        weighted_lengths: dict[int, tuple[float, list[set[int]], ContextBPResult]] = {}
-        for length in range(min_length, max_length + 1):
-            if initial_state not in reachable[length]:
+        last_graph = None
+        last_initial_state = None
+        for effective_order in self._orders_to_try():
+            graph = self.compile_graph(prefix=prefix, order=effective_order)
+            initial_state = graph.state_id(self.initial_context(prefix, order=effective_order))
+            last_graph = graph
+            last_initial_state = initial_state
+            reachable = graph.first_hit_reachable_to_symbol(target_id, max_length)
+            if not graph.can_reach_between(reachable, initial_state, min_length, max_length):
                 continue
-            allowed = self._first_hit_allowed_symbols_by_position(length, target_id)
-            try:
-                inference = forward_backward(
-                    graph,
-                    initial_state=initial_state,
-                    length=length,
-                    allowed_symbols_by_position=allowed,
-                    vocab_size=len(self.vocabulary),
-                )
-            except NoFeasibleSequenceError:
-                continue
-            if inference.path_mass > 0:
-                weighted_lengths[length] = (inference.path_mass, allowed, inference)
 
-        if not weighted_lengths and raise_on_fail:
-            raise NoFeasibleSequenceError("No first-hit path satisfies the requested window.")
-        return graph, initial_state, weighted_lengths
+            weighted_lengths: dict[int, tuple[float, list[set[int]], ContextBPResult]] = {}
+            for length in range(min_length, max_length + 1):
+                if initial_state not in reachable[length]:
+                    continue
+                allowed = self._first_hit_allowed_symbols_by_position(length, target_id)
+                try:
+                    inference = forward_backward(
+                        graph,
+                        initial_state=initial_state,
+                        length=length,
+                        allowed_symbols_by_position=allowed,
+                        vocab_size=len(self.vocabulary),
+                    )
+                except NoFeasibleSequenceError:
+                    continue
+                if inference.path_mass > 0:
+                    weighted_lengths[length] = (inference.path_mass, allowed, inference)
+
+            if weighted_lengths:
+                return graph, initial_state, weighted_lengths
+
+        if raise_on_fail:
+            raise NoFeasibleSequenceError("No first-hit path satisfies the requested window at any order.")
+        if last_graph is None or last_initial_state is None:
+            last_graph = self.compile_graph(prefix=prefix)
+            last_initial_state = last_graph.state_id(self.initial_context(prefix, order=last_graph.kmax))
+        return last_graph, last_initial_state, {}
 
     def _first_hit_allowed_symbols_by_position(
         self,

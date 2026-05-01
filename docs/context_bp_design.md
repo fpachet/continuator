@@ -25,6 +25,13 @@ with the transition weight learned from the longest available suffix of the
 current context. Positional constraints apply to the emitted symbol labels on
 these edges.
 
+For constrained generation, the engine uses order backoff. It first tries exact
+context-BP at `kmax`; if no constrained path exists, it recompiles the context
+graph at `kmax - 1`, then `kmax - 2`, and so on down to order 1. The generated
+sequence therefore uses the highest order that is compatible with the
+constraints, rather than failing merely because the maximum context was too
+specific.
+
 ## First Implementation
 
 The first implementation lives under `ctor.core`:
@@ -71,8 +78,8 @@ It uses `ContextBPModel` for viewpoint generation and keeps a classic
 `ContextBPModel.continue_until_end(...)` uses first-hit semantics: the target
 symbol is forbidden before the final generated position and forced at the final
 position. Feasible lengths inside the requested window are weighted by their
-exact path mass, then a fixed-length context-BP sample is drawn for the chosen
-length.
+exact path mass at the highest feasible effective order, then a fixed-length
+context-BP sample is drawn for the chosen length.
 
 ## Compatibility
 
