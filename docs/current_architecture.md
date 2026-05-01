@@ -240,7 +240,9 @@ a practical MIDI test path. The generic context-BP model defaults to the
 longest feasible context policy, while this MIDI facade uses the classic-style
 singleton-avoidance policy by default. The context-BP facade can expose the
 last generation trace so external clients can inspect selected orders and
-singleton backoffs.
+singleton backoffs. For memory-only fixed-length generation, it uses a
+free-initial context mode rather than forcing the hidden START context; prompted
+continuation still uses the given prefix as conditioning context.
 
 ### `MidiContinuatorBase`
 

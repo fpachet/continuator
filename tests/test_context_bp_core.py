@@ -151,6 +151,27 @@ class ContextBPModelTest(unittest.TestCase):
 
         self.assertEqual(sequence, ["A", model.end_symbol])
 
+    def test_free_initial_mode_can_satisfy_short_end_constraint(self):
+        model = ContextBPModel(kmax=1, seed=0)
+        model.learn_sequence(["A", "B"])
+
+        strict_sequence = model.sample_sequence(
+            length=2,
+            constraints={1: model.end_symbol},
+        )
+        free_result = model.sample_sequence_with_trace(
+            length=2,
+            constraints={1: model.end_symbol},
+            initial_mode="free",
+            raise_on_fail=True,
+        )
+        self.assertIsNotNone(free_result)
+        free_sequence, trace = free_result
+
+        self.assertIsNone(strict_sequence)
+        self.assertEqual(free_sequence, ["B", model.end_symbol])
+        self.assertEqual(trace[0].policy, "free_initial")
+
     def test_continue_until_end_respects_length_window(self):
         model = ContextBPModel(kmax=3, seed=0)
         model.learn_sequence([1, 2, 3])

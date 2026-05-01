@@ -61,6 +61,15 @@ chosen transition. Trace steps also expose the policy name, candidate orders,
 candidate counts, skipped singleton orders, and skipped symbol. This is useful
 for diagnosing where the model is backing off.
 
+By default, generic `ContextBPModel.sample_sequence(...)` starts from the
+hidden START context. It also supports `initial_mode="free"` for unprompted
+generation: the first emitted symbol is chosen from learned non-START symbols
+that can still satisfy the remaining constraints, then the usual stepwise
+policy is used for the suffix. The MIDI-facing `ContextBPContinuator` uses this
+free-initial mode when no prefix or explicit handoff viewpoint is provided, so
+memory-only generation is not artificially tied to the beginning of a learned
+phrase.
+
 ## First Implementation
 
 The implementation lives under `ctor.context_bp`:

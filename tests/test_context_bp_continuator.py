@@ -48,6 +48,21 @@ class ContextBPContinuatorTest(unittest.TestCase):
         self.assertEqual(len(trace_payload), len(sequence))
         self.assertIn("policy", trace_payload[0])
 
+    def test_context_bp_continuator_uses_free_initial_generation_without_prefix(self):
+        continuator = ContextBPContinuator(kmax=1)
+        phrase = make_phrase([60, 62])
+        continuator.learn_phrase(phrase, transposition=False)
+
+        sequence = continuator.sample_sequence(
+            length=2,
+            constraints={1: continuator.get_end_vp()},
+            raise_on_fail=True,
+        )
+        trace = continuator.get_last_generation_trace()
+
+        self.assertEqual(sequence, [continuator.get_viewpoint(phrase[1]), continuator.get_end_vp()])
+        self.assertEqual(trace[0]["policy"], "free_initial")
+
     def test_until_end_uses_context_boundary_and_realizes_notes(self):
         continuator = ContextBPContinuator(kmax=3)
         phrase = make_phrase([60, 62, 64])

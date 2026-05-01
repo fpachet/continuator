@@ -100,10 +100,12 @@ class ContextBPContinuator(MidiContinuatorBase):
         raise_on_fail=False,
     ):
         effective_prefix = [start_vp] if start_vp is not None else prefix
+        initial_mode = "free" if effective_prefix is None else "start"
         return self.context_model.sample_sequence(
             length=length,
             prefix=effective_prefix,
             constraints=constraints,
+            initial_mode=initial_mode,
             raise_on_fail=raise_on_fail,
         )
 
@@ -118,10 +120,12 @@ class ContextBPContinuator(MidiContinuatorBase):
         raise_on_fail=False,
     ):
         effective_prefix = [start_vp] if start_vp is not None else prefix
+        initial_mode = "free" if effective_prefix is None else "start"
         return self.context_model.sample_sequence_with_trace(
             length=length,
             prefix=effective_prefix,
             constraints=constraints,
+            initial_mode=initial_mode,
             raise_on_fail=raise_on_fail,
         )
 

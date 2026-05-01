@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
+from dataclasses import replace
 import random
 from typing import Any, Callable, Hashable, Iterable, Mapping
 
@@ -49,6 +51,7 @@ class ContextBPModel:
         self.order_policy = order_policy or LongestFeasiblePolicy()
         self.vocabulary = Vocabulary()
         self.counts = ContextCounts(self.kmax)
+        self.symbol_counts: Counter[int] = Counter()
         self.rng = random.Random(seed)
         self.input_sequences: list[list[Any]] = []
         self.last_sample_trace: list[SampleStep] = []
@@ -78,8 +81,10 @@ class ContextBPModel:
         material = list(sequence)
         self.input_sequences.append(material)
         encoded = [self.vocabulary.start_id]
-        encoded.extend(self.vocabulary.encode_or_add(self.get_viewpoint(item)) for item in material)
+        encoded_material = [self.vocabulary.encode_or_add(self.get_viewpoint(item)) for item in material]
+        encoded.extend(encoded_material)
         encoded.append(self.vocabulary.end_id)
+        self.symbol_counts.update(encoded_material)
         self.counts.update_sequence(encoded)
         self.counts.update_sequence([self.vocabulary.end_id, self.vocabulary.end_id])
 
@@ -155,15 +160,26 @@ class ContextBPModel:
         *,
         prefix: Iterable[Any] | None = None,
         constraints: ConstraintProblem | Mapping[int, Any] | None = None,
+        initial_mode: str = "start",
         raise_on_fail: bool = False,
     ) -> list[Any] | None:
         try:
-            decoded = self._sample_with_stepwise_order_backoff(
-                length,
-                prefix=prefix,
-                constraints=constraints,
-                raise_on_fail=raise_on_fail,
-            )
+            if initial_mode == "start":
+                decoded = self._sample_with_stepwise_order_backoff(
+                    length,
+                    prefix=prefix,
+                    constraints=constraints,
+                    raise_on_fail=raise_on_fail,
+                )
+            elif initial_mode == "free":
+                decoded = self._sample_with_free_initial(
+                    length,
+                    prefix=prefix,
+                    constraints=constraints,
+                    raise_on_fail=raise_on_fail,
+                )
+            else:
+                raise ValueError("initial_mode must be 'start' or 'free'")
         except NoFeasibleSequenceError:
             if raise_on_fail:
                 raise
@@ -183,12 +199,14 @@ class ContextBPModel:
         *,
         prefix: Iterable[Any] | None = None,
         constraints: ConstraintProblem | Mapping[int, Any] | None = None,
+        initial_mode: str = "start",
         raise_on_fail: bool = False,
     ) -> tuple[list[Any], list[SampleStep]] | None:
         sequence = self.sample_sequence(
             length,
             prefix=prefix,
             constraints=constraints,
+            initial_mode=initial_mode,
             raise_on_fail=raise_on_fail,
         )
         if sequence is None:
@@ -305,6 +323,97 @@ class ContextBPModel:
             allowed_symbols_by_position=allowed,
             raise_on_fail=raise_on_fail,
         )
+
+    def _sample_with_free_initial(
+        self,
+        length: int,
+        *,
+        prefix: Iterable[Any] | None,
+        constraints: ConstraintProblem | Mapping[int, Any] | None,
+        raise_on_fail: bool,
+    ) -> list[Any] | None:
+        if prefix is not None:
+            return self._sample_with_stepwise_order_backoff(
+                length,
+                prefix=prefix,
+                constraints=constraints,
+                raise_on_fail=raise_on_fail,
+            )
+        if length < 0:
+            raise ValueError("length must be non-negative")
+        if length == 0:
+            self.last_sample_trace = []
+            return []
+
+        allowed = self._allowed_symbols_by_position(length, constraints)
+        candidate_ids = [
+            symbol_id
+            for symbol_id in allowed[0]
+            if symbol_id != self.vocabulary.start_id
+        ]
+        weighted_candidates = []
+        for symbol_id in candidate_ids:
+            weight = self._free_initial_candidate_weight(symbol_id, allowed[1:])
+            if weight > 0:
+                weighted_candidates.append((symbol_id, weight))
+
+        while weighted_candidates:
+            ids, weights = zip(*weighted_candidates)
+            first_symbol_id = self.rng.choices(ids, weights=weights, k=1)[0]
+            first_symbol = self.vocabulary.decode(first_symbol_id)
+            suffix = self._sample_with_allowed_stepwise(
+                length - 1,
+                prefix=[first_symbol],
+                allowed_symbols_by_position=allowed[1:],
+                raise_on_fail=False,
+            )
+            if suffix is not None:
+                first_step = SampleStep(
+                    position=0,
+                    symbol=first_symbol,
+                    order=0,
+                    effective_order=0,
+                    context=(),
+                    policy="free_initial",
+                    candidate_orders=(0,),
+                    candidate_counts=(len(weighted_candidates),),
+                )
+                suffix_trace = [replace(step, position=step.position + 1) for step in self.last_sample_trace]
+                self.last_sample_trace = [first_step] + suffix_trace
+                return [first_symbol] + suffix
+            weighted_candidates = [
+                candidate
+                for candidate in weighted_candidates
+                if candidate[0] != first_symbol_id
+            ]
+
+        self.last_sample_trace = []
+        if raise_on_fail:
+            raise NoFeasibleSequenceError("No context path satisfies the constraints from any initial symbol.")
+        return None
+
+    def _free_initial_candidate_weight(self, first_symbol_id: int, suffix_allowed: list[set[int]]) -> float:
+        if not suffix_allowed:
+            return float(self.symbol_counts.get(first_symbol_id, 1))
+
+        prefix = [self.vocabulary.decode(first_symbol_id)]
+        last_error = None
+        for order in self._orders_to_try():
+            graph = self.compile_graph(prefix=prefix, order=order)
+            initial_context = self.initial_context(prefix, order=order)
+            initial_state = graph.state_id(initial_context)
+            try:
+                result = forward_backward(
+                    graph,
+                    initial_state=initial_state,
+                    length=len(suffix_allowed),
+                    allowed_symbols_by_position=suffix_allowed,
+                    vocab_size=len(self.vocabulary),
+                )
+                return float(self.symbol_counts.get(first_symbol_id, 1)) * result.path_mass
+            except NoFeasibleSequenceError as e:
+                last_error = e
+        return 0.0
 
     def _sample_with_allowed_stepwise(
         self,

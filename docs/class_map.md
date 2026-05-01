@@ -22,12 +22,16 @@ Key public methods:
 - `learn_sequence(sequence)`
 - `infer(length, prefix=None, constraints=None)`
 - `symbol_marginals(length, prefix=None, constraints=None)`
-- `sample_sequence(length, prefix=None, constraints=None, raise_on_fail=False)`
-- `sample_sequence_with_trace(length, prefix=None, constraints=None, raise_on_fail=False)`
+- `sample_sequence(length, prefix=None, constraints=None, initial_mode="start", raise_on_fail=False)`
+- `sample_sequence_with_trace(length, prefix=None, constraints=None, initial_mode="start", raise_on_fail=False)`
 - `continue_until_end(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `continue_until_end_with_trace(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `first_hit_lengths(prefix=None, min_length=1, max_length=64, end_symbol=None)`
 - `last_sample_trace_as_dicts()`
+
+`initial_mode="start"` uses the hidden START context. `initial_mode="free"`
+chooses the first emitted symbol from learned symbols that can still satisfy
+the remaining constraints, then continues with normal stepwise order policy.
 
 ### `ctor.context_bp.SampleStep`
 
@@ -199,7 +203,9 @@ stable for existing clients. It uses `SingletonAvoidingBackoffPolicy` by
 default to preserve the classic Continuator's practical anti-copying behavior.
 It exposes `sample_sequence_with_trace`, `continue_until_end_with_trace`, and
 `get_last_generation_trace` for debugging the selected orders and singleton
-backoffs.
+backoffs. When called without a prefix or explicit handoff viewpoint, its
+fixed-length generation uses context-BP's free-initial mode, matching the
+classic engine's memory-only generation more closely.
 
 ### `ctor.midi.MidiContinuatorBase`
 

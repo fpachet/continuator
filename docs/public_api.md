@@ -59,6 +59,10 @@ continue_until_end_with_trace(...)
 get_last_generation_trace()
 ```
 
+When `ContextBPContinuator.sample_sequence(...)` is called without a prefix or
+explicit `start_vp`, it uses context-BP free-initial generation so hard ending
+constraints are not unnecessarily tied to the beginning of a learned phrase.
+
 ## `Continuator2`
 
 `Continuator2` is the public MIDI-facing facade. It should remain importable
