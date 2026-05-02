@@ -15,6 +15,11 @@ from midi_stuff.mini_muse import Note
 class MidiContinuatorBase:
     """Shared MIDI utilities used by classic and context-BP facades."""
 
+    def _midi_store(self):
+        if hasattr(self, "realization_store"):
+            return self.realization_store
+        return self.vom
+
     def initialize_midi_state(self, transposition: bool = False) -> None:
         self.learn_input = True
         self.tempo_msgs = []
@@ -48,24 +53,20 @@ class MidiContinuatorBase:
     def set_transpose(self, trans):
         self.transpose = trans
 
-    def set_decay_mode(self, choice):
-        if hasattr(self, "vom"):
-            self.vom.set_period_mode(choice)
-
     def get_phrase_titles(self):
-        return [f"{i + 1} phrase with {len(phrase)} notes" for i, phrase in enumerate(self.vom.input_sequences)]
+        return [f"{i + 1} phrase with {len(phrase)} notes" for i, phrase in enumerate(self._midi_store().input_sequences)]
 
     def get_phrase(self, index):
-        return self.vom.input_sequences[index]
+        return self._midi_store().input_sequences[index]
 
     def clear_memory(self):
-        self.vom.clear_memory()
+        self._midi_store().clear_memory()
 
     def clear_first_n_phrases(self, n):
-        self.vom.clear_first_N_phrases(n)
+        self._midi_store().clear_first_N_phrases(n)
 
     def clear_last_phrase(self):
-        self.vom.clear_last_phrase()
+        self._midi_store().clear_last_phrase()
 
     def learn_file(self, midi_file, transposition):
         notes_original = self.extract_notes(midi_file)
@@ -114,13 +115,13 @@ class MidiContinuatorBase:
         return [n.transpose(t) for n in notes]
 
     def get_input_note(self, note_address):
-        return self.vom.get_input_object(note_address)
+        return self._midi_store().get_input_object(note_address)
 
     def is_starting_address(self, note_address):
-        return self.vom.is_starting_address(note_address)
+        return self._midi_store().is_starting_address(note_address)
 
     def is_ending_address(self, note_address):
-        return self.vom.is_ending_address(note_address)
+        return self._midi_store().is_ending_address(note_address)
 
     def extract_notes(self, midi_file):
         """Extract the sequence of note-on events from a MIDI file."""
@@ -174,25 +175,27 @@ class MidiContinuatorBase:
     def realize_vp_sequence(self, vp_seq):
         note_sequence = []
         viewpoints = self._realizable_viewpoint_sequence(vp_seq)
+        midi_store = self._midi_store()
         for i, vp in enumerate(viewpoints):
             if i == 0:
-                initials = [real for real in self.vom.viewpoints_realizations[vp] if self.is_starting_address(real)]
+                initials = [real for real in midi_store.viewpoints_realizations[vp] if self.is_starting_address(real)]
                 if initials:
                     note_sequence.append(random.choice(initials))
                     continue
-            if i == len(viewpoints) - 1 and vp == self.vom.end_padding:
-                lasts = [real for real in self.vom.viewpoints_realizations[vp] if self.is_ending_address(real)]
+            if i == len(viewpoints) - 1 and vp == midi_store.end_padding:
+                lasts = [real for real in midi_store.viewpoints_realizations[vp] if self.is_ending_address(real)]
                 if lasts:
                     note_sequence.append(random.choice(lasts))
                     continue
-            note_sequence.append(random.choice(self.vom.viewpoints_realizations[vp]))
+            note_sequence.append(random.choice(midi_store.viewpoints_realizations[vp]))
         return self.set_timing(note_sequence)
 
     def get_vp_for_pitch(self, pitch):
         vps = []
-        for vp, notes in self.vom.viewpoints_realizations.items():
+        midi_store = self._midi_store()
+        for vp, notes in midi_store.viewpoints_realizations.items():
             for note_address in notes:
-                note = self.vom.get_input_object(note_address)
+                note = midi_store.get_input_object(note_address)
                 if note.pitch == pitch:
                     vps.append(vp)
         return random.choice(vps)
@@ -279,7 +282,7 @@ class MidiContinuatorBase:
         note_sequence = [self.get_input_note(address) for address in address_sequence]
         sequence_string = self.get_pitch_string(note_sequence)
         best = 0
-        for input_seq in self.vom.input_sequences:
+        for input_seq in self._midi_store().input_sequences:
             train_string = self.get_pitch_string(input_seq)
             match = SequenceMatcher(None, train_string, sequence_string, autojunk=False).find_longest_match()
             nb_notes_common = train_string[match.a: match.a + match.size].count(" ")

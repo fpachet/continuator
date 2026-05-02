@@ -30,6 +30,15 @@ class ContextBPContinuatorTest(unittest.TestCase):
 
         self.assertIsInstance(continuator.context_model.order_policy, SingletonAvoidingBackoffPolicy)
 
+    def test_context_bp_continuator_has_no_decay_mode_control(self):
+        from ctor.classic.variable_order_markov import Variable_order_Markov
+
+        continuator = ContextBPContinuator(kmax=2)
+
+        self.assertFalse(hasattr(continuator, "set_decay_mode"))
+        self.assertFalse(hasattr(continuator, "vom"))
+        self.assertNotIsInstance(continuator.realization_store, Variable_order_Markov)
+
     def test_context_bp_continuator_exposes_generation_trace(self):
         continuator = ContextBPContinuator(
             kmax=2,

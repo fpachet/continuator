@@ -110,8 +110,8 @@ For MIDI experiments, use the separate `ContextBPContinuator` class:
 from ctor.context_bp import ContextBPContinuator
 ```
 
-It uses `ContextBPModel` for viewpoint generation and keeps a classic
-`Variable_order_Markov` store for note realization. It does not inherit from
+It uses `ContextBPModel` for viewpoint generation and a lightweight
+`MidiRealizationStore` for note realization. It does not inherit from
 `Continuator2`; both MIDI facades can use model-agnostic utilities from
 `ctor.midi`.
 

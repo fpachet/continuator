@@ -57,6 +57,7 @@ The repository currently uses `ctor` as its import package.
 | `ctor/continuator.py`, `ctor/variable_order_markov.py` | Compatibility aliases for classic implementation imports. |
 | `ctor/context_bp_continuator.py` | Compatibility wrapper for the context-BP MIDI facade. |
 | `ctor/midi/` | Shared MIDI/viewpoint/realization utilities for MIDI-facing facades. |
+| `ctor/midi/realization_store.py` | Lightweight viewpoint-to-note realization memory for MIDI facades that do not need the classic model. |
 | `midi_stuff/mini_muse.py` | Lightweight `Note` representation used by the MIDI layer. |
 | `ctor/ui/gradio_app.py` | Local Gradio UI around `Continuator2`. |
 | `ctor/continuator_gradio.py` | Compatibility entry point for the Gradio UI. |
@@ -233,7 +234,8 @@ longer subclasses `Continuator2`; instead it uses shared MIDI helpers from
 `ctor.midi` and learns each phrase into two stores:
 
 - `context_model`: `ContextBPModel` used for viewpoint generation.
-- `vom`: classic `Variable_order_Markov` used for viewpoint realizations.
+- `realization_store`: lightweight `MidiRealizationStore` used only for
+  viewpoint-to-note realization.
 
 This keeps the external `Continuator2` API unchanged while giving the new core
 a practical MIDI test path. The generic context-BP model defaults to the
@@ -251,7 +253,8 @@ Defined in `ctor/midi/base.py`.
 This contains shared MIDI application behavior such as MIDI file parsing,
 MIDI-message conversion, phrase metadata, default note viewpoints, transposition,
 and viewpoint realization back to `Note` objects. It is intentionally model
-agnostic: concrete facades supply the learning and generation engine.
+agnostic: concrete facades supply the learning, generation engine, and MIDI
+realization memory.
 
 ### `Note`
 

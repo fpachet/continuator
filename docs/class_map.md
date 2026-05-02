@@ -194,9 +194,9 @@ using it; new code may prefer the explicit `ClassicContinuator` name.
 
 ### `ctor.context_bp.ContextBPContinuator`
 
-Experimental MIDI Continuator facade. It keeps the classic
-`Variable_order_Markov` store for MIDI realization, but delegates viewpoint
-generation to `ContextBPModel`. It does not subclass `Continuator2`.
+Experimental MIDI Continuator facade. It delegates viewpoint generation to
+`ContextBPModel` and keeps only a lightweight `MidiRealizationStore` for MIDI
+realization. It does not subclass `Continuator2`.
 
 Use this class for context-BP MIDI experiments while leaving `Continuator2`
 stable for existing clients. It uses `SingletonAvoidingBackoffPolicy` by
@@ -212,6 +212,12 @@ classic engine's memory-only generation more closely.
 Shared MIDI helper base for MIDI-facing facades. It contains MIDI parsing,
 MIDI writing, phrase conversion, default note viewpoint extraction,
 transposition helpers, and viewpoint-to-note realization.
+
+### `ctor.midi.MidiRealizationStore`
+
+Small realization memory for MIDI facades. It stores learned note phrases and
+maps each viewpoint to source note addresses, without variable-order sampling,
+transition counts, or decay modes.
 
 ### `midi_stuff.mini_muse.Note`
 

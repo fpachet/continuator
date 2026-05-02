@@ -87,6 +87,9 @@ class ClassicContinuator(MidiContinuatorBase):
         # print(self.vom.all_unique_viewpoints)
         # print(self.quantile_bins(all_durations, 2))
 
+    def set_decay_mode(self, choice):
+        self.vom.set_period_mode(choice)
+
     def learn_phrase(self, note_sequence, transposition):
         # TODO: update adaptive viewpoint quantizers here when duration,
         # velocity, or articulation bins become active.

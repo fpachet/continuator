@@ -4,16 +4,15 @@ from typing import Any
 
 from ctor.context_bp.model import ContextBPModel
 from ctor.context_bp.order_policy import OrderPolicy, SingletonAvoidingBackoffPolicy
-from ctor.midi import MidiContinuatorBase
-from ctor.classic.variable_order_markov import Variable_order_Markov
+from ctor.midi import MidiContinuatorBase, MidiRealizationStore
 
 
 class ContextBPContinuator(MidiContinuatorBase):
     """
     Experimental MIDI Continuator using context-BP for viewpoint generation.
 
-    The classic `Variable_order_Markov` store is maintained only as a MIDI
-    realization memory. This class deliberately does not inherit from
+    A lightweight MIDI realization store maps generated viewpoints back to
+    learned note addresses. This class deliberately does not inherit from
     `Continuator2`; both facades use shared MIDI utilities instead.
     """
 
@@ -26,18 +25,17 @@ class ContextBPContinuator(MidiContinuatorBase):
     ) -> None:
         self.kmax = int(kmax)
         self.order_policy = order_policy or SingletonAvoidingBackoffPolicy()
-        self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
+        self.realization_store = self._new_realization_store()
         self.initialize_midi_state(transposition)
         if midi_file is not None:
             self.learn_file(midi_file, transposition)
 
-    def _new_realization_store(self) -> Variable_order_Markov:
-        return Variable_order_Markov(
-            sequence_of_stuff=None,
+    def _new_realization_store(self) -> MidiRealizationStore:
+        return MidiRealizationStore(
             vp_lambda=self.get_viewpoint,
-            kmax=self.kmax,
-            seed=0,
+            start_padding=self.context_model.start_symbol,
+            end_padding=self.context_model.end_symbol,
         )
 
     def _new_context_model(self) -> ContextBPModel:
@@ -49,38 +47,40 @@ class ContextBPContinuator(MidiContinuatorBase):
         )
 
     def _relearn_sequences(self, sequences: list[list[Any]]) -> None:
-        self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
+        self.realization_store = self._new_realization_store()
         for sequence in sequences:
             material = list(sequence)
-            self.vom.learn_sequence(material)
+            self.realization_store.learn_sequence(material)
             self.context_model.learn_sequence(material)
 
     def clear_memory(self):
-        self.vom = self._new_realization_store()
         self.context_model = self._new_context_model()
+        self.realization_store = self._new_realization_store()
 
     def clear_first_n_phrases(self, n):
-        self._relearn_sequences([list(sequence) for sequence in self.vom.input_sequences[n:]])
+        self._relearn_sequences([list(sequence) for sequence in self.realization_store.input_sequences[n:]])
 
     def clear_last_phrase(self):
-        if not self.vom.input_sequences:
+        if not self.realization_store.input_sequences:
             print("nothing to remove, memory is empty")
             return
-        self._relearn_sequences([list(sequence) for sequence in self.vom.input_sequences[:-1]])
+        self._relearn_sequences([list(sequence) for sequence in self.realization_store.input_sequences[:-1]])
 
     def learn_phrase(self, note_sequence, transposition):
         if len(note_sequence) == 0:
             return
-        if self.forget_past and self.keep_last_n_melodies <= len(self.vom.input_sequences):
-            self.clear_first_n_phrases(1 + len(self.vom.input_sequences) - self.keep_last_n_melodies)
+        if self.forget_past and self.keep_last_n_melodies <= len(self.realization_store.input_sequences):
+            self.clear_first_n_phrases(
+                1 + len(self.realization_store.input_sequences) - self.keep_last_n_melodies
+            )
 
         trange = range(0, 1)
         if transposition:
             trange = range(-6, 6, 1)
         for t in trange:
             transposed = self.transpose_notes(note_sequence, t)
-            self.vom.learn_sequence(transposed)
+            self.realization_store.learn_sequence(transposed)
             self.context_model.learn_sequence(transposed)
 
     def get_start_vp(self):

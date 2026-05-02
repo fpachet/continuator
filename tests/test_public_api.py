@@ -44,6 +44,9 @@ class PublicApiTest(unittest.TestCase):
         for name in ["prefix", "min_length", "max_length", "end_vp"]:
             self.assertIn(name, until_end_sig.parameters)
 
+        decay_sig = inspect.signature(Continuator2.set_decay_mode)
+        self.assertIn("choice", decay_sig.parameters)
+
     def test_core_public_imports(self):
         from ctor.belief_propag import NoSolutionErrorInBP
         from ctor.chain_solver import SparseForwardBackward
