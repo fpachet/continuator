@@ -5,7 +5,14 @@ from typing import Callable, Hashable, Iterable
 
 
 class MidiRealizationStore:
-    """Minimal viewpoint-to-note memory used by MIDI facades."""
+    """
+    Minimal viewpoint-to-note memory used by MIDI facades.
+
+    This is deliberately not a Markov model. It does not store transition
+    counts, apply decay, or sample continuations. Its only job is to keep the
+    original note phrases and remember which note addresses can be used to
+    realize each generated viewpoint.
+    """
 
     def __init__(
         self,

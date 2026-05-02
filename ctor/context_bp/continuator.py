@@ -11,9 +11,12 @@ class ContextBPContinuator(MidiContinuatorBase):
     """
     Experimental MIDI Continuator using context-BP for viewpoint generation.
 
-    A lightweight MIDI realization store maps generated viewpoints back to
-    learned note addresses. This class deliberately does not inherit from
-    `Continuator2`; both facades use shared MIDI utilities instead.
+    This class intentionally keeps generation and realization separate:
+    `ContextBPModel` learns and samples viewpoint sequences, while
+    `MidiRealizationStore` only remembers which learned notes can realize a
+    generated viewpoint. That keeps the context-BP path independent from the
+    classic `Variable_order_Markov` implementation and its decay/sampling
+    machinery.
     """
 
     def __init__(
@@ -25,7 +28,9 @@ class ContextBPContinuator(MidiContinuatorBase):
     ) -> None:
         self.kmax = int(kmax)
         self.order_policy = order_policy or SingletonAvoidingBackoffPolicy()
+        # Generation state: symbolic viewpoint model and context-BP sampler.
         self.context_model = self._new_context_model()
+        # Realization state: learned note addresses for generated viewpoints.
         self.realization_store = self._new_realization_store()
         self.initialize_midi_state(transposition)
         if midi_file is not None:

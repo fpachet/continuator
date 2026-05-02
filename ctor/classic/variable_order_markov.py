@@ -155,7 +155,13 @@ class Variable_order_Markov:
     ):
         # inputs
         self.viewpoint_lambda = vp_lambda
-        self.store_realizations = vp_lambda is not None if store_realizations is None else bool(store_realizations)
+        if store_realizations is None:
+            # When a viewpoint function is supplied, learned objects are richer
+            # than their viewpoints. Keep source addresses so MIDI facades can
+            # realize a generated viewpoint back into one of the learned notes.
+            self.store_realizations = vp_lambda is not None
+        else:
+            self.store_realizations = bool(store_realizations)
         self.start_padding = _Start_vp()
         self.end_padding = _End_vp()
         self.kmax = int(kmax)

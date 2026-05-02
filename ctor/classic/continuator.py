@@ -11,7 +11,6 @@ from ctor.midi import MidiContinuatorBase
 from ctor.classic.variable_order_markov import Variable_order_Markov
 
 """
-- Split the music Continuator class from a generic Variable_Order_Markov, usable for any type of sequence (e.g. words).
 - Implementation of Continuator is different from original, to enable experiments with belief propagation and skips.
 - Representation of contexts of size 1 to K and their continuations with dictionaries. Trees/oracles are useless here.
 - Contexts are tuples of viewpoints AND continuations are viewpoints (see get_viewpoint()) (Unlike in the original)
@@ -23,15 +22,18 @@ from ctor.classic.variable_order_markov import Variable_order_Markov
 They have a "status" describing how they were played originally, which is preserved at sampling. This enables more creativity for chords.
 - TODO: retrain periodically with computed viewpoints (bin quartiles for durations and velocity)
 - TODO: audio synthesis with Dawdreamer
-- TODO: add database storage of real time performances
 - TODO: data augmentation with inversions, negative harmony, etc.
 - TODO: rhythm transfer for data augmentation/control
-- TODO: server with js client, or huggingface solution or github page with python2js
-- TODO: use fine-tuning of transformers
 """
 
 class ClassicContinuator(MidiContinuatorBase):
-    """Classic MIDI Continuator facade backed by `Variable_order_Markov`."""
+    """
+    MIDI-facing facade for the classic Continuator engine.
+
+    In the classic path, one `Variable_order_Markov` object does both jobs:
+    it generates viewpoint sequences and keeps the viewpoint-to-note
+    realization memory used when rendering generated viewpoints back to notes.
+    """
 
     def __init__(self, midi_file: object = None, kmax: int = 4, transposition: bool = False) -> None:
         # self.vom = Variable_order_Markov(None, self.get_viewpoint, kmax)

@@ -13,9 +13,17 @@ from midi_stuff.mini_muse import Note
 
 
 class MidiContinuatorBase:
-    """Shared MIDI utilities used by classic and context-BP facades."""
+    """
+    Shared MIDI utilities used by classic and context-BP facades.
+
+    Concrete facades provide their own generation engine. This base class only
+    handles MIDI parsing, phrase memory access, note realization, and MIDI file
+    output.
+    """
 
     def _midi_store(self):
+        # Context-BP has a dedicated realization store; the classic facade uses
+        # its Variable_order_Markov object as both model and realization store.
         if hasattr(self, "realization_store"):
             return self.realization_store
         return self.vom
