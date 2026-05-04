@@ -21,6 +21,10 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 - Efficient yet simple implementation of variable-order markov model
 - Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
 - Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain.
+- Three MIDI-facing Continuator engines for experiments: the classic engine,
+  the context-BP engine, and the `vo_regular_bp` order-stack engine.
+- Shared MIDI realization for all engines, using a dynamic-programming pass to
+  choose coherent learned note realizations for generated viewpoints.
 - Many tricks here and there to maximize musical quality
 
 ## Architecture documentation
@@ -38,9 +42,10 @@ The current implementation is documented in:
 ### Dependencies
 The project requires Python 3.11 at least.
 
-The core package depends only on:
+The core package depends on:
 - `numpy`
 - `mido`
+- `vo-regular-bp`
 
 Optional features are installed with extras:
 - `continuator[gradio]` for the Gradio UI dependencies
@@ -125,6 +130,33 @@ generator.save_midi(rendered_sequence, "../../data/constrained_prelude.mid", tem
 
 ### Generation APIs
 
+The project currently exposes three MIDI-facing Continuator engines:
+
+| Engine | Import | Generation backend | Main use |
+| --- | --- | --- | --- |
+| Classic | `from ctor.continuator import Continuator2` or `from ctor.classic import ClassicContinuator` | `Variable_order_Markov` plus sparse first-order constraint inference | stable compatibility engine |
+| Context BP | `from ctor.context_bp import ContextBPContinuator` | context-state BP with explicit order policy | experimental exact context/backoff behavior |
+| VO Regular BP | `from ctor.vo_regular_bp import VORegularBPContinuator` | external `vo_regular_bp` order-stack library | regular constraints, generalized stop predicates, virtual transposition augmentation |
+
+For MIDI experiments, the three engines intentionally share the same practical
+surface:
+
+```python
+generator.learn_phrase(notes, transposition=False)
+viewpoints = generator.sample_sequence(length=16, constraints=constraints)
+continuation = generator.continue_sequence(prefix, length=16, constraints=constraints)
+ending = generator.continue_until_end(prefix=prefix, min_length=1, max_length=64)
+notes = generator.realize_vp_sequence(viewpoints)
+generator.save_midi(notes, "output.mid", tempo=-1)
+```
+
+They also share phrase-memory helpers such as `get_phrase_titles()`,
+`get_phrase(index)`, `clear_memory()`, `set_transpose(...)`, and
+`set_keep_last(...)`. Some controls are engine-specific: for example decay modes
+belong to the classic engine, trace helpers belong to the context-BP and
+VO-Regular-BP experiments, and `VORegularBPContinuator` additionally exposes
+`continue_until(...)` for arbitrary stop viewpoints/predicates.
+
 There are three related generation modes:
 
 - `sample_sequence(length, constraints=...)` generates a fixed-length sequence.
@@ -154,18 +186,24 @@ constraints.at(19).equals(generator.get_end_vp())
 sequence = generator.sample_sequence(length=20, constraints=constraints)
 ```
 
-The experimental generic context-BP engine can be selected explicitly without
-changing the MIDI-facing `Continuator2` API:
+For generic symbolic sequence experiments, `ctor.engines` provides a small
+engine-selection adapter for the classic and context-BP models:
 
 ```python
 from ctor.engines import make_sequence_engine
 
+classic = make_sequence_engine("classic", kmax=4)
 engine = make_sequence_engine("context_bp", kmax=4)
 engine.learn_sequence(["C", "D", "E"])
 sequence = engine.continue_until_end(prefix=["C"], min_length=2, max_length=8)
 ```
 
-For MIDI experiments with the new core, use the separate experimental facade:
+The VO-Regular-BP backend is available through its MIDI facade in this package,
+and through the public `vo_regular_bp` package when you want to run lower-level
+order-stack experiments directly.
+
+For MIDI experiments with the context-BP core, use the separate experimental
+facade:
 
 ```python
 from ctor.context_bp import ContextBPContinuator
@@ -216,7 +254,7 @@ from ctor.continuator import Continuator2
 For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
 
 ```text
-continuator @ git+https://github.com/fpachet/continuator.git@v1.2.2
+continuator @ git+https://github.com/fpachet/continuator.git@<tag-or-commit-sha>
 ```
 
 The base package intentionally does not install `gradio`, `matplotlib`, or `python-rtmidi`. Hosted front ends such as `continuator_front` should depend on those packages only if they use them directly.
