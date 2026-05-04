@@ -221,9 +221,10 @@ transition counts, or decay modes.
 
 ### `midi_stuff.mini_muse.Note`
 
-Lightweight note object with pitch, velocity, duration, start time, and neighbor
-delta information. `Continuator2` uses its overlap methods to compute
-viewpoints and reconstruct timing.
+Lightweight note object with pitch, velocity, duration, start time, a
+`next_start_delta` timing offset, and an `overlaps_left` flag. `Continuator2`
+uses its overlap methods to compute viewpoints and reconstructs timing from
+duration plus `next_start_delta`.
 
 ### `ctor.phrase_listener.MidiPhraseListener`
 

@@ -266,10 +266,13 @@ Defined in `midi_stuff/mini_muse.py`.
 - velocity
 - duration
 - start time
-- deltas to neighboring notes
+- `next_start_delta`, used to reconstruct inter-onset timing
+- an `overlaps_left` flag, used with `next_start_delta < 0` to compute the
+  overlap viewpoint booleans
 
-The overlap-related deltas are used by `Continuator2.get_viewpoint` and by the
-realization/timing logic to preserve simple polyphonic status.
+The overlap booleans are used by `Continuator2.get_viewpoint`. Realization
+timing is reconstructed from each rendered note's duration plus its learned
+`next_start_delta`.
 
 ## Learning Flow
 

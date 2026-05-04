@@ -165,12 +165,12 @@ class MidiContinuatorBase:
     @staticmethod
     def set_delta_notes(notes):
         for i, note in enumerate(notes):
+            note.overlaps_left_flag = False
+            note.next_start_delta = 0
             if i > 0:
-                note.preceding_start_delta = note.start_time - notes[i - 1].start_time
-                note.preceding_end_delta = note.start_time - notes[i - 1].get_end_time()
+                note.overlaps_left_flag = note.start_time < notes[i - 1].get_end_time()
             if i < len(notes) - 1:
                 note.next_start_delta = notes[i + 1].start_time - note.get_end_time()
-                note.next_end_delta = notes[i + 1].get_end_time() - note.get_end_time()
 
     @staticmethod
     def all_midi_files_from_path(path_string):
@@ -233,14 +233,7 @@ class MidiContinuatorBase:
     def decide_delta_time(note_to_add_address, note_to_add, current_address, current_note):
         if current_note is None:
             return 0
-        cur_status = current_note.get_status_right()
-        note_to_add_status = note_to_add.get_status_left()
-        delta = current_note.duration + current_note.next_start_delta
-        if cur_status in {"inside", "overlaps", "after"}:
-            if note_to_add_status in {"before", "overlaps", "contains"}:
-                return delta
-        print("should not be here")
-        return 0
+        return current_note.duration + current_note.next_start_delta
 
     def save_midi(self, sequence, output_file, tempo=120, sustain=False):
         ms = self.create_mido_sequence(sequence, tempo=tempo, sustain=sustain)
