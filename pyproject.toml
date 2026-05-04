@@ -14,7 +14,7 @@ license = { file = "LICENSE" }
 dependencies = [
     "numpy",
     "mido ~= 1.3",
-    "vo-regular-bp",
+    "vo-regular-bp @ git+https://github.com/fpachet/vo-regular-bp.git@v0.1.1",
 ]
 
 [project.optional-dependencies]
