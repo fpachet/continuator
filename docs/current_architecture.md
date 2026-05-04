@@ -50,6 +50,7 @@ The repository currently uses `ctor` as its import package.
 | `ctor/classic/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and compatibility `Continuator2`. |
 | `ctor/context_bp/` | Experimental context-BP implementation: generic model, inference, vocabulary, and MIDI facade. |
 | `ctor/context_bp/order_policy.py` | Context-BP sampling policies, including longest-feasible and classic singleton-avoidance backoff. |
+| `ctor/vo_regular_bp/` | Experimental MIDI facade backed by the external `vo_regular_bp` order-stack library, including virtual transposition realization support. |
 | `ctor/core/` | Compatibility wrappers for the old context-BP core import path. |
 | `ctor/engines.py` | Small generic engine-selection adapters for comparing classic and context-BP models. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
@@ -62,9 +63,6 @@ The repository currently uses `ctor` as its import package.
 | `ctor/ui/gradio_app.py` | Local Gradio UI around `Continuator2`. |
 | `ctor/continuator_gradio.py` | Compatibility entry point for the Gradio UI. |
 | `ctor/phrase_listener.py` | Realtime MIDI phrase capture/playback helper. |
-| `ctor/legacy/dynaprog.py` | Legacy variable-domain sequence optimizer, currently optional/experimental for realization. |
-| `ctor/legacy/markov_analysis.py` | Legacy Markov-chain diagnostics such as irreducibility and stationary distribution. |
-| `ctor/dynaprog.py`, `ctor/markov_analysis.py` | Compatibility wrappers for the legacy helper modules. |
 | `ctor/belief_propag.py` | Compatibility exception only; the old generic BP graph implementation has been removed. |
 | `examples/` | Basic examples for ints, chars, words, chord sequences, and notes. |
 | `examples/compare_classic_context_bp_midi.py` | MIDI comparison script for classic vs context-BP generations. |
@@ -246,15 +244,34 @@ singleton backoffs. For memory-only fixed-length generation, it uses a
 free-initial context mode rather than forcing the hidden START context; prompted
 continuation still uses the given prefix as conditioning context.
 
+### `VORegularBPContinuator`
+
+Defined in `ctor/vo_regular_bp/continuator.py`.
+
+This MIDI-facing experiment delegates viewpoint generation to the external
+`vo_regular_bp` order-stack backend. It supports fixed-length positional
+constraints, generalized first-hit `continue_until(...)`, END-targeted
+`continue_until_end(...)`, and optional data augmentation. Explicit
+transposition materializes transformed note phrases, matching the classic
+behavior. Virtual transposition uses `VirtualAugmentedOrderStackModel` for
+symbolic counts and a transform-aware realization store that lazily transposes
+base notes when generated transformed viewpoints are rendered.
+
+Like `ContextBPContinuator`, it does not subclass `Continuator2` and keeps the
+classic public entry point unchanged.
+
 ### `MidiContinuatorBase`
 
 Defined in `ctor/midi/base.py`.
 
 This contains shared MIDI application behavior such as MIDI file parsing,
 MIDI-message conversion, phrase metadata, default note viewpoints, transposition,
-and viewpoint realization back to `Note` objects. It is intentionally model
-agnostic: concrete facades supply the learning, generation engine, and MIDI
-realization memory.
+and viewpoint realization back to `Note` objects. Realization is model-agnostic:
+the base class builds one address domain per generated viewpoint and uses a
+vectorized dynamic-programming pass to choose a coherent source-address path.
+The cost function prefers compatible overlap states, consecutive addresses in
+the same learned phrase, and stable virtual-augmentation transforms. START/END
+boundary markers are handled as realization-domain filters when present.
 
 ### `Note`
 
@@ -382,8 +399,8 @@ These are not necessarily bugs, but they matter for future work:
 - The constrained solver is first-order, while the sampler is variable-order.
 - The model uses arbitrary Python viewpoint objects in context keys, which is
   convenient but keeps hashing in important paths.
-- Realization storage is tied to the model class rather than a separate
-  realization layer.
+- The classic model still carries its own realization storage, even though MIDI
+  rendering now goes through the shared realization policy.
 - MIDI parsing, viewpoint design, generation policy, and rendering still live
   in or near `Continuator2`.
 - Some diagnostic behavior still uses `print`.
@@ -404,7 +421,9 @@ classic engine and add a new core with these boundaries:
 - constraint compilation
 - forward-backward inference over context states
 - exact constrained sampler
-- separate MIDI realization layer
+- shared MIDI realization policy backed by engine-specific realization memory
+- optional diagnostics for induced transition graphs, constraint reachability,
+  and mixing behavior
 
 The current implementation should then remain available as the classic engine
 for comparison, compatibility, and musical regression testing.

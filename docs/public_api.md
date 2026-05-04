@@ -21,6 +21,7 @@ New code may prefer the explicit package locations:
 from ctor.classic import ClassicContinuator, Continuator2, Variable_order_Markov
 from ctor.context_bp import ContextBPModel, ContextBPContinuator
 from ctor.context_bp import LongestFeasiblePolicy, SingletonAvoidingBackoffPolicy
+from ctor.vo_regular_bp import VORegularBPContinuator
 from ctor.constraints import ConstraintProblem
 ```
 
@@ -31,8 +32,6 @@ implementation lives elsewhere:
 from ctor.continuator_gradio import Continuator_gradio
 from ctor.chain_solver import SparseForwardBackward
 from ctor.belief_propag import NoSolutionErrorInBP
-from ctor.dynaprog import VariableDomainSequenceOptimizer
-from ctor.markov_analysis import MarkovAnalysis, analyze_markov_chain
 ```
 
 The experimental generic engine-selection API is available separately:
@@ -62,6 +61,16 @@ get_last_generation_trace()
 When `ContextBPContinuator.sample_sequence(...)` is called without a prefix or
 explicit `start_vp`, it uses context-BP free-initial generation so hard ending
 constraints are not unnecessarily tied to the beginning of a learned phrase.
+
+The experimental MIDI-facing `vo_regular_bp` class is also separate:
+
+```python
+from ctor.vo_regular_bp import VORegularBPContinuator
+```
+
+It uses the external `vo_regular_bp` order-stack library for viewpoint
+generation and does not change the existing `Continuator2` compatibility
+surface.
 
 ## `Continuator2`
 
@@ -108,6 +117,9 @@ continue_until_end(prefix=None, min_length=1, max_length=64, end_vp=None)
 sample_sequence_0(length=50, constraints=None)
 
 realize_vp_sequence(vp_seq)
+# Realizes generated viewpoints through the shared MIDI DP realizer.
+# START/END markers, when present in the viewpoint sequence, constrain the
+# first/last concrete note realizations.
 create_mido_sequence(sequence, tempo=120, sustain=False)
 save_midi(sequence, output_file, tempo=120, sustain=False)
 
@@ -176,15 +188,3 @@ If the default Gradio ports are already in use, set an explicit port:
 ```bash
 GRADIO_SERVER_PORT=8060 python -m ctor.continuator_gradio
 ```
-
-## Legacy Helpers
-
-Experimental helpers that are not part of the core runtime live under
-`ctor.legacy`, with old imports preserved as wrappers:
-
-```python
-from ctor.legacy.dynaprog import VariableDomainSequenceOptimizer
-from ctor.legacy.markov_analysis import MarkovAnalysis, analyze_markov_chain
-```
-
-These helpers should not constrain the future context-BP core design.

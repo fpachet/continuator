@@ -54,6 +54,7 @@ class PublicApiTest(unittest.TestCase):
         from ctor.continuator import ClassicContinuator
         from ctor.constraints import ConstraintProblem
         from ctor.context_bp_continuator import ContextBPContinuator
+        from ctor.vo_regular_bp_continuator import VORegularBPContinuator
         from ctor.context_bp import (
             ContextBPModel,
             LongestFeasiblePolicy,
@@ -69,6 +70,7 @@ class PublicApiTest(unittest.TestCase):
         self.assertIsNotNone(ClassicContinuator)
         self.assertIsNotNone(ConstraintProblem)
         self.assertIsNotNone(ContextBPContinuator)
+        self.assertIsNotNone(VORegularBPContinuator)
         self.assertIsNotNone(make_sequence_engine)
         self.assertIsNotNone(MidiContinuatorBase)
         self.assertIsNotNone(Variable_order_Markov)
@@ -77,14 +79,6 @@ class PublicApiTest(unittest.TestCase):
         self.assertIsNotNone(LongestFeasiblePolicy)
         self.assertIsNotNone(PolicyDecision)
         self.assertIsNotNone(SingletonAvoidingBackoffPolicy)
-
-    def test_legacy_import_wrappers_still_work(self):
-        from ctor.dynaprog import VariableDomainSequenceOptimizer
-        from ctor.markov_analysis import MarkovAnalysis, analyze_markov_chain
-
-        self.assertIsNotNone(VariableDomainSequenceOptimizer)
-        self.assertIsNotNone(MarkovAnalysis)
-        self.assertIsNotNone(analyze_markov_chain)
 
     def test_ui_package_import_does_not_eagerly_import_gradio_app(self):
         import ctor.ui

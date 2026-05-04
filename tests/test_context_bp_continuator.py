@@ -39,6 +39,14 @@ class ContextBPContinuatorTest(unittest.TestCase):
         self.assertFalse(hasattr(continuator, "vom"))
         self.assertNotIsInstance(continuator.realization_store, Variable_order_Markov)
 
+    def test_context_bp_continuator_exposes_shared_phrase_memory_api(self):
+        continuator = ContextBPContinuator(kmax=2)
+        phrase = make_phrase([60, 62, 64])
+        continuator.learn_phrase(phrase, transposition=False)
+
+        self.assertEqual(continuator.get_phrase_titles(), ["1 phrase with 3 notes"])
+        self.assertEqual([note.pitch for note in continuator.get_phrase(0)], [60, 62, 64])
+
     def test_context_bp_continuator_exposes_generation_trace(self):
         continuator = ContextBPContinuator(
             kmax=2,

@@ -178,25 +178,142 @@ class MidiContinuatorBase:
         return list(path.glob("*.mid")) + list(path.glob("*.midi"))
 
     def _realizable_viewpoint_sequence(self, vp_seq: Iterable[object]) -> list[object]:
-        return list(vp_seq)
+        midi_store = self._midi_store()
+        start_padding = getattr(midi_store, "start_padding", None)
+        end_padding = getattr(midi_store, "end_padding", None)
+        return [
+            viewpoint
+            for viewpoint in vp_seq
+            if viewpoint != start_padding and viewpoint != end_padding
+        ]
 
     def realize_vp_sequence(self, vp_seq):
-        note_sequence = []
-        viewpoints = self._realizable_viewpoint_sequence(vp_seq)
+        raw_viewpoints = list(vp_seq)
         midi_store = self._midi_store()
-        for i, vp in enumerate(viewpoints):
+        end_padding = getattr(midi_store, "end_padding", None)
+        force_ending_realization = bool(raw_viewpoints and raw_viewpoints[-1] == end_padding)
+        viewpoints = self._realizable_viewpoint_sequence(raw_viewpoints)
+        if not viewpoints:
+            return []
+
+        domains = self._realization_domains(
+            viewpoints,
+            force_ending_realization=force_ending_realization,
+        )
+        note_addresses = self._best_realization_address_sequence(domains)
+        return self.set_timing(note_addresses)
+
+    def _realization_domains(self, viewpoints, *, force_ending_realization=False):
+        midi_store = self._midi_store()
+        domains = []
+        for i, viewpoint in enumerate(viewpoints):
+            realizations = list(midi_store.viewpoints_realizations.get(viewpoint, []))
+            if not realizations:
+                raise ValueError(f"No MIDI realization for viewpoint: {viewpoint!r}")
+
+            starting_realizations = []
             if i == 0:
-                initials = [real for real in midi_store.viewpoints_realizations[vp] if self.is_starting_address(real)]
-                if initials:
-                    note_sequence.append(random.choice(initials))
-                    continue
-            if i == len(viewpoints) - 1 and vp == midi_store.end_padding:
-                lasts = [real for real in midi_store.viewpoints_realizations[vp] if self.is_ending_address(real)]
-                if lasts:
-                    note_sequence.append(random.choice(lasts))
-                    continue
-            note_sequence.append(random.choice(midi_store.viewpoints_realizations[vp]))
-        return self.set_timing(note_sequence)
+                starting_realizations = [
+                    address for address in realizations if self.is_starting_address(address)
+                ]
+                if starting_realizations:
+                    realizations = starting_realizations
+
+            if i == len(viewpoints) - 1 and force_ending_realization:
+                ending_realizations = [
+                    address
+                    for address in midi_store.viewpoints_realizations[viewpoint]
+                    if self.is_ending_address(address)
+                ]
+                if i == 0 and starting_realizations:
+                    start_and_end = [
+                        address for address in starting_realizations if self.is_ending_address(address)
+                    ]
+                    if start_and_end:
+                        ending_realizations = start_and_end
+                if ending_realizations:
+                    realizations = ending_realizations
+
+            domains.append(realizations)
+        return domains
+
+    def _best_realization_address_sequence(self, domains):
+        if not domains:
+            return []
+        if len(domains) == 1:
+            return [domains[0][0]]
+
+        features = [self._realization_domain_features(domain) for domain in domains]
+        costs = np.zeros(len(domains[0]), dtype=np.float64)
+        backpointers = []
+
+        for position in range(len(domains) - 1):
+            transition_costs = self._realization_transition_cost_matrix(
+                features[position],
+                features[position + 1],
+            )
+            total_costs = costs[:, None] + transition_costs
+            best_previous = np.argmin(total_costs, axis=0)
+            costs = total_costs[best_previous, np.arange(total_costs.shape[1])]
+            backpointers.append(best_previous)
+
+        best_index = int(np.argmin(costs))
+        indices = [0] * len(domains)
+        indices[-1] = best_index
+        for position in range(len(domains) - 2, -1, -1):
+            best_index = int(backpointers[position][best_index])
+            indices[position] = best_index
+
+        return [domains[position][index] for position, index in enumerate(indices)]
+
+    def _realization_domain_features(self, domain):
+        sequence_positions = [self._address_sequence_position(address) for address in domain]
+        notes = [self.get_input_note(address) for address in domain]
+        return {
+            "sequence": np.array([sequence for sequence, _index in sequence_positions], dtype=np.int64),
+            "index": np.array([index for _sequence, index in sequence_positions], dtype=np.int64),
+            "transform": np.array(
+                [self._address_transform_index(address) for address in domain],
+                dtype=np.int64,
+            ),
+            "overlaps_left": np.array([bool(note.overlaps_left()) for note in notes], dtype=bool),
+            "overlaps_right": np.array([bool(note.overlaps_right()) for note in notes], dtype=bool),
+        }
+
+    @staticmethod
+    def _realization_transition_cost_matrix(left, right):
+        same_sequence = (
+            (left["sequence"][:, None] >= 0)
+            & (left["sequence"][:, None] == right["sequence"][None, :])
+        )
+        gap = right["index"][None, :] - left["index"][:, None]
+        same_sequence_cost = np.abs(gap - 1).astype(np.float64) * 10.0
+        same_sequence_cost += (gap <= 0).astype(np.float64) * 20.0
+        cost = np.where(same_sequence, same_sequence_cost, 100.0)
+
+        incompatible_overlap = left["overlaps_right"][:, None] != right["overlaps_left"][None, :]
+        cost += incompatible_overlap.astype(np.float64) * 10_000.0
+
+        left_transform = left["transform"][:, None]
+        right_transform = right["transform"][None, :]
+        both_transformed = (left_transform >= 0) & (right_transform >= 0)
+        transform_change = both_transformed & (left_transform != right_transform)
+        cost += transform_change.astype(np.float64) * 5.0
+        return cost
+
+    @staticmethod
+    def _address_sequence_position(address):
+        try:
+            return int(address[0]), int(address[1])
+        except (IndexError, TypeError, ValueError):
+            return -1, -1
+
+    @staticmethod
+    def _address_transform_index(address):
+        try:
+            return int(address[2])
+        except (IndexError, TypeError, ValueError):
+            return -1
 
     def get_vp_for_pitch(self, pitch):
         vps = []
@@ -220,6 +337,8 @@ class MidiContinuatorBase:
                 start_time += delta
             note_copy.set_start_time(start_time)
             sequence.append(note_copy)
+        if not sequence:
+            return []
         first_note_time = sequence[0].start_time
         for note in sequence:
             note.start_time = note.start_time - first_note_time

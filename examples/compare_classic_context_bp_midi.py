@@ -112,7 +112,7 @@ def main() -> None:
         learn_material(engine, args.midi_path, transpose=args.transpose)
 
     for engine_name, engine in engines:
-        memory_size = len(getattr(engine.vom, "input_sequences", []))
+        memory_size = len(engine.get_phrase_titles())
         print(f"\n{engine_name} ({memory_size} learned phrases)")
         for sample_index in range(1, args.samples + 1):
             viewpoint_sequence, warning = generate_viewpoints(

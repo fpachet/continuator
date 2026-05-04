@@ -173,6 +173,15 @@ from ctor.context_bp import ContextBPContinuator
 generator = ContextBPContinuator(kmax=4)
 ```
 
+For experiments with the external `vo_regular_bp` order-stack library,
+including generalized first-hit stops and transposition augmentation, use:
+
+```python
+from ctor.vo_regular_bp import VORegularBPContinuator
+
+generator = VORegularBPContinuator(kmax=4, augmentation_mode="virtual", transposition=True)
+```
+
 ### Migration notes
 
 For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:

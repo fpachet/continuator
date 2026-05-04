@@ -207,11 +207,29 @@ backoffs. When called without a prefix or explicit handoff viewpoint, its
 fixed-length generation uses context-BP's free-initial mode, matching the
 classic engine's memory-only generation more closely.
 
+### `ctor.vo_regular_bp.VORegularBPContinuator`
+
+Experimental MIDI Continuator facade backed by the external `vo_regular_bp`
+library. It uses an order-stack model for viewpoint generation and a separate
+MIDI realization store. It supports fixed-length positional constraints,
+generalized first-hit `continue_until(...)`, `continue_until_end(...)`, and
+explicit or virtual transposition augmentation. Virtual transposition keeps the
+symbolic model virtual and realizes transformed viewpoints lazily by applying
+the corresponding note transform to learned base notes.
+
+Use this class for experiments with regular-constrained generation and
+data-augmentation semantics while leaving `Continuator2` stable.
+
 ### `ctor.midi.MidiContinuatorBase`
 
 Shared MIDI helper base for MIDI-facing facades. It contains MIDI parsing,
 MIDI writing, phrase conversion, default note viewpoint extraction,
-transposition helpers, and viewpoint-to-note realization.
+transposition helpers, and viewpoint-to-note realization. The default realizer
+uses a vectorized dynamic-programming pass over viewpoint-specific address
+domains, so all MIDI engines share the same policy for choosing concrete
+learned notes. It prefers compatible overlap state, consecutive source
+addresses, and stable transform choices; generated END markers force the last
+realized note to come from an ending address when one is available.
 
 ### `ctor.midi.MidiRealizationStore`
 
@@ -238,25 +256,6 @@ roll display, and generation controls.
 
 The older `ctor.continuator_gradio.Continuator_gradio` import remains as a
 compatibility wrapper.
-
-## Utilities and Experimental Helpers
-
-### `ctor.legacy.dynaprog.VariableDomainSequenceOptimizer`
-
-Generic dynamic-programming optimizer over a sequence of variable domains. It is
-currently available for realization experiments but is not the default MIDI
-realizer.
-
-The older `ctor.dynaprog.VariableDomainSequenceOptimizer` import remains as a
-compatibility wrapper.
-
-### `ctor.legacy.markov_analysis.MarkovAnalysis`
-
-Dataclass returned by `analyze_markov_chain`. It stores Markov-chain diagnostics
-such as irreducibility, period, ergodicity, stationary distribution, strongly
-connected components, and optional primitive exponent.
-
-The older `ctor.markov_analysis` import remains as a compatibility wrapper.
 
 ## Practical Import Guide
 
