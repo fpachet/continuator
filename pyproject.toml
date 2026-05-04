@@ -34,6 +34,9 @@ dev = [
     "pytest",
 ]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.sdist]
 include = [
     "/ctor",
