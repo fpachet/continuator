@@ -189,8 +189,9 @@ Key public methods:
 
 ### `ctor.classic.continuator.Continuator2`
 
-Compatibility subclass of `ClassicContinuator`. Existing clients should keep
-using it; new code may prefer the explicit `ClassicContinuator` name.
+Historical compatibility subclass of `ClassicContinuator` inside the classic
+package. The top-level default `ctor.continuator.Continuator2` now uses the
+VO-Regular-BP backend.
 
 ### `ctor.context_bp.ContextBPContinuator`
 
@@ -198,9 +199,10 @@ Experimental MIDI Continuator facade. It delegates viewpoint generation to
 `ContextBPModel` and keeps only a lightweight `MidiRealizationStore` for MIDI
 realization. It does not subclass `Continuator2`.
 
-Use this class for context-BP MIDI experiments while leaving `Continuator2`
-stable for existing clients. It uses `SingletonAvoidingBackoffPolicy` by
-default to preserve the classic Continuator's practical anti-copying behavior.
+Use this class for context-BP MIDI experiments while keeping it separate from
+the default `Continuator2` entry point. It uses
+`SingletonAvoidingBackoffPolicy` by default to preserve the classic
+Continuator's practical anti-copying behavior.
 It exposes `sample_sequence_with_trace`, `continue_until_end_with_trace`, and
 `get_last_generation_trace` for debugging the selected orders and singleton
 backoffs. When called without a prefix or explicit handoff viewpoint, its
@@ -217,8 +219,9 @@ explicit or virtual transposition augmentation. Virtual transposition keeps the
 symbolic model virtual and realizes transformed viewpoints lazily by applying
 the corresponding note transform to learned base notes.
 
-Use this class for experiments with regular-constrained generation and
-data-augmentation semantics while leaving `Continuator2` stable.
+Use this class directly for regular-constrained generation and
+data-augmentation semantics. The top-level default
+`ctor.continuator.Continuator2` subclasses this facade.
 
 ### `ctor.midi.MidiContinuatorBase`
 
@@ -266,14 +269,20 @@ from ctor.classic import Variable_order_Markov
 from ctor.constraints import ConstraintProblem
 ```
 
-For the current MIDI Continuator:
+For the default MIDI Continuator:
+
+```python
+from ctor.continuator import Continuator2
+```
+
+For the classic MIDI Continuator:
 
 ```python
 from ctor.classic import ClassicContinuator
 ```
 
-Compatibility imports such as `from ctor.continuator import Continuator2`,
-`from ctor.variable_order_markov import Variable_order_Markov`, and
+Compatibility imports such as
+`from ctor.variable_order_markov import Variable_order_Markov` and
 `from ctor.core import ContextBPModel` remain supported.
 
 For direct sparse chain inference:

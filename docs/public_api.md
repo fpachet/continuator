@@ -2,7 +2,7 @@
 
 This project is used by external front ends, including `continuator_front`.
 The imports and methods in this document should be treated as compatibility
-surface for the current classic engine.
+surface for the current default MIDI engine.
 
 ## Stable Imports
 
@@ -18,7 +18,7 @@ from ctor.constraints import ConstraintProblem
 New code may prefer the explicit package locations:
 
 ```python
-from ctor.classic import ClassicContinuator, Continuator2, Variable_order_Markov
+from ctor.classic import ClassicContinuator, Variable_order_Markov
 from ctor.context_bp import ContextBPModel, ContextBPContinuator
 from ctor.context_bp import LongestFeasiblePolicy, SingletonAvoidingBackoffPolicy
 from ctor.vo_regular_bp import VORegularBPContinuator
@@ -40,14 +40,19 @@ The experimental generic engine-selection API is available separately:
 from ctor.engines import make_sequence_engine
 ```
 
-The experimental MIDI-facing context-BP class is also separate:
+The classic engine remains available explicitly:
+
+```python
+from ctor.classic import ClassicContinuator
+```
+
+The experimental MIDI-facing context-BP class is separate:
 
 ```python
 from ctor.context_bp import ContextBPContinuator
 ```
 
-It is no longer a subclass of `Continuator2`. Neither one changes the existing
-`Continuator2` compatibility surface.
+It is not a subclass of `Continuator2`.
 
 `ContextBPContinuator` additionally exposes trace helpers for experimental
 front ends:
@@ -62,21 +67,23 @@ When `ContextBPContinuator.sample_sequence(...)` is called without a prefix or
 explicit `start_vp`, it uses context-BP free-initial generation so hard ending
 constraints are not unnecessarily tied to the beginning of a learned phrase.
 
-The experimental MIDI-facing `vo_regular_bp` class is also separate:
+The `vo_regular_bp` class is the backend used by the default `Continuator2`
+entry point and is also available directly:
 
 ```python
 from ctor.vo_regular_bp import VORegularBPContinuator
 ```
 
 It uses the external `vo_regular_bp` order-stack library for viewpoint
-generation and does not change the existing `Continuator2` compatibility
-surface.
+generation.
 
 ## `Continuator2`
 
 `Continuator2` is the public MIDI-facing facade. It should remain importable
 from `ctor.continuator`. It is now a compatibility subclass of
-`ClassicContinuator`, which is the explicit name for the classic MIDI engine.
+`VORegularBPContinuator`. `ClassicContinuator` remains importable from
+`ctor.continuator` and `ctor.classic` for callers that explicitly need the
+classic engine.
 
 Constructor:
 
@@ -131,7 +138,7 @@ get_viewpoint(note)
 set_learn_input(value)
 get_learn_input()
 set_transpose(trans)
-set_decay_mode(choice)
+set_decay_mode(choice)  # compatibility no-op for the VO-Regular-BP backend
 set_forget(forget_past)
 set_keep_last(keep)
 clear_memory()

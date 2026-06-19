@@ -101,8 +101,8 @@ classic = make_sequence_engine("classic", kmax=4)
 context_bp = make_sequence_engine("context_bp", kmax=4)
 ```
 
-This is deliberately not wired into `Continuator2` yet. The current MIDI-facing
-API stays classic while the new core is compared on generic sequences.
+This remains separate from `Continuator2`. The default MIDI-facing API now uses
+VO-Regular-BP while the context-BP core is compared on generic sequences.
 
 For MIDI experiments, use the separate `ContextBPContinuator` class:
 
@@ -112,8 +112,8 @@ from ctor.context_bp import ContextBPContinuator
 
 It uses `ContextBPModel` for viewpoint generation and a lightweight
 `MidiRealizationStore` for note realization. It does not inherit from
-`Continuator2`; both MIDI facades can use model-agnostic utilities from
-`ctor.midi`.
+the default `Continuator2`; both MIDI facades can use model-agnostic utilities
+from `ctor.midi`.
 
 ## Until-End Generation
 
@@ -140,10 +140,11 @@ write MIDI files with `--output-dir`.
 
 ## Compatibility
 
-The classic API remains unchanged. In particular:
+The classic API remains explicitly available. The public default
+`ctor.continuator.Continuator2` uses VO-Regular-BP, while:
 
 ```python
-from ctor.continuator import Continuator2
+from ctor.classic import ClassicContinuator
 from ctor.variable_order_markov import Variable_order_Markov
 ```
 

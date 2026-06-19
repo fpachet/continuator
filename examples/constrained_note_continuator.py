@@ -22,13 +22,15 @@ if __name__ == "__main__":
         )
 
     t0 = time.perf_counter_ns()
-    generator = Continuator2(midi_file_path, 4, transposition=False)
+    generator = Continuator2(kmax=4, transposition=False)
+    phrase = list(generator.extract_notes(midi_file_path)[:12])
+    generator.learn_phrase(phrase, transposition=False)
 
     constraints = {
-        0: generator.get_vp_for_pitch(62),
-        19: generator.get_end_vp(),
+        0: generator.get_viewpoint(phrase[0]),
+        12: generator.get_end_vp(),
     }
-    generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
+    generated_sequence = generator.sample_sequence(length=13, constraints=constraints)
     if generated_sequence is None:
         raise RuntimeError("No sequence could be generated for these constraints.")
 
@@ -39,4 +41,3 @@ if __name__ == "__main__":
     rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
     generator.save_midi(rendered_sequence, output_path, tempo=-1, sustain=False)
     print(f"created file: {output_path}")
-    generator.vom.show_conts_structure()

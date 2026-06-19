@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Make the public `ctor.continuator.Continuator2` default to the
+  VO-Regular-BP MIDI engine while keeping `ClassicContinuator` explicitly
+  importable.
+- Tidy MIDI examples so they use tracked example input data and no longer
+  assume classic-only internals.
 - Document the classic architecture, class map, and public API compatibility surface used by external front ends.
 - Move the Gradio UI implementation under `ctor.ui` while preserving the `ctor.continuator_gradio` compatibility entry point.
 - Remove unused legacy helper modules and compatibility wrappers for `ctor.dynaprog` and `ctor.markov_analysis`.

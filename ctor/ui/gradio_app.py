@@ -80,10 +80,10 @@ class Continuator_gradio:
         return "Running" if self.listener is not None else "Stopped"
 
     def memory_summary(self):
-        phrase_count = len(self.continuator.vom.input_sequences)
+        phrase_count = len(self.continuator.get_phrase_titles())
         if phrase_count == 0:
             return "No phrases learned yet."
-        note_count = sum(len(phrase) for phrase in self.continuator.vom.input_sequences)
+        note_count = sum(len(self.continuator.get_phrase(index)) for index in range(phrase_count))
         return f"{phrase_count} phrase(s), {note_count} note(s) learned."
 
     def sync_ui_state(self, selected_phrase=None):
@@ -381,9 +381,9 @@ class Continuator_gradio:
         if not midi_files:
             return "No .mid or .midi files were selected.", self.memory_summary(), self.update_phrase_dropdown()
         try:
-            before = len(self.continuator.vom.input_sequences)
+            before = len(self.continuator.get_phrase_titles())
             self.continuator.learn_files(midi_files, transposition=self.continuator.transpose)
-            learned = len(self.continuator.vom.input_sequences) - before
+            learned = len(self.continuator.get_phrase_titles()) - before
         except Exception as e:
             return f"Could not load MIDI files: {e}", self.memory_summary(), self.update_phrase_dropdown()
         return f"Loaded {len(midi_files)} MIDI file(s), learned {learned} phrase(s).", self.memory_summary(), self.update_phrase_dropdown()
@@ -403,9 +403,9 @@ class Continuator_gradio:
         return self.update_phrase_dropdown()
 
     def clear_last_phrase_with_status(self):
-        before = len(self.continuator.vom.input_sequences)
+        before = len(self.continuator.get_phrase_titles())
         self.continuator.clear_last_phrase()
-        after = len(self.continuator.vom.input_sequences)
+        after = len(self.continuator.get_phrase_titles())
         if before == after:
             status = "No phrase to forget."
         else:

@@ -7,10 +7,12 @@ class PublicApiTest(unittest.TestCase):
         from ctor.classic import ClassicContinuator as PackageClassicContinuator
         from ctor.continuator import ClassicContinuator, Continuator2
         from ctor.midi import MidiContinuatorBase
+        from ctor.vo_regular_bp import VORegularBPContinuator
 
         self.assertIs(ClassicContinuator, PackageClassicContinuator)
         self.assertTrue(issubclass(ClassicContinuator, MidiContinuatorBase))
-        self.assertTrue(issubclass(Continuator2, ClassicContinuator))
+        self.assertTrue(issubclass(Continuator2, VORegularBPContinuator))
+        self.assertFalse(issubclass(Continuator2, PackageClassicContinuator))
 
         init_sig = inspect.signature(Continuator2)
         self.assertIn("midi_file", init_sig.parameters)
@@ -51,7 +53,7 @@ class PublicApiTest(unittest.TestCase):
         from ctor.belief_propag import NoSolutionErrorInBP
         from ctor.chain_solver import SparseForwardBackward
         from ctor.classic import Variable_order_Markov as PackageVariableOrderMarkov
-        from ctor.continuator import ClassicContinuator
+        from ctor.continuator import ClassicContinuator, Continuator2
         from ctor.constraints import ConstraintProblem
         from ctor.context_bp_continuator import ContextBPContinuator
         from ctor.vo_regular_bp_continuator import VORegularBPContinuator
@@ -68,6 +70,7 @@ class PublicApiTest(unittest.TestCase):
         self.assertTrue(issubclass(NoSolutionErrorInBP, Exception))
         self.assertIsNotNone(SparseForwardBackward)
         self.assertIsNotNone(ClassicContinuator)
+        self.assertTrue(issubclass(Continuator2, VORegularBPContinuator))
         self.assertIsNotNone(ConstraintProblem)
         self.assertIsNotNone(ContextBPContinuator)
         self.assertIsNotNone(VORegularBPContinuator)

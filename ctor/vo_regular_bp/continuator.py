@@ -193,6 +193,13 @@ class VORegularBPContinuator(MidiContinuatorBase):
             return
         self._relearn_sequences([list(sequence) for sequence in self.realization_store.input_sequences[:-1]])
 
+    def set_decay_mode(self, choice):
+        """Compatibility no-op for the classic decay-mode control."""
+        self.decay_mode = choice
+
+    def sample_sequence_0(self, length=50, constraints=None):
+        return self.sample_sequence(length=length, constraints=constraints)
+
     def learn_phrase(self, note_sequence, transposition):
         if len(note_sequence) == 0:
             return

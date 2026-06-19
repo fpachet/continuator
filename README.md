@@ -20,9 +20,10 @@ Three reasons why this kind of approach remains interesting, in spite of the exi
 
 - Efficient yet simple implementation of variable-order markov model
 - Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
-- Sampling combines the variable-order Markov model with exact finite-chain inference for positional constraints. The current implementation uses an iterative sparse forward-backward solver for the constrained chain.
-- Three MIDI-facing Continuator engines for experiments: the classic engine,
-  the context-BP engine, and the `vo_regular_bp` order-stack engine.
+- The default MIDI-facing `Continuator2` now uses the `vo_regular_bp`
+  order-stack engine for constrained generation.
+- The classic variable-order Markov engine and context-BP engine remain
+  available explicitly for comparison and migration work.
 - Shared MIDI realization for all engines, using a dynamic-programming pass to
   choose coherent learned note realizations for generated viewpoints.
 - Many tricks here and there to maximize musical quality
@@ -134,7 +135,8 @@ The project currently exposes three MIDI-facing Continuator engines:
 
 | Engine | Import | Generation backend | Main use |
 | --- | --- | --- | --- |
-| Classic | `from ctor.continuator import Continuator2` or `from ctor.classic import ClassicContinuator` | `Variable_order_Markov` plus sparse first-order constraint inference | stable compatibility engine |
+| Default | `from ctor.continuator import Continuator2` | external `vo_regular_bp` order-stack library | default MIDI-facing engine |
+| Classic | `from ctor.classic import ClassicContinuator` | `Variable_order_Markov` plus sparse first-order constraint inference | classic compatibility engine |
 | Context BP | `from ctor.context_bp import ContextBPContinuator` | context-state BP with explicit order policy | experimental exact context/backoff behavior |
 | VO Regular BP | `from ctor.vo_regular_bp import VORegularBPContinuator` | external `vo_regular_bp` order-stack library | regular constraints, generalized stop predicates, virtual transposition augmentation |
 
@@ -152,9 +154,9 @@ generator.save_midi(notes, "output.mid", tempo=-1)
 
 They also share phrase-memory helpers such as `get_phrase_titles()`,
 `get_phrase(index)`, `clear_memory()`, `set_transpose(...)`, and
-`set_keep_last(...)`. Some controls are engine-specific: for example decay modes
-belong to the classic engine, trace helpers belong to the context-BP and
-VO-Regular-BP experiments, and `VORegularBPContinuator` additionally exposes
+`set_keep_last(...)`. Some controls are engine-specific: for example decay
+modes only affect the classic engine, trace helpers belong to the context-BP
+and VO-Regular-BP engines, and `VORegularBPContinuator` additionally exposes
 `continue_until(...)` for arbitrary stop viewpoints/predicates.
 
 There are three related generation modes:
@@ -165,7 +167,9 @@ There are three related generation modes:
 
 Constraints are always indexed over the returned generated sequence, not over the prefix plus the generated sequence. For example, in `continue_sequence(prefix=[1, 2], length=3, constraints={0: 3})`, position `0` refers to the first generated element after the prefix.
 
-The current constrained sampler uses an iterative forward-backward pass on the first-order chain for feasibility and marginals, then combines that information with the variable-order continuation model during sampling.
+The default constrained sampler delegates fixed-length and until-end generation
+to the external `vo_regular_bp` order-stack backend. The classic engine remains
+available when you need the previous sparse first-order chain sampler.
 
 The legacy dictionary format for constraints is still supported:
 
@@ -222,7 +226,8 @@ generator = VORegularBPContinuator(kmax=4, augmentation_mode="virtual", transpos
 
 ### Migration notes
 
-For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`:
+For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`.
+This default facade is backed by VO-Regular-BP:
 
 - Existing calls to `sample_sequence(length=..., constraints=...)` still work.
 - Existing client code that passes `sample_sequence(..., start_vp=...)` is supported for compatibility with `continuator_front`; `start_vp` is treated as a hidden handoff viewpoint and is not included in the returned sequence.
@@ -231,8 +236,8 @@ For front-end integrations, prefer the high-level `Continuator2` methods in `cto
 
 The generated continuation returned by `continue_sequence` and `continue_until_end` excludes the prefix. This is useful for MIDI playback because the UI should play only the newly generated material.
 
-`ClassicContinuator` is the explicit name for the same classic MIDI engine.
-`Continuator2` remains the compatibility entry point:
+`ClassicContinuator` is the explicit name for the classic MIDI engine.
+`Continuator2` remains the default compatibility entry point:
 
 ```python
 from ctor.classic import ClassicContinuator

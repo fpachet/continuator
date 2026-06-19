@@ -22,10 +22,10 @@ class VORegularBPContinuatorTest(unittest.TestCase):
 
         self.assertEqual(sequence, [continuator.get_viewpoint(phrase[2])])
 
-    def test_vo_regular_bp_continuator_does_not_subclass_classic_continuator(self):
+    def test_continuator2_defaults_to_vo_regular_bp_continuator(self):
         from ctor.continuator import Continuator2
 
-        self.assertFalse(issubclass(VORegularBPContinuator, Continuator2))
+        self.assertTrue(issubclass(Continuator2, VORegularBPContinuator))
 
     def test_pitch_viewpoint_constraints_work(self):
         continuator = VORegularBPContinuator(kmax=2)

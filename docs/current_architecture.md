@@ -1,8 +1,9 @@
 # Current Continuator Architecture
 
-This document describes the current "classic" Continuator implementation. It is
+This document describes the current "classic" Continuator implementation and
+the default MIDI facade that now points to the VO-Regular-BP engine. It is
 intended as a quick orientation guide for contributors and future coding-agent
-sessions before any larger context-BP redesign.
+sessions before larger engine migrations.
 
 ## Big Picture
 
@@ -47,7 +48,7 @@ The repository currently uses `ctor` as its import package.
 | Path | Role |
 | --- | --- |
 | `ctor/classic/variable_order_markov.py` | Generic classic variable-order Markov model, learning, constrained sampling, decay modes, compatibility behavior. |
-| `ctor/classic/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and compatibility `Continuator2`. |
+| `ctor/classic/continuator.py` | MIDI-facing classic facade; exports `ClassicContinuator` and the classic package's historical `Continuator2` name. |
 | `ctor/context_bp/` | Experimental context-BP implementation: generic model, inference, vocabulary, and MIDI facade. |
 | `ctor/context_bp/order_policy.py` | Context-BP sampling policies, including longest-feasible and classic singleton-avoidance backoff. |
 | `ctor/vo_regular_bp/` | Experimental MIDI facade backed by the external `vo_regular_bp` order-stack library, including virtual transposition realization support. |
@@ -55,7 +56,8 @@ The repository currently uses `ctor` as its import package.
 | `ctor/engines.py` | Small generic engine-selection adapters for comparing classic and context-BP models. |
 | `ctor/chain_solver.py` | Sparse forward-backward solver for finite first-order Markov chains. |
 | `ctor/constraints.py` | Small positional constraint builder and helpers for legacy dict constraints. |
-| `ctor/continuator.py`, `ctor/variable_order_markov.py` | Compatibility aliases for classic implementation imports. |
+| `ctor/continuator.py` | Default MIDI facade; exports `Continuator2` backed by VO-Regular-BP plus explicit `ClassicContinuator`. |
+| `ctor/variable_order_markov.py` | Compatibility alias for the classic variable-order Markov model. |
 | `ctor/context_bp_continuator.py` | Compatibility wrapper for the context-BP MIDI facade. |
 | `ctor/midi/` | Shared MIDI/viewpoint/realization utilities for MIDI-facing facades. |
 | `ctor/midi/realization_store.py` | Lightweight viewpoint-to-note realization memory for MIDI facades that do not need the classic model. |
@@ -121,8 +123,9 @@ interface for generic sequence experiments:
 
 Use `make_sequence_engine("classic")` or
 `make_sequence_engine("context_bp")` when comparing the two generic models.
-`ClassicContinuator` is the classic MIDI facade; `Continuator2` remains as a
-compatibility name for existing clients.
+`ClassicContinuator` is the classic MIDI facade. The top-level
+`ctor.continuator.Continuator2` compatibility name now points to the
+VO-Regular-BP MIDI facade.
 
 ### `LazyExpCounter` and `MultiCounter`
 
@@ -189,7 +192,7 @@ constraints = {0: start_viewpoint, 19: end_viewpoint}
 `ConstraintProblem` can represent one-of constraints. The legacy dict format can
 only represent single-value equality constraints.
 
-### `ClassicContinuator` and `Continuator2`
+### `ClassicContinuator`
 
 Defined in `ctor/classic/continuator.py`.
 
@@ -213,12 +216,12 @@ Main responsibilities:
 - Maintain practical UI settings such as forgetting old phrases, transposition,
   generation length, and decay mode.
 
-`Continuator2` is a compatibility subclass of `ClassicContinuator`. Existing
-front ends should continue importing `Continuator2`; new code can use the more
-explicit `ClassicContinuator` name.
+The `ctor.classic` package still exposes its historical `Continuator2` name for
+classic-engine callers. The public default `ctor.continuator.Continuator2`
+uses the VO-Regular-BP engine.
 
-Neither class is the generic model. They are application layers over the
-classic generic model.
+`ClassicContinuator` is not the generic model. It is an application layer over
+the classic generic model.
 
 See `docs/public_api.md` for the compatibility surface that should remain
 stable for external clients such as `continuator_front`.
@@ -257,8 +260,7 @@ behavior. Virtual transposition uses `VirtualAugmentedOrderStackModel` for
 symbolic counts and a transform-aware realization store that lazily transposes
 base notes when generated transformed viewpoints are rendered.
 
-Like `ContextBPContinuator`, it does not subclass `Continuator2` and keeps the
-classic public entry point unchanged.
+The public default `ctor.continuator.Continuator2` subclasses this facade.
 
 ### `MidiContinuatorBase`
 
