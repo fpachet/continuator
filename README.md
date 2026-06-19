@@ -36,6 +36,7 @@ The current implementation is documented in:
 - [`docs/class_map.md`](docs/class_map.md): concise class-level reference for the current code.
 - [`docs/public_api.md`](docs/public_api.md): compatibility surface used by external front ends such as `continuator_front`.
 - [`docs/context_bp_design.md`](docs/context_bp_design.md): notes on the experimental context-BP core.
+- [`docs/todo.md`](docs/todo.md): cleanup roadmap for converging on the VO-Regular-BP engine and removing older engine/UI paths.
 
 ## Authors
 - [François Pachet](https://github.com/fpachet)
