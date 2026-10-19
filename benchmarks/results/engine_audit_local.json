@@ -1,0 +1,2783 @@
+{
+  "environment": {
+    "python": "3.13.11 | packaged by Anaconda, Inc. | (main, Dec 10 2025, 21:21:08) [Clang 20.1.8 ]",
+    "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
+    "backend_path": "/Users/francoispachet/IdeaProjects/vo_regular_bp/vo_regular_bp/__init__.py",
+    "backend_git_head": "ae05b8799a9698d986afbe2b010194b32aa2c678",
+    "midi": "data/prelude_c.mid",
+    "midi_sha256": "c87843095aac7e54a2c485e4200b7a0dd1de5905d4382d38b97bf1765a6dc921",
+    "backend_source_ref": "installed editable checkout",
+    "backend_source_revision": "ae05b8799a9698d986afbe2b010194b32aa2c678"
+  },
+  "acceptance": [
+    {
+      "engine": "classic",
+      "scenario": "fixed",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7853787878787879,
+      "examples": [
+        [
+          62,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          67,
+          60,
+          64,
+          60
+        ],
+        [
+          64,
+          62,
+          60,
+          67,
+          60,
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          65
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7258207070707071,
+      "examples": [
+        [
+          65,
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          65,
+          67,
+          65,
+          62,
+          60
+        ],
+        [
+          64,
+          60,
+          65,
+          64,
+          60,
+          65,
+          60,
+          67,
+          60,
+          65,
+          60,
+          62,
+          64,
+          62,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "one_of_and_last",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.696780303030303,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          64,
+          60,
+          62,
+          60,
+          67,
+          65,
+          60,
+          64,
+          60
+        ],
+        [
+          67,
+          60,
+          65,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          60,
+          62,
+          64,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "prefix_last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 99,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7062752525252525,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          67,
+          60,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60
+        ],
+        [
+          65,
+          67,
+          65,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          60,
+          62,
+          65,
+          62,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "hidden_handoff",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7066919191919192,
+      "examples": [
+        [
+          60,
+          67,
+          65,
+          64,
+          62,
+          65,
+          64,
+          62,
+          60,
+          67,
+          60,
+          65,
+          67,
+          60,
+          62,
+          60
+        ],
+        [
+          60,
+          65,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "fixed_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7310606060606061,
+      "examples": [
+        [
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          67,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60
+        ],
+        [
+          67,
+          64,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          67,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 90,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19,
+        21,
+        22,
+        24,
+        25,
+        26,
+        27,
+        30,
+        31
+      ],
+      "mean_pairwise_pitch_hamming": 0.5925014712256483,
+      "examples": [
+        [
+          62,
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60
+        ],
+        [
+          67,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "prefix_until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 77,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        25,
+        26,
+        27,
+        28,
+        30,
+        31
+      ],
+      "mean_pairwise_pitch_hamming": 0.4352807659889703,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          65,
+          64,
+          60,
+          65,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60
+        ],
+        [
+          65,
+          64,
+          60,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "fixed",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7770580808080808,
+      "examples": [
+        [
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          67,
+          65,
+          64
+        ],
+        [
+          62,
+          64,
+          60,
+          65,
+          60,
+          67,
+          65,
+          64,
+          62,
+          60,
+          64,
+          67,
+          65,
+          60,
+          62,
+          65
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7271464646464646,
+      "examples": [
+        [
+          60,
+          62,
+          65,
+          62,
+          60,
+          64,
+          67,
+          64,
+          67,
+          64,
+          62,
+          60,
+          65,
+          67,
+          64,
+          60
+        ],
+        [
+          64,
+          62,
+          60,
+          64,
+          67,
+          64,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "one_of_and_last",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6802904040404041,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          64,
+          67,
+          60,
+          67,
+          65,
+          64,
+          60
+        ],
+        [
+          60,
+          62,
+          64,
+          60,
+          62,
+          60,
+          62,
+          64,
+          60,
+          65,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "prefix_last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7194065656565657,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          64,
+          60,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          65,
+          64,
+          60,
+          62,
+          60
+        ],
+        [
+          65,
+          62,
+          60,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          65,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "hidden_handoff",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7113131313131313,
+      "examples": [
+        [
+          60,
+          64,
+          67,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          60
+        ],
+        [
+          60,
+          67,
+          65,
+          60,
+          67,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "fixed_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7293308080808081,
+      "examples": [
+        [
+          62,
+          60,
+          65,
+          67,
+          64,
+          60,
+          62,
+          60,
+          64,
+          67,
+          65,
+          60,
+          65,
+          60,
+          64,
+          60
+        ],
+        [
+          64,
+          67,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          64,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 85,
+      "note_lengths": [
+        9
+      ],
+      "mean_pairwise_pitch_hamming": 0.566936026936027,
+      "examples": [
+        [
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          60,
+          67,
+          60
+        ],
+        [
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "prefix_until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 70,
+      "note_lengths": [
+        7
+      ],
+      "mean_pairwise_pitch_hamming": 0.6141991341991342,
+      "examples": [
+        [
+          64,
+          62,
+          64,
+          60,
+          65,
+          62,
+          60
+        ],
+        [
+          64,
+          60,
+          65,
+          67,
+          60,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "fixed",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7264141414141414,
+      "examples": [
+        [
+          60,
+          64,
+          67,
+          64,
+          60,
+          62,
+          65,
+          64,
+          62,
+          60,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60
+        ],
+        [
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          64,
+          67,
+          65,
+          64,
+          60,
+          62,
+          65,
+          60,
+          67,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6636868686868687,
+      "examples": [
+        [
+          60,
+          65,
+          67,
+          65,
+          64,
+          60,
+          65,
+          67,
+          64,
+          67,
+          60,
+          65,
+          60,
+          67,
+          65,
+          60
+        ],
+        [
+          60,
+          64,
+          67,
+          64,
+          62,
+          60,
+          64,
+          67,
+          65,
+          64,
+          62,
+          64,
+          60,
+          65,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "one_of_and_last",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6247727272727273,
+      "examples": [
+        [
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          62,
+          60,
+          64,
+          67,
+          64,
+          60,
+          65,
+          60
+        ],
+        [
+          60,
+          62,
+          65,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          67,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "prefix_last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7166666666666667,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          64,
+          67,
+          65,
+          64,
+          60,
+          65,
+          60,
+          64,
+          67,
+          65,
+          64,
+          62,
+          60
+        ],
+        [
+          60,
+          67,
+          65,
+          64,
+          60,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          62,
+          65,
+          60,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "hidden_handoff",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 98,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7119949494949495,
+      "examples": [
+        [
+          60,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60
+        ],
+        [
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "fixed_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6670328282828283,
+      "examples": [
+        [
+          60,
+          64,
+          67,
+          65,
+          60,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          65,
+          60,
+          67,
+          65,
+          60
+        ],
+        [
+          60,
+          62,
+          60,
+          67,
+          65,
+          60,
+          64,
+          67,
+          64,
+          62,
+          60,
+          67,
+          64,
+          67,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 81,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        29,
+        30,
+        31
+      ],
+      "mean_pairwise_pitch_hamming": 0.41603085176095533,
+      "examples": [
+        [
+          60,
+          62,
+          65,
+          64,
+          60,
+          62,
+          65,
+          67,
+          65,
+          64,
+          60,
+          65,
+          60
+        ],
+        [
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          67,
+          60,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "prefix_until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 90,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "mean_pairwise_pitch_hamming": 0.5659636812341945,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          64,
+          67,
+          64,
+          62,
+          65,
+          60
+        ],
+        [
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          62,
+          64,
+          67,
+          65,
+          64,
+          60
+        ]
+      ]
+    }
+  ],
+  "compatibility_probes": [
+    {
+      "engine": "classic",
+      "probe": "unprompted_short_suffix",
+      "result": [
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "classic",
+      "probe": "explicit_start_marker",
+      "result": [
+        "START",
+        60,
+        62,
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "classic",
+      "probe": "final_note_or_end",
+      "result": [
+        60,
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "classic",
+      "probe": "unknown_prefix_default",
+      "error": "KeyError",
+      "message": "(99, 1, False, False)"
+    },
+    {
+      "engine": "classic",
+      "probe": "viewpoint_prefix",
+      "error": "AttributeError",
+      "message": "'tuple' object has no attribute 'pitch'"
+    },
+    {
+      "engine": "classic",
+      "probe": "unknown_constraint_default",
+      "error": "KeyError",
+      "message": "(99, 1, False, False)"
+    },
+    {
+      "engine": "classic",
+      "probe": "impossible_transition_default",
+      "result": null
+    },
+    {
+      "engine": "classic",
+      "probe": "unreachable_end_window",
+      "result": null
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unprompted_short_suffix",
+      "result": [
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "probe": "explicit_start_marker",
+      "error": "NoFeasibleSequenceError",
+      "message": "No context path satisfies the constraints from any initial symbol."
+    },
+    {
+      "engine": "context_bp",
+      "probe": "final_note_or_end",
+      "result": [
+        60,
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unknown_prefix_default",
+      "error": "KeyError",
+      "message": "'Unknown symbol: (99, 1, False, False)'"
+    },
+    {
+      "engine": "context_bp",
+      "probe": "viewpoint_prefix",
+      "result": [
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unknown_constraint_default",
+      "error": "AttributeError",
+      "message": "'tuple' object has no attribute 'pitch'"
+    },
+    {
+      "engine": "context_bp",
+      "probe": "impossible_transition_default",
+      "result": null
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unreachable_end_window",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unprompted_short_suffix",
+      "error": "NoSolutionErrorInBP",
+      "message": "No solution for constraints."
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "explicit_start_marker",
+      "error": "NoSolutionErrorInBP",
+      "message": "No solution for constraints."
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "final_note_or_end",
+      "error": "NoSolutionErrorInBP",
+      "message": "No solution for constraints."
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unknown_prefix_default",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "viewpoint_prefix",
+      "result": [
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unknown_constraint_default",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "impossible_transition_default",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unreachable_end_window",
+      "result": null
+    }
+  ],
+  "rolling_continuations": [
+    {
+      "engine": "classic",
+      "chunks": 100,
+      "generated_notes": 1600,
+      "unique_chunks": 100
+    },
+    {
+      "engine": "context_bp",
+      "chunks": 100,
+      "generated_notes": 1600,
+      "unique_chunks": 100
+    },
+    {
+      "engine": "vo_regular_bp",
+      "chunks": 100,
+      "generated_notes": 1600,
+      "unique_chunks": 100
+    }
+  ],
+  "benchmarks": [
+    {
+      "engine": "classic",
+      "scenario": "bach_fixed_last_note",
+      "length": 16,
+      "learn_ms": 6.5014169085770845,
+      "generation": {
+        "median_ms": 2.722332952544093,
+        "p95_ms": 2.9151578433811665,
+        "max_ms": 2.9590828344225883,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 0.47279195860028267,
+        "p95_ms": 0.6906336639076471,
+        "max_ms": 0.7369588129222393,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_fixed_last_note",
+      "length": 64,
+      "learn_ms": 6.5014169085770845,
+      "generation": {
+        "median_ms": 12.354499893262982,
+        "p95_ms": 12.461008550599217,
+        "max_ms": 12.463541934266686,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 1.971124904230237,
+        "p95_ms": 2.4034088011831045,
+        "max_ms": 2.4573339615017176,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_fixed_last_note",
+      "length": 256,
+      "learn_ms": 6.5014169085770845,
+      "generation": {
+        "median_ms": 51.476375199854374,
+        "p95_ms": 51.91184990108013,
+        "max_ms": 51.978208124637604,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 10.34604199230671,
+        "p95_ms": 10.63309139572084,
+        "max_ms": 10.645458009094,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_until_end",
+      "max_length": 32,
+      "generation": {
+        "median_ms": 4.9300421960651875,
+        "p95_ms": 5.10839163325727,
+        "max_ms": 5.129249999299645,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_until_end",
+      "max_length": 64,
+      "generation": {
+        "median_ms": 9.516000049188733,
+        "p95_ms": 9.838417079299688,
+        "max_ms": 9.842458879575133,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_until_end",
+      "max_length": 128,
+      "generation": {
+        "median_ms": 18.462750129401684,
+        "p95_ms": 18.910666834563017,
+        "max_ms": 18.976042047142982,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 16,
+      "learn_ms": 6.444792030379176,
+      "generation": {
+        "median_ms": 15.040541999042034,
+        "p95_ms": 18.231949862092733,
+        "max_ms": 18.97245808504522,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 0.41200011037290096,
+        "p95_ms": 0.5240827798843384,
+        "max_ms": 0.5480409599840641,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 64,
+      "learn_ms": 6.444792030379176,
+      "generation": {
+        "median_ms": 47.0849578268826,
+        "p95_ms": 47.19022517092526,
+        "max_ms": 47.196917003020644,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.485250122845173,
+        "p95_ms": 2.691024774685502,
+        "max_ms": 2.7234579902142286,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 256,
+      "learn_ms": 6.444792030379176,
+      "generation": {
+        "median_ms": 173.86625008657575,
+        "p95_ms": 175.02491674385965,
+        "max_ms": 175.07112491875887,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 9.47824981994927,
+        "p95_ms": 10.131633328273892,
+        "max_ms": 10.168583132326603,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_until_end",
+      "max_length": 32,
+      "generation": {
+        "median_ms": 113.60804201103747,
+        "p95_ms": 115.66897528246045,
+        "max_ms": 115.6961671076715,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_until_end",
+      "max_length": 64,
+      "generation": {
+        "median_ms": 559.4949580263346,
+        "p95_ms": 572.9156917426735,
+        "max_ms": 574.2662919219583,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_until_end",
+      "max_length": 128,
+      "generation": {
+        "median_ms": 466.36454202234745,
+        "p95_ms": 478.1947915907949,
+        "max_ms": 479.8373749945313,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 16,
+      "learn_ms": 5.783458007499576,
+      "generation": {
+        "median_ms": 12.57958309724927,
+        "p95_ms": 17.38174157217145,
+        "max_ms": 18.57737498357892,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 0.429375097155571,
+        "p95_ms": 0.4951747599989176,
+        "max_ms": 0.5115829408168793,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 64,
+      "learn_ms": 5.783458007499576,
+      "generation": {
+        "median_ms": 44.31058303453028,
+        "p95_ms": 44.392991438508034,
+        "max_ms": 44.410458067432046,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.357665915042162,
+        "p95_ms": 2.467191079631448,
+        "max_ms": 2.4776661302894354,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 256,
+      "learn_ms": 5.783458007499576,
+      "generation": {
+        "median_ms": 164.80629099532962,
+        "p95_ms": 167.04429164528847,
+        "max_ms": 167.54487506113946,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 9.083542041480541,
+        "p95_ms": 9.282541181892157,
+        "max_ms": 9.315290953963995,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 32,
+      "generation": {
+        "median_ms": 27.8267920948565,
+        "p95_ms": 29.115782817825675,
+        "max_ms": 29.148916015401483,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 64,
+      "generation": {
+        "median_ms": 53.78833296708763,
+        "p95_ms": 54.752850299701095,
+        "max_ms": 54.990542121231556,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 128,
+      "generation": {
+        "median_ms": 106.24079196713865,
+        "p95_ms": 108.77182483673096,
+        "max_ms": 109.35645806603134,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 256,
+      "generation": {
+        "median_ms": 209.94545798748732,
+        "p95_ms": 212.50295001082122,
+        "max_ms": 212.65237499028444,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 500,
+      "generation": {
+        "median_ms": 418.8640001229942,
+        "p95_ms": 419.41367485560477,
+        "max_ms": 419.43070804700255,
+        "repeats": 5
+      }
+    }
+  ],
+  "vo_scaling": [
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 4,
+      "augmentation": "none",
+      "stored_phrases": 1,
+      "learning_total_ms": 1.5499161090701818,
+      "learning_last_ms": 1.5499161090701818,
+      "facade": {
+        "median_ms": 44.98237487860024,
+        "p95_ms": 50.92623303644359,
+        "max_ms": 52.41058301180601,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 43.11074991710484,
+        "p95_ms": 48.98254149593413,
+        "max_ms": 50.087374867871404,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.49400003626942635,
+        "p95_ms": 0.994058884680271,
+        "max_ms": 1.0770841035991907,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.02579190954566,
+        "p95_ms": 2.3123247548937798,
+        "max_ms": 2.3649579379707575,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 4.314303398132324,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 2158,
+        "context_edges": 3210,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -6.386831168801685
+          ],
+          [
+            2,
+            -6.1156577175578555
+          ],
+          [
+            3,
+            -Infinity
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "base_notes": 2196,
+      "base_phrases": 4,
+      "kmax": 4,
+      "augmentation": "none",
+      "stored_phrases": 4,
+      "learning_total_ms": 13.118375092744827,
+      "learning_last_ms": 4.7902921214699745,
+      "facade": {
+        "median_ms": 43.391000013798475,
+        "p95_ms": 46.96276672184467,
+        "max_ms": 47.84387489780784,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 42.223208118230104,
+        "p95_ms": 43.2091417722404,
+        "max_ms": 43.43779198825359,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.4330419469624758,
+        "p95_ms": 0.5331413820385933,
+        "max_ms": 0.5573329981416464,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 6.75674993544817,
+        "p95_ms": 7.0846326649188995,
+        "max_ms": 7.150665856897831,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 4.314303398132324,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 2158,
+        "context_edges": 3210,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -6.386831168801685
+          ],
+          [
+            2,
+            -6.1156577175578555
+          ],
+          [
+            3,
+            -Infinity
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "base_notes": 8784,
+      "base_phrases": 16,
+      "kmax": 4,
+      "augmentation": "none",
+      "stored_phrases": 16,
+      "learning_total_ms": 155.7386249769479,
+      "learning_last_ms": 17.872791038826108,
+      "facade": {
+        "median_ms": 42.94704087078571,
+        "p95_ms": 47.319424618035555,
+        "max_ms": 48.16633299924433,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 43.90808311291039,
+        "p95_ms": 57.946241553872824,
+        "max_ms": 61.39287492260337,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.4433330614119768,
+        "p95_ms": 0.5527251400053501,
+        "max_ms": 0.5781669169664383,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 60.470249969512224,
+        "p95_ms": 62.05289992503822,
+        "max_ms": 62.421999871730804,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 4.314303398132324,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 2158,
+        "context_edges": 3210,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -6.386831168801685
+          ],
+          [
+            2,
+            -6.1156577175578555
+          ],
+          [
+            3,
+            -Infinity
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 1,
+      "augmentation": "none",
+      "stored_phrases": 1,
+      "learning_total_ms": 0.6616250611841679,
+      "learning_last_ms": 0.6616250611841679,
+      "facade": {
+        "median_ms": 2.3163750302046537,
+        "p95_ms": 2.652883669361472,
+        "max_ms": 2.695667091757059,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 1.8130410462617874,
+        "p95_ms": 1.828616438433528,
+        "max_ms": 1.829083077609539,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.24791620671749115,
+        "p95_ms": 0.29628355987370014,
+        "max_ms": 0.3082919865846634,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.0728749223053455,
+        "p95_ms": 2.1518328692764044,
+        "max_ms": 2.167666098102927,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 0.2857847213745117,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 1,
+        "context_states": 91,
+        "context_edges": 243,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -6.386831168801685
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 8,
+      "augmentation": "none",
+      "stored_phrases": 1,
+      "learning_total_ms": 3.0894579831510782,
+      "learning_last_ms": 3.0894579831510782,
+      "facade": {
+        "median_ms": 214.57341685891151,
+        "p95_ms": 234.2588160187006,
+        "max_ms": 238.91666601411998,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 212.02670806087554,
+        "p95_ms": 212.52425811253488,
+        "max_ms": 212.59145787917078,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.6226249970495701,
+        "p95_ms": 0.7766830269247293,
+        "max_ms": 0.8120830170810223,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 1.9744171295315027,
+        "p95_ms": 2.278350107371807,
+        "max_ms": 2.331250114366412,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 21.727442741394043,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 8,
+        "context_states": 11109,
+        "context_edges": 13805,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -6.386831168801685
+          ],
+          [
+            2,
+            -6.1156577175578555
+          ],
+          [
+            3,
+            -Infinity
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 4,
+      "augmentation": "explicit",
+      "stored_phrases": 12,
+      "learning_total_ms": 35.89829197153449,
+      "learning_last_ms": 35.89829197153449,
+      "facade": {
+        "median_ms": 400.26200003921986,
+        "p95_ms": 440.5657331459224,
+        "max_ms": 447.66095792874694,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 386.6130420938134,
+        "p95_ms": 392.41513344459236,
+        "max_ms": 393.1757500395179,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.7500420324504375,
+        "p95_ms": 0.9306749328970909,
+        "max_ms": 0.9681249503046274,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 17.217374872416258,
+        "p95_ms": 17.900266218930483,
+        "max_ms": 18.025791039690375,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 35.40684986114502,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 17956,
+        "context_edges": 30507,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.00013874747573230272
+          ],
+          [
+            2,
+            0.000139732154557029
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -8.882854998423564
+          ],
+          [
+            2,
+            -8.875783149560258
+          ],
+          [
+            3,
+            -Infinity
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 4,
+      "augmentation": "virtual",
+      "stored_phrases": 1,
+      "learning_total_ms": 8.213333087041974,
+      "learning_last_ms": 8.213333087041974,
+      "facade": {
+        "median_ms": 399.83920799568295,
+        "p95_ms": 572.5513164885342,
+        "max_ms": 615.4856248758733,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 396.43766707740724,
+        "p95_ms": 398.74815000221133,
+        "max_ms": 398.92475004307926,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.7462918292731047,
+        "p95_ms": 0.9752833284437656,
+        "max_ms": 0.9917081333696842,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 16.669957898557186,
+        "p95_ms": 16.74325023777783,
+        "max_ms": 16.75866707228124,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 35.404438972473145,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 17956,
+        "context_edges": 30507,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": 0.013818750157952309,
+        "virtual_context_materialization_calls": 4,
+        "virtual_context_materialization_cache_hits": 0,
+        "virtual_context_materialization_cache_misses": 4,
+        "augmented_count_calls": 36162,
+        "augmented_count_cache_hits": 26452,
+        "augmented_count_cache_misses": 9710,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.00013874747573230272
+          ],
+          [
+            2,
+            0.000139732154557029
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -8.882854998423564
+          ],
+          [
+            2,
+            -8.875783149560258
+          ],
+          [
+            3,
+            -Infinity
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    }
+  ],
+  "diverse_corpus_scaling": [
+    {
+      "phrases": 8,
+      "notes": 512,
+      "vocabulary": 12,
+      "learning_total_ms": 6.214334163814783,
+      "generation": {
+        "median_ms": 38.88187510892749,
+        "p95_ms": 43.6339661013335,
+        "max_ms": 44.7559158783406,
+        "repeats": 5
+      },
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 1895,
+        "context_edges": 3455,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.032124507575111136
+          ],
+          [
+            2,
+            0.031342219947152
+          ],
+          [
+            3,
+            0.02806496592206046
+          ],
+          [
+            4,
+            0.0
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -3.438136064285444
+          ],
+          [
+            2,
+            -3.4627892102568305
+          ],
+          [
+            3,
+            -3.573233244839185
+          ],
+          [
+            4,
+            -Infinity
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "phrases": 32,
+      "notes": 2048,
+      "vocabulary": 12,
+      "learning_total_ms": 91.89387504011393,
+      "generation": {
+        "median_ms": 98.53341686539352,
+        "p95_ms": 112.70391652360559,
+        "max_ms": 116.19737488217652,
+        "repeats": 5
+      },
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 4977,
+        "context_edges": 10326,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.027287052470867934
+          ],
+          [
+            2,
+            0.028246179220884307
+          ],
+          [
+            3,
+            0.012351953051456217
+          ],
+          [
+            4,
+            0.012286150896990741
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -3.60134295775846
+          ],
+          [
+            2,
+            -3.5667970793548878
+          ],
+          [
+            3,
+            -4.393941086592933
+          ],
+          [
+            4,
+            -4.399282594288254
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    },
+    {
+      "phrases": 128,
+      "notes": 8192,
+      "vocabulary": 12,
+      "learning_total_ms": 1317.9535418748856,
+      "generation": {
+        "median_ms": 248.67604207247496,
+        "p95_ms": 286.8301246780902,
+        "max_ms": 295.77883309684694,
+        "repeats": 5
+      },
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 11197,
+        "context_edges": 28097,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "regular_transition_rows": null,
+        "regular_transition_row_cache_hits": null,
+        "regular_transition_row_cache_misses": null,
+        "regular_accepted_transitions": null,
+        "regular_beta_state_expansions": null,
+        "regular_beta_cache_hits": null,
+        "regular_beta_cache_misses": null,
+        "regular_acceptor_symbol_transition_cache_hits": null,
+        "regular_acceptor_symbol_transition_cache_misses": null,
+        "duration_view_quotient_states": null,
+        "duration_view_quotient_classes": null,
+        "duration_view_quotient_state_reduction": null,
+        "duration_view_quotient_edges": null,
+        "duration_view_quotient_projected_edges": null,
+        "duration_view_quotient_ignored_edges": null,
+        "duration_view_quotient_quotient_edges": null,
+        "duration_view_quotient_projected_edge_reduction": null,
+        "duration_view_quotient_max_class_size": null,
+        "duration_view_quotient_refinement_rounds": null,
+        "duration_view_quotient_seconds": null,
+        "duration_view_quotient_order_stats": [],
+        "virtual_context_materialization_seconds": null,
+        "virtual_context_materialization_calls": null,
+        "virtual_context_materialization_cache_hits": null,
+        "virtual_context_materialization_cache_misses": null,
+        "augmented_count_calls": null,
+        "augmented_count_cache_hits": null,
+        "augmented_count_cache_misses": null,
+        "virtual_outgoing_row_calls": 0,
+        "virtual_outgoing_row_cache_hits": 0,
+        "virtual_outgoing_row_cache_misses": 0,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.028850547004105928
+          ],
+          [
+            2,
+            0.027302913289533107
+          ],
+          [
+            3,
+            0.02705393300464354
+          ],
+          [
+            4,
+            0.03453404680816087
+          ]
+        ],
+        "start_log_order_masses": [
+          [
+            1,
+            -3.545626325926804
+          ],
+          [
+            2,
+            -3.6007618685824347
+          ],
+          [
+            3,
+            -3.609922886674986
+          ],
+          [
+            4,
+            -3.36580957757031
+          ]
+        ],
+        "regular_transition_cache_entries": null,
+        "regular_transition_cache_skipped_rows": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,2263 @@
+{
+  "environment": {
+    "python": "3.13.11 | packaged by Anaconda, Inc. | (main, Dec 10 2025, 21:21:08) [Clang 20.1.8 ]",
+    "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
+    "backend_path": "/private/tmp/continuator-audit-v011/vo_regular_bp/__init__.py",
+    "backend_git_head": null,
+    "midi": "data/prelude_c.mid",
+    "midi_sha256": "c87843095aac7e54a2c485e4200b7a0dd1de5905d4382d38b97bf1765a6dc921",
+    "backend_source_ref": "v0.1.1",
+    "backend_source_revision": "7ca7bcbce536a23fa8a190af6e59db174f55d49d"
+  },
+  "acceptance": [
+    {
+      "engine": "classic",
+      "scenario": "fixed",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7853787878787879,
+      "examples": [
+        [
+          62,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          67,
+          60,
+          64,
+          60
+        ],
+        [
+          64,
+          62,
+          60,
+          67,
+          60,
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          65
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7258207070707071,
+      "examples": [
+        [
+          65,
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          65,
+          67,
+          65,
+          62,
+          60
+        ],
+        [
+          64,
+          60,
+          65,
+          64,
+          60,
+          65,
+          60,
+          67,
+          60,
+          65,
+          60,
+          62,
+          64,
+          62,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "one_of_and_last",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.696780303030303,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          64,
+          60,
+          62,
+          60,
+          67,
+          65,
+          60,
+          64,
+          60
+        ],
+        [
+          67,
+          60,
+          65,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          60,
+          62,
+          64,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "prefix_last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 99,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7062752525252525,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          67,
+          60,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60
+        ],
+        [
+          65,
+          67,
+          65,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          60,
+          62,
+          65,
+          62,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "hidden_handoff",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7066919191919192,
+      "examples": [
+        [
+          60,
+          67,
+          65,
+          64,
+          62,
+          65,
+          64,
+          62,
+          60,
+          67,
+          60,
+          65,
+          67,
+          60,
+          62,
+          60
+        ],
+        [
+          60,
+          65,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "fixed_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7310606060606061,
+      "examples": [
+        [
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          67,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60
+        ],
+        [
+          67,
+          64,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          67,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 90,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19,
+        21,
+        22,
+        24,
+        25,
+        26,
+        27,
+        30,
+        31
+      ],
+      "mean_pairwise_pitch_hamming": 0.5925014712256483,
+      "examples": [
+        [
+          62,
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60
+        ],
+        [
+          67,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "classic",
+      "scenario": "prefix_until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 77,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        25,
+        26,
+        27,
+        28,
+        30,
+        31
+      ],
+      "mean_pairwise_pitch_hamming": 0.4352807659889703,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          65,
+          64,
+          60,
+          65,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60
+        ],
+        [
+          65,
+          64,
+          60,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "fixed",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7770580808080808,
+      "examples": [
+        [
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          67,
+          65,
+          64
+        ],
+        [
+          62,
+          64,
+          60,
+          65,
+          60,
+          67,
+          65,
+          64,
+          62,
+          60,
+          64,
+          67,
+          65,
+          60,
+          62,
+          65
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7271464646464646,
+      "examples": [
+        [
+          60,
+          62,
+          65,
+          62,
+          60,
+          64,
+          67,
+          64,
+          67,
+          64,
+          62,
+          60,
+          65,
+          67,
+          64,
+          60
+        ],
+        [
+          64,
+          62,
+          60,
+          64,
+          67,
+          64,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "one_of_and_last",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6802904040404041,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          64,
+          67,
+          60,
+          67,
+          65,
+          64,
+          60
+        ],
+        [
+          60,
+          62,
+          64,
+          60,
+          62,
+          60,
+          62,
+          64,
+          60,
+          65,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "prefix_last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7194065656565657,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          64,
+          60,
+          62,
+          60,
+          65,
+          64,
+          60,
+          62,
+          65,
+          64,
+          60,
+          62,
+          60
+        ],
+        [
+          65,
+          62,
+          60,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          64,
+          60,
+          65,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "hidden_handoff",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7113131313131313,
+      "examples": [
+        [
+          60,
+          64,
+          67,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          60
+        ],
+        [
+          60,
+          67,
+          65,
+          60,
+          67,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "fixed_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7293308080808081,
+      "examples": [
+        [
+          62,
+          60,
+          65,
+          67,
+          64,
+          60,
+          62,
+          60,
+          64,
+          67,
+          65,
+          60,
+          65,
+          60,
+          64,
+          60
+        ],
+        [
+          64,
+          67,
+          64,
+          60,
+          62,
+          65,
+          62,
+          60,
+          64,
+          60,
+          65,
+          67,
+          65,
+          60,
+          67,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 85,
+      "note_lengths": [
+        9
+      ],
+      "mean_pairwise_pitch_hamming": 0.566936026936027,
+      "examples": [
+        [
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          60,
+          67,
+          60
+        ],
+        [
+          60,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "prefix_until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 70,
+      "note_lengths": [
+        7
+      ],
+      "mean_pairwise_pitch_hamming": 0.6141991341991342,
+      "examples": [
+        [
+          64,
+          62,
+          64,
+          60,
+          65,
+          62,
+          60
+        ],
+        [
+          64,
+          60,
+          65,
+          67,
+          60,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "fixed",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7264141414141414,
+      "examples": [
+        [
+          60,
+          64,
+          67,
+          64,
+          60,
+          62,
+          65,
+          64,
+          62,
+          60,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60
+        ],
+        [
+          60,
+          65,
+          64,
+          60,
+          62,
+          60,
+          64,
+          67,
+          65,
+          64,
+          60,
+          62,
+          65,
+          60,
+          67,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6636868686868687,
+      "examples": [
+        [
+          60,
+          65,
+          67,
+          65,
+          64,
+          60,
+          65,
+          67,
+          64,
+          67,
+          60,
+          65,
+          60,
+          67,
+          65,
+          60
+        ],
+        [
+          60,
+          64,
+          67,
+          64,
+          62,
+          60,
+          64,
+          67,
+          65,
+          64,
+          62,
+          64,
+          60,
+          65,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "one_of_and_last",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6247727272727273,
+      "examples": [
+        [
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          62,
+          60,
+          64,
+          67,
+          64,
+          60,
+          65,
+          60
+        ],
+        [
+          60,
+          62,
+          65,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60,
+          67,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "prefix_last_note",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7166666666666667,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          64,
+          67,
+          65,
+          64,
+          60,
+          65,
+          60,
+          64,
+          67,
+          65,
+          64,
+          62,
+          60
+        ],
+        [
+          60,
+          67,
+          65,
+          64,
+          60,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          62,
+          65,
+          60,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "hidden_handoff",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 98,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.7119949494949495,
+      "examples": [
+        [
+          60,
+          64,
+          60,
+          65,
+          64,
+          62,
+          60,
+          65,
+          67,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60
+        ],
+        [
+          60,
+          65,
+          64,
+          62,
+          60,
+          67,
+          60,
+          67,
+          60,
+          65,
+          64,
+          60,
+          62,
+          64,
+          62,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "fixed_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 100,
+      "note_lengths": [
+        16
+      ],
+      "mean_pairwise_pitch_hamming": 0.6670328282828283,
+      "examples": [
+        [
+          60,
+          64,
+          67,
+          65,
+          60,
+          62,
+          60,
+          67,
+          65,
+          64,
+          60,
+          65,
+          60,
+          67,
+          65,
+          60
+        ],
+        [
+          60,
+          62,
+          60,
+          67,
+          65,
+          60,
+          64,
+          67,
+          64,
+          62,
+          60,
+          67,
+          64,
+          67,
+          64,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 81,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        29,
+        30,
+        31
+      ],
+      "mean_pairwise_pitch_hamming": 0.41603085176095533,
+      "examples": [
+        [
+          60,
+          62,
+          65,
+          64,
+          60,
+          62,
+          65,
+          67,
+          65,
+          64,
+          60,
+          65,
+          60
+        ],
+        [
+          60,
+          62,
+          64,
+          62,
+          60,
+          65,
+          67,
+          60,
+          65,
+          60
+        ]
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "prefix_until_end",
+      "attempts": 100,
+      "successes": 100,
+      "failures": {},
+      "unique": 90,
+      "note_lengths": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "mean_pairwise_pitch_hamming": 0.5659636812341945,
+      "examples": [
+        [
+          64,
+          62,
+          60,
+          65,
+          64,
+          62,
+          60,
+          64,
+          67,
+          64,
+          62,
+          65,
+          60
+        ],
+        [
+          64,
+          62,
+          60,
+          67,
+          65,
+          64,
+          62,
+          64,
+          67,
+          65,
+          64,
+          60
+        ]
+      ]
+    }
+  ],
+  "compatibility_probes": [
+    {
+      "engine": "classic",
+      "probe": "unprompted_short_suffix",
+      "result": [
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "classic",
+      "probe": "explicit_start_marker",
+      "result": [
+        "START",
+        60,
+        62,
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "classic",
+      "probe": "final_note_or_end",
+      "result": [
+        62,
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "classic",
+      "probe": "unknown_prefix_default",
+      "error": "KeyError",
+      "message": "(99, 1, False, False)"
+    },
+    {
+      "engine": "classic",
+      "probe": "viewpoint_prefix",
+      "error": "AttributeError",
+      "message": "'tuple' object has no attribute 'pitch'"
+    },
+    {
+      "engine": "classic",
+      "probe": "unknown_constraint_default",
+      "error": "KeyError",
+      "message": "(99, 1, False, False)"
+    },
+    {
+      "engine": "classic",
+      "probe": "impossible_transition_default",
+      "result": null
+    },
+    {
+      "engine": "classic",
+      "probe": "unreachable_end_window",
+      "result": null
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unprompted_short_suffix",
+      "result": [
+        64,
+        "END"
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "probe": "explicit_start_marker",
+      "error": "NoFeasibleSequenceError",
+      "message": "No context path satisfies the constraints from any initial symbol."
+    },
+    {
+      "engine": "context_bp",
+      "probe": "final_note_or_end",
+      "result": [
+        60,
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unknown_prefix_default",
+      "error": "KeyError",
+      "message": "'Unknown symbol: (99, 1, False, False)'"
+    },
+    {
+      "engine": "context_bp",
+      "probe": "viewpoint_prefix",
+      "result": [
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unknown_constraint_default",
+      "error": "AttributeError",
+      "message": "'tuple' object has no attribute 'pitch'"
+    },
+    {
+      "engine": "context_bp",
+      "probe": "impossible_transition_default",
+      "result": null
+    },
+    {
+      "engine": "context_bp",
+      "probe": "unreachable_end_window",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unprompted_short_suffix",
+      "error": "NoSolutionErrorInBP",
+      "message": "No solution for constraints."
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "explicit_start_marker",
+      "error": "NoSolutionErrorInBP",
+      "message": "No solution for constraints."
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "final_note_or_end",
+      "error": "NoSolutionErrorInBP",
+      "message": "No solution for constraints."
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unknown_prefix_default",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "viewpoint_prefix",
+      "result": [
+        62,
+        64
+      ]
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unknown_constraint_default",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "impossible_transition_default",
+      "result": null
+    },
+    {
+      "engine": "vo_regular_bp",
+      "probe": "unreachable_end_window",
+      "result": null
+    }
+  ],
+  "rolling_continuations": [
+    {
+      "engine": "classic",
+      "chunks": 100,
+      "generated_notes": 1600,
+      "unique_chunks": 100
+    },
+    {
+      "engine": "context_bp",
+      "chunks": 100,
+      "generated_notes": 1600,
+      "unique_chunks": 100
+    },
+    {
+      "engine": "vo_regular_bp",
+      "chunks": 100,
+      "generated_notes": 1600,
+      "unique_chunks": 100
+    }
+  ],
+  "benchmarks": [
+    {
+      "engine": "classic",
+      "scenario": "bach_fixed_last_note",
+      "length": 16,
+      "learn_ms": 6.444208789616823,
+      "generation": {
+        "median_ms": 2.476750174537301,
+        "p95_ms": 2.6376503985375166,
+        "max_ms": 2.67316703684628,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 0.47387508675456047,
+        "p95_ms": 0.5241001956164837,
+        "max_ms": 0.5330420099198818,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_fixed_last_note",
+      "length": 64,
+      "learn_ms": 6.444208789616823,
+      "generation": {
+        "median_ms": 11.811750009655952,
+        "p95_ms": 12.07180805504322,
+        "max_ms": 12.08874979056418,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 1.9186248537153006,
+        "p95_ms": 2.025857847183943,
+        "max_ms": 2.043541055172682,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_fixed_last_note",
+      "length": 256,
+      "learn_ms": 6.444208789616823,
+      "generation": {
+        "median_ms": 48.50266710855067,
+        "p95_ms": 48.872092086821795,
+        "max_ms": 48.92979213036597,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 9.41483280621469,
+        "p95_ms": 9.583991765975952,
+        "max_ms": 9.62541694752872,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_until_end",
+      "max_length": 32,
+      "generation": {
+        "median_ms": 4.691291134804487,
+        "p95_ms": 4.778533335775137,
+        "max_ms": 4.798874957486987,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_until_end",
+      "max_length": 64,
+      "generation": {
+        "median_ms": 9.250957984477282,
+        "p95_ms": 9.36968345195055,
+        "max_ms": 9.385791840031743,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "classic",
+      "scenario": "bach_until_end",
+      "max_length": 128,
+      "generation": {
+        "median_ms": 18.34062486886978,
+        "p95_ms": 18.653683690354228,
+        "max_ms": 18.72441708110273,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 16,
+      "learn_ms": 5.440915934741497,
+      "generation": {
+        "median_ms": 14.679041923955083,
+        "p95_ms": 15.903091710060835,
+        "max_ms": 16.077749896794558,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 0.4355418495833874,
+        "p95_ms": 0.5346327554434538,
+        "max_ms": 0.556665938347578,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 64,
+      "learn_ms": 5.440915934741497,
+      "generation": {
+        "median_ms": 45.64795782789588,
+        "p95_ms": 47.6173413451761,
+        "max_ms": 47.68383293412626,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.4168752133846283,
+        "p95_ms": 2.6444496121257544,
+        "max_ms": 2.6964580174535513,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 256,
+      "learn_ms": 5.440915934741497,
+      "generation": {
+        "median_ms": 168.3952920138836,
+        "p95_ms": 170.4042919445783,
+        "max_ms": 170.7982919178903,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 9.870958048850298,
+        "p95_ms": 10.136367147788405,
+        "max_ms": 10.136833880096674,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_until_end",
+      "max_length": 32,
+      "generation": {
+        "median_ms": 114.65816688723862,
+        "p95_ms": 116.97540888562799,
+        "max_ms": 117.42595885880291,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_until_end",
+      "max_length": 64,
+      "generation": {
+        "median_ms": 562.221665866673,
+        "p95_ms": 572.583082690835,
+        "max_ms": 574.6966658625752,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "context_bp",
+      "scenario": "bach_until_end",
+      "max_length": 128,
+      "generation": {
+        "median_ms": 471.6407919768244,
+        "p95_ms": 478.3424166496843,
+        "max_ms": 479.30600005201995,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 16,
+      "learn_ms": 5.621792050078511,
+      "generation": {
+        "median_ms": 5.849458044394851,
+        "p95_ms": 10.341458255425096,
+        "max_ms": 11.432375060394406,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 0.4504169337451458,
+        "p95_ms": 0.543149933218956,
+        "max_ms": 0.5642499309033155,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 64,
+      "learn_ms": 5.621792050078511,
+      "generation": {
+        "median_ms": 21.41391602344811,
+        "p95_ms": 22.59369189850986,
+        "max_ms": 22.640416864305735,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.278875093907118,
+        "p95_ms": 2.404874563217163,
+        "max_ms": 2.428957959637046,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_fixed_last_note",
+      "length": 256,
+      "learn_ms": 5.621792050078511,
+      "generation": {
+        "median_ms": 91.79129102267325,
+        "p95_ms": 92.88704204373062,
+        "max_ms": 93.03129208274186,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 9.251291863620281,
+        "p95_ms": 9.56863360479474,
+        "max_ms": 9.630667045712471,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 32,
+      "generation": {
+        "median_ms": 261.06695807538927,
+        "p95_ms": 265.88908368721604,
+        "max_ms": 266.8002920690924,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 64,
+      "generation": {
+        "median_ms": 1051.4951669611037,
+        "p95_ms": 1081.628066720441,
+        "max_ms": 1088.2998751476407,
+        "repeats": 5
+      }
+    },
+    {
+      "engine": "vo_regular_bp",
+      "scenario": "bach_until_end",
+      "max_length": 128,
+      "generation": {
+        "median_ms": 4328.548500081524,
+        "p95_ms": 4397.318667313084,
+        "max_ms": 4404.909209115431,
+        "repeats": 5
+      }
+    }
+  ],
+  "vo_scaling": [
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 4,
+      "augmentation": "none",
+      "stored_phrases": 1,
+      "learning_total_ms": 1.4266250655055046,
+      "learning_last_ms": 1.4266250655055046,
+      "facade": {
+        "median_ms": 21.389416186138988,
+        "p95_ms": 26.30137545056641,
+        "max_ms": 27.52683381550014,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 20.688375225290656,
+        "p95_ms": 20.940625062212348,
+        "max_ms": 20.958416862413287,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.4698340781033039,
+        "p95_ms": 0.9521589614450932,
+        "max_ms": 1.0097089689224958,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 1.9751249346882105,
+        "p95_ms": 2.076025027781725,
+        "max_ms": 2.090750029310584,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 4.316584587097168,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 2158,
+        "context_edges": 3210,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "base_notes": 2196,
+      "base_phrases": 4,
+      "kmax": 4,
+      "augmentation": "none",
+      "stored_phrases": 4,
+      "learning_total_ms": 14.515875140205026,
+      "learning_last_ms": 4.945083055645227,
+      "facade": {
+        "median_ms": 22.572958143427968,
+        "p95_ms": 26.61704164929688,
+        "max_ms": 27.535750064998865,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 20.694707985967398,
+        "p95_ms": 21.6478168964386,
+        "max_ms": 21.771916886791587,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.4235832020640373,
+        "p95_ms": 0.5510089918971062,
+        "max_ms": 0.5825839471071959,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 7.113916100934148,
+        "p95_ms": 7.396141299977899,
+        "max_ms": 7.403957890346646,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 4.313342094421387,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 2158,
+        "context_edges": 3210,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "base_notes": 8784,
+      "base_phrases": 16,
+      "kmax": 4,
+      "augmentation": "none",
+      "stored_phrases": 16,
+      "learning_total_ms": 166.90924810245633,
+      "learning_last_ms": 18.49425002001226,
+      "facade": {
+        "median_ms": 21.171540953218937,
+        "p95_ms": 27.06520836800337,
+        "max_ms": 28.153999941423535,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 20.812791073694825,
+        "p95_ms": 21.272091194987297,
+        "max_ms": 21.334290970116854,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.43083284981548786,
+        "p95_ms": 0.5496082827448845,
+        "max_ms": 0.5747498944401741,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 63.63812484778464,
+        "p95_ms": 72.22845908254385,
+        "max_ms": 74.27895907312632,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 4.313342094421387,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 2158,
+        "context_edges": 3210,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 1,
+      "augmentation": "none",
+      "stored_phrases": 1,
+      "learning_total_ms": 0.7227079477161169,
+      "learning_last_ms": 0.7227079477161169,
+      "facade": {
+        "median_ms": 1.8099579028785229,
+        "p95_ms": 2.2488756105303764,
+        "max_ms": 2.315667225047946,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 1.3153748586773872,
+        "p95_ms": 1.3323917519301176,
+        "max_ms": 1.3361251913011074,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.23945816792547703,
+        "p95_ms": 0.27616708539426327,
+        "max_ms": 0.2845420967787504,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.0839159842580557,
+        "p95_ms": 2.212474448606372,
+        "max_ms": 2.2381660528481007,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 0.2846403121948242,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 1,
+        "context_states": 91,
+        "context_edges": 243,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ]
+        ]
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 8,
+      "augmentation": "none",
+      "stored_phrases": 1,
+      "learning_total_ms": 3.3534590620547533,
+      "learning_last_ms": 3.3534590620547533,
+      "facade": {
+        "median_ms": 100.83704208955169,
+        "p95_ms": 121.72106648795307,
+        "max_ms": 126.89783307723701,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 98.1435829307884,
+        "p95_ms": 100.18967459909618,
+        "max_ms": 100.26920796371996,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.5999580025672913,
+        "p95_ms": 0.722666596993804,
+        "max_ms": 0.7418750319629908,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 2.161333104595542,
+        "p95_ms": 2.2130581084638834,
+        "max_ms": 2.2168748546391726,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 21.7345609664917,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 8,
+        "context_states": 11109,
+        "context_edges": 13805,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.0016835827470037309
+          ],
+          [
+            2,
+            0.002208023036204996
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 4,
+      "augmentation": "explicit",
+      "stored_phrases": 12,
+      "learning_total_ms": 22.772416938096285,
+      "learning_last_ms": 22.772416938096285,
+      "facade": {
+        "median_ms": 197.50212505459785,
+        "p95_ms": 234.56719191744924,
+        "max_ms": 242.63216694816947,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 194.40558296628296,
+        "p95_ms": 201.608232781291,
+        "max_ms": 201.77979092113674,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.6705000996589661,
+        "p95_ms": 0.8363250643014908,
+        "max_ms": 0.8688750676810741,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 18.009041901677847,
+        "p95_ms": 19.680350413545966,
+        "max_ms": 19.860042026266456,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 35.40588855743408,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 17956,
+        "context_edges": 30507,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.00013874747573230272
+          ],
+          [
+            2,
+            0.000139732154557029
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "base_notes": 549,
+      "base_phrases": 1,
+      "kmax": 4,
+      "augmentation": "virtual",
+      "stored_phrases": 1,
+      "learning_total_ms": 3.46174999140203,
+      "learning_last_ms": 3.46174999140203,
+      "facade": {
+        "median_ms": 204.41924990154803,
+        "p95_ms": 417.3632665537297,
+        "max_ms": 469.45099998265505,
+        "repeats": 5
+      },
+      "preparation": {
+        "median_ms": 208.45920802094042,
+        "p95_ms": 210.49042493104935,
+        "max_ms": 210.70174989290535,
+        "repeats": 5
+      },
+      "prepared_sample": {
+        "median_ms": 0.7757919374853373,
+        "p95_ms": 0.947441766038537,
+        "max_ms": 0.9738749358803034,
+        "repeats": 5
+      },
+      "realization": {
+        "median_ms": 16.78633294068277,
+        "p95_ms": 18.17196668125689,
+        "max_ms": 18.49991688504815,
+        "repeats": 5
+      },
+      "python_peak_generation_mib": 35.40341663360596,
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 17956,
+        "context_edges": 30507,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.00013874747573230272
+          ],
+          [
+            2,
+            0.000139732154557029
+          ],
+          [
+            3,
+            0.0
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    }
+  ],
+  "diverse_corpus_scaling": [
+    {
+      "phrases": 8,
+      "notes": 512,
+      "vocabulary": 12,
+      "learning_total_ms": 6.330207921564579,
+      "generation": {
+        "median_ms": 23.83541688323021,
+        "p95_ms": 28.6874586250633,
+        "max_ms": 29.7542919870466,
+        "repeats": 5
+      },
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 1895,
+        "context_edges": 3455,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.032124507575111136
+          ],
+          [
+            2,
+            0.031342219947152
+          ],
+          [
+            3,
+            0.02806496592206046
+          ],
+          [
+            4,
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "phrases": 32,
+      "notes": 2048,
+      "vocabulary": 12,
+      "learning_total_ms": 87.31737500056624,
+      "generation": {
+        "median_ms": 63.21845785714686,
+        "p95_ms": 75.77330037020147,
+        "max_ms": 78.62879219464958,
+        "repeats": 5
+      },
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 4977,
+        "context_edges": 10326,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.027287052470867934
+          ],
+          [
+            2,
+            0.028246179220884307
+          ],
+          [
+            3,
+            0.012351953051456217
+          ],
+          [
+            4,
+            0.012286150896990741
+          ]
+        ]
+      }
+    },
+    {
+      "phrases": 128,
+      "notes": 8192,
+      "vocabulary": 12,
+      "learning_total_ms": 1353.0529579147696,
+      "generation": {
+        "median_ms": 157.95270912349224,
+        "p95_ms": 206.42596669495106,
+        "max_ms": 215.98300011828542,
+        "repeats": 5
+      },
+      "diagnostics": {
+        "backend": "order_stack_positional",
+        "length": 64,
+        "max_order": 4,
+        "context_states": 11197,
+        "context_edges": 28097,
+        "regular_product_states": null,
+        "regular_product_states_time_indexed": null,
+        "regular_product_edges": null,
+        "success_mass": 1.0,
+        "start_order_masses": [
+          [
+            1,
+            0.028850547004105928
+          ],
+          [
+            2,
+            0.027302913289533107
+          ],
+          [
+            3,
+            0.02705393300464354
+          ],
+          [
+            4,
+            0.03453404680816087
+          ]
+        ]
+      }
+    }
+  ]
+}
