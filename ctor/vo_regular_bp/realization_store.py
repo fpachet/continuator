@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Callable, Iterable
 from typing import Hashable, Protocol
 
@@ -44,13 +43,11 @@ class TransformAwareMidiRealizationStore(MidiRealizationStore):
         )
 
     def clear_memory(self) -> None:
-        self.input_sequences: list[list[object]] = []
-        self.viewpoints_realizations = defaultdict(list)
+        super().clear_memory()
 
     def learn_sequence(self, sequence_of_stuff: Iterable[object]) -> None:
         material = list(sequence_of_stuff)
-        sequence_index = len(self.input_sequences)
-        self.input_sequences.append(material)
+        sequence_index = self._remember_phrase(material)
         for item_index, item in enumerate(material):
             viewpoint = self.get_viewpoint(item)
             for transform_index, transform in enumerate(self.transforms):

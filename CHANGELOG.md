@@ -1,18 +1,24 @@
 # Changelog
 
-## Unreleased
+## 2.0.0
 
-- Make the public `ctor.continuator.Continuator2` default to the
-  VO-Regular-BP MIDI engine while keeping `ClassicContinuator` explicitly
-  importable.
-- Tidy MIDI examples so they use tracked example input data and no longer
-  assume classic-only internals.
-- Document the classic architecture, class map, and public API compatibility surface used by external front ends.
-- Move the Gradio UI implementation under `ctor.ui` while preserving the `ctor.continuator_gradio` compatibility entry point.
-- Remove unused legacy helper modules and compatibility wrappers for `ctor.dynaprog` and `ctor.markov_analysis`.
-- Add public API compatibility tests for the `Continuator2` generation surface and legacy imports.
-- Move the constrained MIDI demo from `ctor.continuator` to `examples/constrained_note_continuator.py`.
-- Fix realtime MIDI playback stop-state handling and mido `note_on` / `note_off` type checks.
+- Maintain only the VO-Regular-BP engine. Archive classic, context-BP, their
+  solver/selection wrappers and dedicated tests in the recovery tag
+  `codex/archive-three-engines-2026-10-19`.
+- Keep `ctor.continuator.Continuator2` stable and introduce `SequenceModel` for
+  generic symbols. Keep a deprecated generation-only Variable_order_Markov
+  adapter; retire classic counter, decay and marginal APIs explicitly.
+- Fix free-initial generation, emitted START constraints and final note/END unions.
+- Apply viewpoint functions consistently during repeated generic learning, even
+  when original objects equal existing viewpoints.
+- Reuse prepared inference with bounded LRU admission and invalidate it on
+  memory/configuration changes. Defer model rebuilding until first use.
+- Pin the backend revision containing shared first-hit inference. Deduplicate
+  equivalent MIDI realization domains for exact duplicate phrases.
+- Migrate examples, bound the default chord demo corpus, remove the inactive
+  Gradio decay control and synchronize package versions.
+- Add generation, invalidation, memory, serialization and real frontend contract
+  tests, plus reproducible before/after performance measurements.
 
 ## 1.2.3
 

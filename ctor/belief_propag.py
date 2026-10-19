@@ -2,8 +2,7 @@
 Compatibility exceptions for historical belief-propagation callers.
 
 The old generic graph implementation was removed from the current core;
-constrained sequence inference now uses the sparse chain solver in
-ctor.chain_solver.
+constrained sequence inference now uses the external vo_regular_bp backend.
 """
 
 

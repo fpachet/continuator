@@ -358,10 +358,6 @@ class Continuator_gradio:
         self.continuator.set_learn_input(choice == "Learn input")
         return f"Learn mode set to: {choice}."
 
-    def set_decay_mode(self, choice):
-        self.continuator.set_decay_mode(choice)
-        return f"Decay mode set to: {choice}."
-
     def set_transpose(self, choice):
         self.continuator.set_transpose(choice == "Transpose")
         return f"Transpose mode set to: {choice}."
@@ -594,9 +590,6 @@ class Continuator_gradio:
                     keep_last_slider = gr.Slider(minimum=1, maximum=100, step=1, value=1,
                                                  label="Keep only N last inputs")
                     keep_last_slider.change(fn=self.set_keep_last, inputs=[keep_last_slider], outputs=status_box)
-                    decay_mode_choice = gr.Radio(choices=["full", "late", "middle", "early"], label="Decay Mode",
-                                            value="full")
-                    decay_mode_choice.change(fn=self.set_decay_mode, inputs=decay_mode_choice, outputs=status_box)
             top_start_button.click(fn=self.start_midi_listener, inputs=[in_dropdown, out_dropdown],
                                    outputs=status_box).then(fn=self.listener_summary, outputs=listener_box)
             top_stop_button.click(fn=self.stop_midi_listener, outputs=status_box).then(

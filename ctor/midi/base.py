@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import pathlib
-import random
 from difflib import SequenceMatcher
 from typing import Iterable
 
@@ -14,7 +13,7 @@ from midi_stuff.mini_muse import Note
 
 class MidiContinuatorBase:
     """
-    Shared MIDI utilities used by classic and context-BP facades.
+    Shared MIDI parsing, timing and realization utilities.
 
     Concrete facades provide their own generation engine. This base class only
     handles MIDI parsing, phrase memory access, note realization, and MIDI file
@@ -22,11 +21,7 @@ class MidiContinuatorBase:
     """
 
     def _midi_store(self):
-        # Context-BP has a dedicated realization store; the classic facade uses
-        # its Variable_order_Markov object as both model and realization store.
-        if hasattr(self, "realization_store"):
-            return self.realization_store
-        return self.vom
+        return self.realization_store
 
     def initialize_midi_state(self, transposition: bool = False) -> None:
         self.learn_input = True
@@ -207,7 +202,9 @@ class MidiContinuatorBase:
         midi_store = self._midi_store()
         domains = []
         for i, viewpoint in enumerate(viewpoints):
-            realizations = list(midi_store.viewpoints_realizations.get(viewpoint, []))
+            realizations = [address for address in midi_store.viewpoints_realizations.get(viewpoint, [])
+                            if midi_store.is_canonical_address(address)]
+            all_realizations = realizations
             if not realizations:
                 raise ValueError(f"No MIDI realization for viewpoint: {viewpoint!r}")
 
@@ -221,8 +218,8 @@ class MidiContinuatorBase:
 
             if i == len(viewpoints) - 1 and force_ending_realization:
                 ending_realizations = [
-                    address
-                    for address in midi_store.viewpoints_realizations[viewpoint]
+                        address
+                        for address in all_realizations
                     if self.is_ending_address(address)
                 ]
                 if i == 0 and starting_realizations:
@@ -323,7 +320,9 @@ class MidiContinuatorBase:
                 note = midi_store.get_input_object(note_address)
                 if note.pitch == pitch:
                     vps.append(vp)
-        return random.choice(vps)
+        if not vps:
+            raise ValueError(f"No learned viewpoint for pitch {pitch}")
+        return self.rng.choice(vps)
 
     def set_timing(self, idx_sequence):
         sequence = []

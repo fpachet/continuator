@@ -1,197 +1,136 @@
-# Public API Compatibility
+# Continuator public API
 
-This project is used by external front ends, including `continuator_front`.
-The imports and methods in this document should be treated as compatibility
-surface for the current default MIDI engine.
-
-## Stable Imports
-
-These compatibility imports should continue to work:
+## Maintained imports
 
 ```python
-from ctor.continuator import ClassicContinuator
 from ctor.continuator import Continuator2
-from ctor.variable_order_markov import Variable_order_Markov
-from ctor.constraints import ConstraintProblem
-```
-
-New code may prefer the explicit package locations:
-
-```python
-from ctor.classic import ClassicContinuator, Variable_order_Markov
-from ctor.context_bp import ContextBPModel, ContextBPContinuator
-from ctor.context_bp import LongestFeasiblePolicy, SingletonAvoidingBackoffPolicy
 from ctor.vo_regular_bp import VORegularBPContinuator
+from ctor.sequence_model import SequenceModel
 from ctor.constraints import ConstraintProblem
-```
-
-These legacy/compatibility imports should also keep working, even if their
-implementation lives elsewhere:
-
-```python
-from ctor.continuator_gradio import Continuator_gradio
-from ctor.chain_solver import SparseForwardBackward
 from ctor.belief_propag import NoSolutionErrorInBP
+from vo_regular_bp import ConstraintSet
 ```
 
-The experimental generic engine-selection API is available separately:
+`Continuator2` remains the stable MIDI entry point. Both MIDI names use the
+same backend. `ctor.vo_regular_bp_continuator.VORegularBPContinuator` also
+remains a wrapper import. Historical engine removals are listed in
+[migration.md](migration.md).
+
+## MIDI facade
 
 ```python
-from ctor.engines import make_sequence_engine
-```
+Continuator2(midi_file=None, kmax=4, transposition=False,
+             policy=None, augmentation_mode="explicit", transposition_offsets=None,
+             virtual_transposition=False, seed=0,
+             cache_size=8, cache_bytes=64 * 1024 * 1024)
 
-The classic engine remains available explicitly:
-
-```python
-from ctor.classic import ClassicContinuator
-```
-
-The experimental MIDI-facing context-BP class is separate:
-
-```python
-from ctor.context_bp import ContextBPContinuator
-```
-
-It is not a subclass of `Continuator2`.
-
-`ContextBPContinuator` additionally exposes trace helpers for experimental
-front ends:
-
-```python
-sample_sequence_with_trace(...)
-continue_until_end_with_trace(...)
-get_last_generation_trace()
-```
-
-When `ContextBPContinuator.sample_sequence(...)` is called without a prefix or
-explicit `start_vp`, it uses context-BP free-initial generation so hard ending
-constraints are not unnecessarily tied to the beginning of a learned phrase.
-
-The `vo_regular_bp` class is the backend used by the default `Continuator2`
-entry point and is also available directly:
-
-```python
-from ctor.vo_regular_bp import VORegularBPContinuator
-```
-
-It uses the external `vo_regular_bp` order-stack library for viewpoint
-generation.
-
-## `Continuator2`
-
-`Continuator2` is the public MIDI-facing facade. It should remain importable
-from `ctor.continuator`. It is now a compatibility subclass of
-`VORegularBPContinuator`. `ClassicContinuator` remains importable from
-`ctor.continuator` and `ctor.classic` for callers that explicitly need the
-classic engine.
-
-Constructor:
-
-```python
-Continuator2(midi_file=None, kmax=4, transposition=False)
-```
-
-Important public methods:
-
-```python
 learn_file(midi_file, transposition)
 learn_folder(folder_path, transpose=False)
 learn_files(files, transposition=False)
 learn_phrase(note_sequence, transposition)
-learn_phrase_from_mido(phrase)
-get_phrase_from_mido(phrase)
+learn_phrase_from_mido(messages)
+get_phrase_from_mido(messages)
 
-sample_sequence(
-    prefix=None,
-    length=50,
-    constraints=None,
-    start_vp=None,
-    relax_prefix_on_fail=True,
-    relax_pos0_on_fail=True,
-    raise_on_fail=False,
-)
-
-continue_sequence(
-    prefix,
-    length=50,
-    constraints=None,
-    relax_prefix_on_fail=True,
-    relax_pos0_on_fail=True,
-    raise_on_fail=False,
-)
-
-continue_until_end(prefix=None, min_length=1, max_length=64, end_vp=None)
-sample_sequence_0(length=50, constraints=None)
-
-realize_vp_sequence(vp_seq)
-# Realizes generated viewpoints through the shared MIDI DP realizer.
-# START/END markers, when present in the viewpoint sequence, constrain the
-# first/last concrete note realizations.
-create_mido_sequence(sequence, tempo=120, sustain=False)
-save_midi(sequence, output_file, tempo=120, sustain=False)
+sample_sequence(prefix=None, length=50, constraints=None, start_vp=None,
+                relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False)
+continue_sequence(prefix, length=50, constraints=None,
+                  relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False)
+continue_until(prefix=None, *, stop, min_length=1, max_length=64,
+               constraints=None, raise_on_fail=False)
+continue_until_end(prefix=None, min_length=1, max_length=64, end_vp=None,
+                   *, raise_on_fail=False)
 
 get_start_vp()
 get_end_vp()
-get_vp_for_pitch(pitch)
 get_viewpoint(note)
+get_vp_for_pitch(pitch)
+realize_vp_sequence(viewpoints)
+create_mido_sequence(notes, tempo=120, sustain=False)
+save_midi(notes, output_file, tempo=120, sustain=False)
 
-set_learn_input(value)
-get_learn_input()
-set_transpose(trans)
-set_decay_mode(choice)  # compatibility no-op for the VO-Regular-BP backend
-set_forget(forget_past)
-set_keep_last(keep)
+get_phrase_titles()
+get_phrase(index)
 clear_memory()
 clear_last_phrase()
 clear_first_n_phrases(n)
-get_phrase_titles()
-get_phrase(index)
+set_learn_input(value)
+get_learn_input()
+set_transpose(value)
+set_forget(value)
+set_keep_last(n)
+get_last_generation_trace()
+get_last_generation_diagnostics()
 ```
 
-## Generation Semantics
+Generation returns viewpoints, not notes. Prefixes accept Note objects or
+viewpoints. Dictionary and ConstraintProblem values are viewpoints (the MIDI
+facade also converts Note values); ConstraintSet uses symbolic viewpoints.
+`get_vp_for_pitch` chooses one learned viewpoint for that pitch using the seeded
+RNG and raises ValueError if the pitch was never learned.
 
-The following semantics are compatibility-sensitive:
+`set_transpose` controls future learning. Explicit transposition stores shifted
+phrases. Virtual augmentation uses one transform set for the symbolic memory;
+turning it on during learning transforms the existing base corpus as well.
+Use a new model to change an established virtual transform set.
 
-- `sample_sequence(..., start_vp=...)` treats `start_vp` as a hidden handoff
-  viewpoint and does not include it in the returned sequence.
-- `continue_sequence(prefix, ...)` uses the prefix only as conditioning context.
-  The returned sequence contains only generated material.
-- `continue_until_end(prefix, ...)` also excludes the prefix and includes the
-  first reached end viewpoint when generation succeeds.
-- Positional constraints are indexed over the returned generated sequence, not
-  over the prefix plus generated sequence.
-- Legacy dict constraints and `ConstraintProblem` are both accepted.
-- Public methods return `None` on unsatisfied constraints unless
-  `raise_on_fail=True` requests an exception.
-
-## UI Modules
-
-The Gradio UI implementation now lives in:
+## Generic symbols
 
 ```python
-from ctor.ui.gradio_app import Continuator_gradio
+model = SequenceModel(kmax=4, seed=0)
+model.learn_sequences([["C", "D", "E"], ["C", "F", "E"]])
+sequence = model.sample_sequence(3, constraints={0: "C", 2: "E"})
+continuation = model.continue_sequence(["C"], length=2)
+ending = model.continue_until_end(["C"], min_length=2, max_length=8)
 ```
 
-The older import remains supported:
+SequenceModel accepts optional `viewpoint_fn`, `policy`, `cache_size` and
+`cache_bytes`. Its `sample_sequence(length, *, ...)` uses length as the first
+argument; the MIDI facade keeps its historical prefix-first signature. Generic
+constraints contain symbols/viewpoints, and prefixes may contain original
+objects or already learned viewpoints. It exposes `start_symbol`, `end_symbol`,
+`order_model`, `last_trace`, `has_viewpoint`, `get_viewpoint`, `clear_memory` and
+`get_last_generation_diagnostics`. `learn_sequences` is the batch-learning form.
 
-```python
-from ctor.continuator_gradio import Continuator_gradio
-```
+Learning and `get_viewpoint` always map original objects through viewpoint_fn.
+For prefixes, an already learned viewpoint takes precedence. If raw objects
+can themselves equal learned viewpoints (for example an integer-to-integer
+mapping), explicitly map the prefix with get_viewpoint before passing it.
 
-The old launch command remains supported:
+## Generation contract
 
-```bash
-python -m ctor.continuator_gradio
-```
+- Unprompted fixed generation uses free initial symbols; it can generate a
+  learned phrase suffix. Set `start_vp=get_start_vp()` to require a phrase start.
+- Explicitly constrained emitted START is supported at position 0. END is
+  excluded except when explicitly allowed at the final position. A final
+  one-of containing END may choose either END or an allowed note.
+- Prefix and hidden handoff are conditioning only; they are not returned.
+  If both are supplied, the explicit `start_vp` takes precedence.
+- Positions index the generated sequence. ConstraintProblem.length, when set,
+  must equal the requested fixed length. Out-of-range positions and invalid
+  lengths raise ValueError. Zero fixed length returns an empty list.
+- Until generation first hits the stop symbol/set/predicate within the inclusive
+  length window; that final stop symbol counts toward length. Omitted prefix
+  means hidden START. There is no unbounded infinite computation; clients can
+  repeatedly request continuations and pass back the resulting handoff.
+- Infeasible or unknown-symbol requests return None. `raise_on_fail=True`
+  instead raises NoSolutionErrorInBP. Invalid configuration/type errors remain
+  ValueError/TypeError rather than being reported as infeasibility.
+- Hard constraints are strict. Legacy `relax_prefix_on_fail` and
+  `relax_pos0_on_fail` arguments remain accepted for frontend compatibility but
+  never drop a prefix or constraint. Callers implement and report retries.
+- Seed controls symbolic draws and MIDI pitch-viewpoint selection. Identical
+  input order, options and call order reproduce results for the same backend.
+- Learning/forgetting/clearing invalidates inference caches and the last trace.
+  Transposition-setting changes also invalidate caches. Public model counts
+  should be treated as read-only; mutations must go through learning methods.
 
-New code may prefer:
+`sample_sequence_0` is a deprecated forwarding name for ordinary sampling.
+`set_decay_mode` is retained for frontend compatibility: full is accepted,
+other settings issue DeprecationWarning and have no effect. The local UI no
+longer offers the inactive decay control.
 
-```bash
-python -m ctor.ui.gradio_app
-```
+## Optional UI
 
-If the default Gradio ports are already in use, set an explicit port:
-
-```bash
-GRADIO_SERVER_PORT=8060 python -m ctor.continuator_gradio
-```
+The existing `python -m ctor.continuator_gradio` launch command and
+`ctor.ui.gradio_app.Continuator_gradio` import remain. Install local MIDI/UI
+extras when needed. The two modes are fixed length and bounded Until end.

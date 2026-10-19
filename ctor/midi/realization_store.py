@@ -29,6 +29,24 @@ class MidiRealizationStore:
     def clear_memory(self) -> None:
         self.input_sequences: list[list[object]] = []
         self.viewpoints_realizations = defaultdict(list)
+        self._phrase_signatures = {}
+        self._canonical_phrases = []
+
+    def _remember_phrase(self, material):
+        sequence_index = len(self.input_sequences)
+        self.input_sequences.append(material)
+        try:
+            signature = tuple((n.pitch, n.velocity, n.duration, n.start_time,
+                               n.next_start_delta, n.overlaps_left()) for n in material)
+            canonical = self._phrase_signatures.setdefault(signature, sequence_index)
+        except AttributeError:
+            canonical = sequence_index
+        self._canonical_phrases.append(canonical)
+        return sequence_index
+
+    def is_canonical_address(self, address):
+        """Exact duplicate phrases need only one equivalent realization domain."""
+        return self._canonical_phrases[address[0]] == address[0]
 
     def clear_first_N_phrases(self, n: int) -> None:
         if not self.input_sequences:
@@ -53,8 +71,7 @@ class MidiRealizationStore:
 
     def learn_sequence(self, sequence_of_stuff: Iterable[object]) -> None:
         material = list(sequence_of_stuff)
-        sequence_index = len(self.input_sequences)
-        self.input_sequences.append(material)
+        sequence_index = self._remember_phrase(material)
         for item_index, item in enumerate(material):
             viewpoint = self.get_viewpoint(item)
             self.viewpoints_realizations[viewpoint].append((sequence_index, item_index))

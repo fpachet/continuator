@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-import random
+import warnings
 from typing import Any, Hashable, Literal
 
 from vo_regular_bp import (
@@ -12,13 +12,10 @@ from vo_regular_bp import (
     SingletonAvoidingBackoffPolicy,
     SymbolTransform,
     VirtualAugmentedOrderStackModel,
-    prepare_constrained_order_stack,
-    prepare_until_end_order_stack,
-    prepare_until_order_stack,
 )
 from vo_regular_bp.order_stack_bp import OrderSampleStep
 
-from ctor.belief_propag import NoSolutionErrorInBP
+from ctor.sequence_model import SequenceModel
 from ctor.constraints import ConstraintProblem
 from ctor.midi import MidiContinuatorBase, MidiRealizationStore
 from ctor.vo_regular_bp.realization_store import TransformAwareMidiRealizationStore
@@ -81,10 +78,10 @@ def make_transposition_transforms(
 
 class VORegularBPContinuator(MidiContinuatorBase):
     """
-    Experimental MIDI Continuator using `vo_regular_bp` for generation.
+    MIDI facade for the single `vo_regular_bp` symbolic engine.
 
     The symbolic model is rebuilt from learned viewpoint sequences after memory
-    changes. MIDI realization remains separate, as in `ContextBPContinuator`.
+    changes, lazily on the next generation. MIDI realization remains separate.
     Explicit augmentation materializes transformed note sequences. Virtual
     augmentation keeps base note sequences and realizes transformed viewpoints
     lazily through a transform-aware realization store.
@@ -99,6 +96,9 @@ class VORegularBPContinuator(MidiContinuatorBase):
         augmentation_mode: AugmentationMode = "explicit",
         transposition_offsets: Iterable[int] | None = None,
         virtual_transposition: bool = False,
+        seed: int | None = 0,
+        cache_size: int = 8,
+        cache_bytes: int = 64 * 1024 * 1024,
     ) -> None:
         self.kmax = int(kmax)
         self.policy = policy or SingletonAvoidingBackoffPolicy()
@@ -112,13 +112,16 @@ class VORegularBPContinuator(MidiContinuatorBase):
         )
         self._last_generation_trace: list[dict[str, Any]] = []
         self._last_generation_diagnostics: dict[str, Any] = {}
-        self.rng = random.Random(0)
 
         self.virtual_transforms = self._make_transforms(
             transposition if self.augmentation_mode == "virtual" else False
         )
         self.realization_store = self._new_realization_store()
-        self.order_model = self._new_order_model()
+        self.sequence_model = SequenceModel(
+            kmax=self.kmax, seed=seed, policy=self.policy,
+            start_symbol=self.start_symbol, end_symbol=self.end_symbol,
+            cache_size=cache_size, cache_bytes=cache_bytes, _model_factory=self._new_order_model,
+        )
         self.initialize_midi_state(transposition)
         if midi_file is not None:
             self.learn_file(midi_file, transposition)
@@ -171,8 +174,20 @@ class VORegularBPContinuator(MidiContinuatorBase):
             end_symbol=self.end_symbol,
         )
 
+    @property
+    def order_model(self):
+        return self.sequence_model.order_model
+
+    @property
+    def rng(self):
+        return self.sequence_model.rng
+
+    @rng.setter
+    def rng(self, value):
+        self.sequence_model.rng = value
+
     def _rebuild_order_model(self) -> None:
-        self.order_model = self._new_order_model()
+        self.sequence_model.invalidate()
 
     def _relearn_sequences(self, sequences: list[list[object]]) -> None:
         self.realization_store = self._new_realization_store()
@@ -195,7 +210,14 @@ class VORegularBPContinuator(MidiContinuatorBase):
 
     def set_decay_mode(self, choice):
         """Compatibility no-op for the classic decay-mode control."""
+        if choice != "full":
+            warnings.warn("Decay modes were retired; VO uses full phrase memory.", DeprecationWarning, stacklevel=2)
         self.decay_mode = choice
+
+    def set_transpose(self, trans):
+        if self.transpose != bool(trans):
+            self.sequence_model.invalidate()
+        self.transpose = bool(trans)
 
     def sample_sequence_0(self, length=50, constraints=None):
         return self.sample_sequence(length=length, constraints=constraints)
@@ -241,139 +263,51 @@ class VORegularBPContinuator(MidiContinuatorBase):
         return self.end_symbol
 
     def sample_sequence(
-        self,
-        prefix=None,
-        length=50,
-        constraints=None,
-        start_vp=None,
-        relax_prefix_on_fail=True,
-        relax_pos0_on_fail=True,
-        raise_on_fail=False,
+        self, prefix=None, length=50, constraints=None, start_vp=None,
+        relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False,
     ):
-        effective_prefix = [start_vp] if start_vp is not None else prefix
-        prefix_vps = self._prefix_viewpoints(effective_prefix)
-        return self._sample_fixed(
-            prefix_vps=prefix_vps,
-            length=length,
-            constraints=constraints,
-            raise_on_fail=raise_on_fail,
+        # Relaxation keywords remain accepted for frontend compatibility. All
+        # hard constraints and handoffs are strict; callers retry explicitly.
+        if isinstance(constraints, ConstraintProblem) and constraints.length not in (None, length):
+            raise ValueError("ConstraintProblem.length must match generation length")
+        self.sequence_model.policy = self.policy
+        return self.sequence_model.sample_sequence(
+            length, prefix=self._prefix_viewpoints(prefix),
+            start_vp=None if start_vp is None else self._as_viewpoint(start_vp),
+            constraints=self._to_constraint_set(constraints), raise_on_fail=raise_on_fail,
         )
 
     def continue_sequence(
-        self,
-        prefix,
-        length=50,
-        constraints=None,
-        relax_prefix_on_fail=True,
-        relax_pos0_on_fail=True,
-        raise_on_fail=False,
+        self, prefix, length=50, constraints=None,
+        relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False,
     ):
-        return self._sample_fixed(
-            prefix_vps=self._prefix_viewpoints(prefix),
-            length=length,
-            constraints=constraints,
-            raise_on_fail=raise_on_fail,
+        return self.sample_sequence(prefix=prefix, length=length, constraints=constraints,
+                                    raise_on_fail=raise_on_fail)
+
+    def continue_until(self, prefix=None, *, stop, min_length=1, max_length=64,
+                       constraints=None, raise_on_fail=False):
+        self.sequence_model.policy = self.policy
+        return self.sequence_model.continue_until(
+            self._prefix_viewpoints(prefix), stop=self._stop_condition(stop),
+            min_length=min_length, max_length=max_length,
+            constraints=self._to_constraint_set(constraints), raise_on_fail=raise_on_fail,
         )
 
-    def continue_until(
-        self,
-        prefix=None,
-        *,
-        stop,
-        min_length=1,
-        max_length=64,
-        constraints=None,
-        raise_on_fail=False,
-    ):
-        stop_condition = self._stop_condition(stop)
-        try:
-            backend = prepare_until_order_stack(
-                self.order_model,
-                prefix=tuple(self._prefix_viewpoints(prefix)),
-                stop=stop_condition,
-                min_length=min_length,
-                max_length=max_length,
-                constraints=self._to_constraint_set(constraints),
-                policy=self.policy,
-            )
-            sequence, trace = backend.sample_with_trace(rng=self.rng)
-        except ValueError as e:
-            self._last_generation_trace = []
-            self._last_generation_diagnostics = {}
-            if raise_on_fail:
-                raise NoSolutionErrorInBP("No solution for continue_until constraints.") from e
-            return None
-        self._record_generation(trace, backend.diagnostics.as_dict())
-        return list(sequence)
-
-    def continue_until_end(self, prefix=None, min_length=1, max_length=64, end_vp=None):
-        end_symbol = self.end_symbol if end_vp is None else end_vp
-        try:
-            backend = prepare_until_end_order_stack(
-                self.order_model,
-                prefix=tuple(self._prefix_viewpoints(prefix)),
-                end_symbol=self._as_viewpoint(end_symbol),
-                min_length=min_length,
-                max_length=max_length,
-                policy=self.policy,
-            )
-            sequence, trace = backend.sample_with_trace(rng=self.rng)
-        except ValueError:
-            self._last_generation_trace = []
-            self._last_generation_diagnostics = {}
-            return None
-        self._record_generation(trace, backend.diagnostics.as_dict())
-        return list(sequence)
+    def continue_until_end(self, prefix=None, min_length=1, max_length=64, end_vp=None, *, raise_on_fail=False):
+        return self.continue_until(prefix, stop=self.end_symbol if end_vp is None else end_vp,
+                                   min_length=min_length, max_length=max_length, raise_on_fail=raise_on_fail)
 
     def get_last_generation_trace(self) -> list[dict[str, Any]]:
+        self._record_generation(self.sequence_model.last_trace, {})
         return list(self._last_generation_trace)
 
     def get_last_generation_diagnostics(self) -> dict[str, Any]:
-        return dict(self._last_generation_diagnostics)
-
-    def _sample_fixed(
-        self,
-        *,
-        prefix_vps: Sequence[object],
-        length: int,
-        constraints,
-        raise_on_fail: bool,
-    ):
-        constraint_set = self._to_constraint_set(constraints)
-        try:
-            if self._final_position_accepts_end(constraint_set, length):
-                backend = prepare_until_end_order_stack(
-                    self.order_model,
-                    prefix=tuple(prefix_vps),
-                    end_symbol=self.end_symbol,
-                    min_length=length,
-                    max_length=length,
-                    constraints=constraint_set,
-                    policy=self.policy,
-                )
-            else:
-                backend = prepare_constrained_order_stack(
-                    self.order_model,
-                    constraint_set,
-                    length=length,
-                    prefix=tuple(prefix_vps),
-                    policy=self.policy,
-                )
-            sequence, trace = backend.sample_with_trace(rng=self.rng)
-        except ValueError as e:
-            self._last_generation_trace = []
-            self._last_generation_diagnostics = {}
-            if raise_on_fail:
-                raise NoSolutionErrorInBP("No solution for constraints.") from e
-            return None
-        self._record_generation(trace, backend.diagnostics.as_dict())
-        return list(sequence)
+        return self.sequence_model.get_last_generation_diagnostics()
 
     def _prefix_viewpoints(self, prefix) -> list[object]:
         if prefix is None:
-            return [self.start_symbol]
-        viewpoints = [self._as_viewpoint(item) for item in prefix]
-        return viewpoints or [self.start_symbol]
+            return None
+        return [self._as_viewpoint(item) for item in prefix]
 
     def _as_viewpoint(self, value):
         if value is self.start_symbol or value is self.end_symbol:
@@ -423,19 +357,6 @@ class VORegularBPContinuator(MidiContinuatorBase):
                 }
             )
         raise TypeError("constraints must be None, ConstraintProblem, ConstraintSet, or a mapping")
-
-    def _final_position_accepts_end(self, constraints: ConstraintSet | None, length: int) -> bool:
-        if constraints is None or length <= 0:
-            return False
-        final_constraint = constraints.positional.get(length - 1)
-        if final_constraint is None:
-            return False
-        try:
-            if callable(final_constraint):
-                return bool(final_constraint(self.end_symbol))
-            return self.end_symbol in final_constraint
-        except (TypeError, ValueError):
-            return False
 
     def _record_generation(self, trace: Sequence[OrderSampleStep], diagnostics: dict[str, Any]) -> None:
         self._last_generation_trace = [

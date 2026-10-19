@@ -1,292 +1,152 @@
-# A Python implementation of a constrainable Continuator
+# Continuator
 
-A reimplementation of the Continuator system, using a combination of variable-order Markov modeling and exact finite-chain inference to enforce positional constraints.
-Note that this is the only system, to my knowledge, able to produce controllable sequences (with guarantees) with unary/positional constraints.
-These are extremely powerful and can turn seemingly "random" walks into actual music with intention.
+Continuator learns sequences online and generates varied continuations with
+positional and regular constraints. A note/viewpoint representation preserves
+learned rhythmic and overlap information without tokenizing every timing detail.
 
-It is inspired from the following papers:
-- Pachet, F. The Continuator: Musical Interaction with Style. Journal of New Music Research, 32(3):333-341, 2003
-- Papadopoulos, A., Pachet, F., Roy, P. and Sakellariou, J. Exact Sampling for Regular and Markov Constraints with Belief Propagation. 21th Principles and Practice of Constraint Programming Conference (CP 2015), Cork (Ireland), 2015
-- Pachet, F., Roy, P. and Barbieri, G. Finite-Length Markov Processes with Constraints. Proceedings of the 22nd International Joint Conference on Artificial Intelligence (IJCAI), pages 635-642, Barcelona, Spain, July 2011
-- Roy, P. and Pachet, F. Enforcing Meter in Finite-Length Markov Sequences. 27th Conference on Artificial Intelligence (AAAI 2013), Bellevue, Washington (USA), June 2013
-
-Three reasons why this kind of approach remains interesting, in spite of the existence of more powerful sequence prediction algorithms such as transformers:
-- you can learn **online** and even real time (not the case with transformers)
-- you need **fewer** data to produce interesting material. Try the example with Bach prelude in C for instance.
-- you can **control** the generation, notably with positional constraints like in this project. More complex constraints like meter can also be implemented (with polynomial complexity)
-
-
-## Features
-
-- Efficient yet simple implementation of variable-order markov model
-- Use of a viewpoint system that enables the handling of rhythmic structure without the cost of heavy tokenization
-- The default MIDI-facing `Continuator2` now uses the `vo_regular_bp`
-  order-stack engine for constrained generation.
-- The classic variable-order Markov engine and context-BP engine remain
-  available explicitly for comparison and migration work.
-- Shared MIDI realization for all engines, using a dynamic-programming pass to
-  choose coherent learned note realizations for generated viewpoints.
-- Many tricks here and there to maximize musical quality
-
-## Architecture documentation
-
-The current implementation is documented in:
-
-- [`docs/current_architecture.md`](docs/current_architecture.md): overview of the classic engine, learning flow, constrained sampling, MIDI layer, and known design pressure points.
-- [`docs/class_map.md`](docs/class_map.md): concise class-level reference for the current code.
-- [`docs/public_api.md`](docs/public_api.md): compatibility surface used by external front ends such as `continuator_front`.
-- [`docs/context_bp_design.md`](docs/context_bp_design.md): notes on the experimental context-BP core.
-- [`docs/todo.md`](docs/todo.md): cleanup roadmap for converging on the VO-Regular-BP engine and removing older engine/UI paths.
-
-## Authors
-- [François Pachet](https://github.com/fpachet)
-
-### Dependencies
-The project requires Python 3.11 at least.
-
-The core package depends on:
-- `numpy`
-- `mido`
-- `vo-regular-bp`
-
-Optional features are installed with extras:
-- `continuator[gradio]` for the Gradio UI dependencies
-- `continuator[realtime-midi]` for live MIDI port support through `python-rtmidi`
-- `continuator[local-ui]` for both the Gradio UI and realtime MIDI support
+There is one maintained engine: the external `vo_regular_bp` order-stack
+library. `Continuator2` is the MIDI entry point; `SequenceModel` provides generic
+integer, text, chord and other symbolic generation. The default policy backs
+off from singleton contexts to encourage variety while respecting constraints.
 
 ## Installation
 
-1. clone the repository: 
-```bash
-git clone https://github.com/fpachet/continuator.git
-cd continuator
-```
-2. create virtual environment and install dependencies:
-```bash
-python3 -m venv venv
+Python 3.11 or later is required.
 
-# On macOS/Linux
-source venv/bin/activate
-
-# On Windows (PowerShell):
-# You may need first to install Microsoft C++ Build Tools (a minimal Visual Studio subset that includes cl.exe, the C compiler).
-# Go to the official page.
-
-.\venv\Scripts\Activate.ps1
-
-python3 -m pip install .
-# If this causes a problem like "error: externally managed environment", then try:
-# python3 -m pip install . --break-system-packages
-
-```
-3. To use the local Gradio/realtime MIDI interface, install the optional UI dependencies:
 ```bash
-python3 -m pip install ".[local-ui]"
-```
-4. launch and then click on the url displayed in the terminal:
-```bash
-   python3 -m ctor.continuator_gradio
-```
-The compatibility command above is kept for existing users. New code may also
-launch the UI implementation directly with:
-```bash
-   python3 -m ctor.ui.gradio_app
-```
-If the default Gradio ports are already in use, set an explicit port:
-```bash
-   GRADIO_SERVER_PORT=8060 python3 -m ctor.continuator_gradio
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install .
 ```
 
+Core dependencies are NumPy, mido, and an immutable Git revision of
+vo-regular-bp. Optional integrations use extras:
 
-## Usage in Python
-See "examples" folder for ints, characters, words and chord sequence generation examples.
+```bash
+python -m pip install '.[dev]'           # tests
+python -m pip install '.[local-ui]'      # Gradio and realtime MIDI ports
+python -m ctor.continuator_gradio
+```
+
+The alternative UI command `python -m ctor.ui.gradio_app` remains supported.
+Set `GRADIO_SERVER_PORT=8060` if the usual port is occupied.
+
+## MIDI generation
 
 ```python
-import ctor.continuator
+from ctor.continuator import Continuator2
 
-# Initialize the model
-midi_file_path = "../../data/prelude_c.mid"
-generator = ctor.continuator.Continuator2(midi_file_path, 4, transposition=False)
-
-# set positional constraints as a dictionary index -> viewpoint
-constraints = {}
-# to start with a "start"
-# constraints[0] = generator.get_start_vp()
-# to force arbitrary value at arbitrary position, here a D3 as first note
-constraints[0] = generator.get_vp_for_pitch(62)
-# to end with an "end"
-constraints[19] = generator.get_end_vp()
-
-# generate the viewpoint sequence with some length
-generated_sequence = generator.sample_sequence(length=20, constraints=constraints)
-
-# remove extra start or end viewpoint if needed
-sequence_to_render = generated_sequence[0:-1]
-
-# realize the sequence with actual notes
-rendered_sequence = generator.realize_vp_sequence(sequence_to_render)
-
-# save the generated sequence
-generator.save_midi(rendered_sequence, "../../data/constrained_prelude.mid", tempo=-1)
+continuator = Continuator2('data/prelude_c.mid', kmax=4, seed=0)
+target = continuator.get_vp_for_pitch(60)
+viewpoints = continuator.sample_sequence(length=16, constraints={15: target}, raise_on_fail=True)
+notes = continuator.realize_vp_sequence(viewpoints)
+continuator.save_midi(notes, '/tmp/continuation.mid', tempo=-1)
 ```
 
-### Generation APIs
+A viewpoint is `(pitch, duration_bin, overlaps_left, overlaps_right)`. A last-note
+constraint fixes a complete viewpoint. The external ConstraintSet also accepts
+positional predicates when a pitch-only condition is desired.
 
-The project currently exposes three MIDI-facing Continuator engines:
-
-| Engine | Import | Generation backend | Main use |
-| --- | --- | --- | --- |
-| Default | `from ctor.continuator import Continuator2` | external `vo_regular_bp` order-stack library | default MIDI-facing engine |
-| Classic | `from ctor.classic import ClassicContinuator` | `Variable_order_Markov` plus sparse first-order constraint inference | classic compatibility engine |
-| Context BP | `from ctor.context_bp import ContextBPContinuator` | context-state BP with explicit order policy | experimental exact context/backoff behavior |
-| VO Regular BP | `from ctor.vo_regular_bp import VORegularBPContinuator` | external `vo_regular_bp` order-stack library | regular constraints, generalized stop predicates, virtual transposition augmentation |
-
-For MIDI experiments, the three engines intentionally share the same practical
-surface:
+Generation modes share the same backend:
 
 ```python
-generator.learn_phrase(notes, transposition=False)
-viewpoints = generator.sample_sequence(length=16, constraints=constraints)
-continuation = generator.continue_sequence(prefix, length=16, constraints=constraints)
-ending = generator.continue_until_end(prefix=prefix, min_length=1, max_length=64)
-notes = generator.realize_vp_sequence(viewpoints)
-generator.save_midi(notes, "output.mid", tempo=-1)
+viewpoints = continuator.sample_sequence(length=16)
+viewpoints = continuator.continue_sequence(prefix=played_notes, length=16)
+viewpoints = continuator.continue_until_end(prefix=played_notes, min_length=4, max_length=64)
+viewpoints = continuator.continue_until(prefix=played_notes, stop=target, max_length=64)
 ```
 
-They also share phrase-memory helpers such as `get_phrase_titles()`,
-`get_phrase(index)`, `clear_memory()`, `set_transpose(...)`, and
-`set_keep_last(...)`. Some controls are engine-specific: for example decay
-modes only affect the classic engine, trace helpers belong to the context-BP
-and VO-Regular-BP engines, and `VORegularBPContinuator` additionally exposes
-`continue_until(...)` for arbitrary stop viewpoints/predicates.
+Prefixes condition generation and are excluded from output. Until methods return
+the first reached stop symbol, including END, within a bounded window. Realizing
+a sequence filters out boundary markers. Continuous clients can request successive
+chunks and pass back the last realized notes or handoff viewpoint.
 
-There are three related generation modes:
+Unprompted fixed sampling can start anywhere in learned memory. To require a
+phrase beginning, pass `start_vp=continuator.get_start_vp()`. Positional indices
+always refer to the returned generated sequence. Infeasible requests return None
+unless `raise_on_fail=True`; hard constraints are never silently dropped.
 
-- `sample_sequence(length, constraints=...)` generates a fixed-length sequence.
-- `continue_sequence(prefix, length, constraints=...)` generates a fixed-length continuation. The prefix is conditioning context only and is not included in the returned sequence.
-- `continue_until_end(prefix=..., min_length=..., max_length=...)` generates a variable-length continuation that stops when the end viewpoint is first reached.
-
-Constraints are always indexed over the returned generated sequence, not over the prefix plus the generated sequence. For example, in `continue_sequence(prefix=[1, 2], length=3, constraints={0: 3})`, position `0` refers to the first generated element after the prefix.
-
-The default constrained sampler delegates fixed-length and until-end generation
-to the external `vo_regular_bp` order-stack backend. The classic engine remains
-available when you need the previous sparse first-order chain sampler.
-
-The legacy dictionary format for constraints is still supported:
-
-```python
-constraints = {0: generator.get_vp_for_pitch(62), 19: generator.get_end_vp()}
-sequence = generator.sample_sequence(length=20, constraints=constraints)
-```
-
-For new code, a small constraint builder is also available:
+For one-of constraints:
 
 ```python
 from ctor.constraints import ConstraintProblem
 
-constraints = ConstraintProblem(length=20)
-constraints.at(0).equals(generator.get_vp_for_pitch(62))
-constraints.at(19).equals(generator.get_end_vp())
-
-sequence = generator.sample_sequence(length=20, constraints=constraints)
+problem = ConstraintProblem(length=16)
+problem.at(7).one_of([viewpoint_a, viewpoint_b])
+problem.at(15).equals(target)
+viewpoints = continuator.sample_sequence(length=16, constraints=problem)
 ```
 
-For generic symbolic sequence experiments, `ctor.engines` provides a small
-engine-selection adapter for the classic and context-BP models:
+`vo_regular_bp.ConstraintSet` adds forbidden motifs and regular constraints.
+Explicit and optional virtual transposition remain available through
+VORegularBPContinuator/Continuator2. Virtual learning saves base-note memory,
+while constrained inference still depends on the transformed state space.
+
+## Generic symbols
 
 ```python
-from ctor.engines import make_sequence_engine
+from ctor.sequence_model import SequenceModel
 
-classic = make_sequence_engine("classic", kmax=4)
-engine = make_sequence_engine("context_bp", kmax=4)
-engine.learn_sequence(["C", "D", "E"])
-sequence = engine.continue_until_end(prefix=["C"], min_length=2, max_length=8)
+model = SequenceModel(kmax=4, seed=0)
+model.learn_sequences([[1, 2, 3], [1, 2, 4]])
+sequence = model.sample_sequence(3, constraints={0: 1, 2: 4})
+continuation = model.continue_sequence([1, 2], length=1)
+ending = model.continue_until_end([1], min_length=2, max_length=8)
 ```
 
-The VO-Regular-BP backend is available through its MIDI facade in this package,
-and through the public `vo_regular_bp` package when you want to run lower-level
-order-stack experiments directly.
+Examples can be run from the repository root:
 
-For MIDI experiments with the context-BP core, use the separate experimental
-facade:
-
-```python
-from ctor.context_bp import ContextBPContinuator
-
-generator = ContextBPContinuator(kmax=4)
+```bash
+python -m examples.int_continuator
+python -m examples.char_continuator
+python -m examples.word_continuator
+python -m examples.chordseq_continuator
+python -m examples.constrained_note_continuator
 ```
 
-For experiments with the external `vo_regular_bp` order-stack library,
-including generalized first-hit stops and transposition augmentation, use:
+The chord demo defaults to 256 training phrases. `--limit 0` explicitly loads
+all 31,032 phrases (about 2.5 million chord tokens), which requires substantially
+more inference time and memory.
 
-```python
-from ctor.vo_regular_bp import VORegularBPContinuator
+## Performance and validation
 
-generator = VORegularBPContinuator(kmax=4, augmentation_mode="virtual", transposition=True)
+Learning invalidates the model and defers its rebuild until generation, so
+folder/batch learning avoids repeatedly rebuilding prior material. Repeated
+requests reuse prepared inference. Fixed-length backward tables can be reused
+across different prefixes; callback/regular-product requests bypass the cache.
+Exact duplicate note phrases share equivalent MIDI realization domains while
+retaining their separate phrase entries and statistical weights.
+
+```bash
+python -m pytest -q
+python -m benchmarks.engine_audit --samples 100 --repeats 5 --long-until --output /tmp/audit.json
 ```
 
-### Migration notes
+The benchmark records first-call and repeated-call latency, variety, constraints,
+rolling continuations, transposition and corpus scaling. Its thresholds are not
+machine-specific CI assertions. See [docs/todo.md](docs/todo.md) for measured
+migration results and [docs/current_architecture.md](docs/current_architecture.md)
+for cache admission and memory limitations.
 
-For front-end integrations, prefer the high-level `Continuator2` methods in `ctor.continuator`.
-This default facade is backed by VO-Regular-BP:
+## Compatibility and archive
 
-- Existing calls to `sample_sequence(length=..., constraints=...)` still work.
-- Existing client code that passes `sample_sequence(..., start_vp=...)` is supported for compatibility with `continuator_front`; `start_vp` is treated as a hidden handoff viewpoint and is not included in the returned sequence.
-- Use `continue_sequence(prefix, length=..., constraints=...)` for fixed-length real-time continuations after a played phrase.
-- Use `continue_until_end(prefix=..., min_length=..., max_length=...)` when the continuation should decide its own length but end on the model's end viewpoint.
+Version 2.0 removes the active classic and context-BP engines. Their full source,
+tests and comparison audit remain recoverable through the Git tag
+`codex/archive-three-engines-2026-10-19`. The stable Continuator2 import remains.
+Variable_order_Markov is a deprecated generation-only adapter to the new backend;
+its former counter, decay and chain-marginal APIs are retired.
 
-The generated continuation returned by `continue_sequence` and `continue_until_end` excludes the prefix. This is useful for MIDI playback because the UI should play only the newly generated material.
+Read [docs/migration.md](docs/migration.md) for recovery commands and external
+frontend notes, [docs/public_api.md](docs/public_api.md) for precise semantics,
+and [docs/class_map.md](docs/class_map.md) for the maintained classes. Local UI
+and realtime MIDI support remain optional. The external frontend is available
+at [continuator_front](https://huggingface.co/spaces/pachet/continuator_front).
 
-`ClassicContinuator` is the explicit name for the classic MIDI engine.
-`Continuator2` remains the default compatibility entry point:
+## Background
 
-```python
-from ctor.classic import ClassicContinuator
-from ctor.continuator import Continuator2
-```
+The project builds on François Pachet's Continuator (Journal of New Music
+Research, 2003), finite-length constrained Markov processes (IJCAI 2011), and
+exact sampling for regular and Markov constraints with belief propagation
+(CP 2015). Author: [François Pachet](https://github.com/fpachet).
 
-The Gradio interface exposes both fixed-length generation and "until end" generation. Internally it calls the high-level `Continuator2` continuation methods.
-
-Identity viewpoint models, such as integers, characters, and words, no longer store realization address lists because generated viewpoints are already the realized objects.
-
-### Importing from another project
-
-This repository can be installed as a package named `continuator`. The importable modules keep their existing names, so client code can still use imports such as:
-
-```python
-from ctor.continuator import Continuator2
-```
-
-For a Hugging Face Space, add a pinned Git dependency to the backend `requirements.txt` instead of copying `ctor/`, `midi_stuff/`, or `utils/` into the front-end repository:
-
-```text
-continuator @ git+https://github.com/fpachet/continuator.git@<tag-or-commit-sha>
-```
-
-The base package intentionally does not install `gradio`, `matplotlib`, or `python-rtmidi`. Hosted front ends such as `continuator_front` should depend on those packages only if they use them directly.
-
-During development, a commit SHA is also acceptable when you want to test a specific unreleased commit:
-
-```text
-continuator @ git+https://github.com/fpachet/continuator.git@<commit-sha>
-```
-
-After that, `continuator_front` can remove its vendored Continuator source and import the installed package directly.
-
-## User interface
-Currently continuator can be run as:
-- python code on midi files (input and output)
-- real time midi with rt-midi on a local machine, command line
-- real time midi with rt-midi on a local machine, with a gradio interface from a browser
-
-A web client-server version is available on a Huggingface space at:
-https://huggingface.co/spaces/pachet/continuator_front
-
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+Licensed under the MIT License; see [LICENSE](LICENSE).
