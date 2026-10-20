@@ -1,0 +1,239 @@
+{
+  "backend_commit": "66627cb0f1747bf8a4deb6af146e3a9a5d47a3fe",
+  "continuator_commit": "dfeffa81a3aede834830d4b1c2c17ecbf39b7743",
+  "python": "3.13.11 | packaged by Anaconda, Inc. | (main, Dec 10 2025, 21:21:08) [Clang 20.1.8 ]",
+  "platform": "macOS-15.7.7-arm64-arm-64bit-Mach-O",
+  "scope": "Append-only integration prototype using the public with_sequences API and temporary assignment to SequenceModel._model; not implemented in the maintained adapter or deployed.",
+  "parameters": {
+    "initial_notes": 549,
+    "order": 4,
+    "added_notes_per_update": 16,
+    "updates_per_worker": 8,
+    "workers_per_method": 5,
+    "methods_alternated": true,
+    "fixed_length": 64,
+    "until_window": [
+      4,
+      64
+    ],
+    "phrase_slice_start": "80 + cycle * 13, for cycle 0 through 7",
+    "new_symbols": "Transpose the added slice by +24 semitones on cycles 3 and 7",
+    "sampling_seed": "91 + cycle",
+    "summary": "Median of five worker medians, each over eight post-learning requests",
+    "repeated_samples_per_worker": 10
+  },
+  "checks": [
+    "counts/alphabet/forbidden markers equal fresh rebuild after every update",
+    "seeded sequences equal rebuild across all methods and workers",
+    "previous model weak reference released",
+    "hard endpoint, length and motif constraints hold"
+  ],
+  "interpretation": "Regular constraints bypass the application inference cache; repeat_without_learning does not imply cache reuse for that case. Timings include phrase learning, cache invalidation, model construction/update, graph preparation and first symbolic sample, excluding MIDI parsing and realization.",
+  "measurements": [
+    {
+      "kind": "prefix",
+      "method": "rebuild",
+      "median_ms": 29.570500017143786,
+      "worker_medians_ms": [
+        29.61591654457152,
+        29.00981262791902,
+        29.76847894024104,
+        29.55433342140168,
+        29.570500017143786
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.5456459475681186
+    },
+    {
+      "kind": "prefix",
+      "method": "counts",
+      "median_ms": 27.78137498535216,
+      "worker_medians_ms": [
+        27.78137498535216,
+        27.854812098667026,
+        27.74681244045496,
+        28.110812534578145,
+        27.70466636866331
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.5382716190069914
+    },
+    {
+      "kind": "prefix",
+      "method": "reuse",
+      "median_ms": 22.706770920194685,
+      "worker_medians_ms": [
+        22.64141698833555,
+        22.706770920194685,
+        22.663478972390294,
+        22.712354082614183,
+        22.973146056756377
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.5382495000958443
+    },
+    {
+      "kind": "until",
+      "method": "rebuild",
+      "median_ms": 29.88333348184824,
+      "worker_medians_ms": [
+        29.83887493610382,
+        29.953187564387918,
+        29.809874948114157,
+        29.88333348184824,
+        30.76404193416238
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.22243743296712637
+    },
+    {
+      "kind": "until",
+      "method": "counts",
+      "median_ms": 28.156270971521735,
+      "worker_medians_ms": [
+        28.294478892348707,
+        28.059291536919773,
+        27.9672920005396,
+        28.156270971521735,
+        28.402853989973664
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.22056244779378176
+    },
+    {
+      "kind": "until",
+      "method": "reuse",
+      "median_ms": 22.995728999376297,
+      "worker_medians_ms": [
+        22.961833514273167,
+        22.89500052575022,
+        22.995728999376297,
+        23.03577051497996,
+        23.12989649362862
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.22339553106576204
+    },
+    {
+      "kind": "regular",
+      "method": "rebuild",
+      "median_ms": 47.27808351162821,
+      "worker_medians_ms": [
+        47.615812392905354,
+        47.191000543534756,
+        46.126687549985945,
+        48.715979093685746,
+        47.27808351162821
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 39.59175001364201
+    },
+    {
+      "kind": "regular",
+      "method": "counts",
+      "median_ms": 46.20041709858924,
+      "worker_medians_ms": [
+        45.547062531113625,
+        46.79822898469865,
+        46.20041709858924,
+        48.818645533174276,
+        44.96935452334583
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 39.64810445904732
+    },
+    {
+      "kind": "regular",
+      "method": "reuse",
+      "median_ms": 40.709687513299286,
+      "worker_medians_ms": [
+        40.709687513299286,
+        40.24439596105367,
+        40.45277088880539,
+        43.50372892804444,
+        41.47018794901669
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 39.27987487986684
+    },
+    {
+      "kind": "free",
+      "method": "rebuild",
+      "median_ms": 46.505708480253816,
+      "worker_medians_ms": [
+        46.54977039899677,
+        46.85231251642108,
+        46.37591657228768,
+        46.505708480253816,
+        46.384083572775126
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.565291615203023
+    },
+    {
+      "kind": "free",
+      "method": "counts",
+      "median_ms": 44.83387491200119,
+      "worker_medians_ms": [
+        44.83387491200119,
+        44.81852054595947,
+        45.927500003017485,
+        45.33993802033365,
+        44.78956200182438
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.5762283690273762
+    },
+    {
+      "kind": "free",
+      "method": "reuse",
+      "median_ms": 45.157562592066824,
+      "worker_medians_ms": [
+        44.7331874165684,
+        45.157562592066824,
+        44.66231248807162,
+        45.175832929089665,
+        45.46402092091739
+      ],
+      "updates_per_worker": 8,
+      "workers": 5,
+      "seeded_output_equivalence": true,
+      "repeat_without_learning_median_ms": 0.5692084087058902
+    }
+  ],
+  "validation": {
+    "upstream_tests": 198,
+    "continuator_tests": 84,
+    "frontend_backend_tests": 55,
+    "full_audit_acceptance_requests": 800,
+    "full_audit_constraint_failures": 0,
+    "rolling_notes": 1600
+  },
+  "midi": {
+    "path": "data/prelude_c.mid",
+    "sha256": "c87843095aac7e54a2c485e4200b7a0dd1de5905d4382d38b97bf1765a6dc921"
+  },
+  "prototype_checks": "Fresh independent model counts checked outside timed intervals; the old model reference is released before generation. Production integration still requires lazy pending updates and deletion/configuration fallbacks."
+}

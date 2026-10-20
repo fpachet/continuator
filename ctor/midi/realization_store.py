@@ -48,27 +48,6 @@ class MidiRealizationStore:
         """Exact duplicate phrases need only one equivalent realization domain."""
         return self._canonical_phrases[address[0]] == address[0]
 
-    def clear_first_N_phrases(self, n: int) -> None:
-        if not self.input_sequences:
-            print("nothing to remove, memory is empty")
-            return
-        if len(self.input_sequences) < n:
-            print("nothing to remove, memory is less than " + str(n))
-            return
-        sequences_to_learn = self.input_sequences[n:]
-        self.clear_memory()
-        for sequence in sequences_to_learn:
-            self.learn_sequence(sequence)
-
-    def clear_last_phrase(self) -> None:
-        if not self.input_sequences:
-            print("nothing to remove, memory is empty")
-            return
-        sequences_to_learn = self.input_sequences[:-1]
-        self.clear_memory()
-        for sequence in sequences_to_learn:
-            self.learn_sequence(sequence)
-
     def learn_sequence(self, sequence_of_stuff: Iterable[object]) -> None:
         material = list(sequence_of_stuff)
         sequence_index = self._remember_phrase(material)

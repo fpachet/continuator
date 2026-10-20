@@ -196,7 +196,7 @@ class SequenceModel:
         return value
 
     def sample_sequence(self, length, *, prefix=None, constraints=None, start_vp=None,
-                        raise_on_fail=False, relax_prefix_on_fail=False, relax_pos0_on_fail=False):
+                        raise_on_fail=False):
         if not isinstance(length, int) or length < 0:
             raise ValueError("length must be a non-negative integer")
         self._reset_generation()

@@ -42,9 +42,6 @@ class TransformAwareMidiRealizationStore(MidiRealizationStore):
             end_padding=end_padding,
         )
 
-    def clear_memory(self) -> None:
-        super().clear_memory()
-
     def learn_sequence(self, sequence_of_stuff: Iterable[object]) -> None:
         material = list(sequence_of_stuff)
         sequence_index = self._remember_phrase(material)
@@ -62,10 +59,3 @@ class TransformAwareMidiRealizationStore(MidiRealizationStore):
             return note
         transform = self.transforms[obj_address[2]]
         return transform.apply_note(note)
-
-    @staticmethod
-    def is_starting_address(note_address: tuple[int, int] | tuple[int, int, int]) -> bool:
-        return note_address[1] == 0
-
-    def is_ending_address(self, note_address: tuple[int, int] | tuple[int, int, int]) -> bool:
-        return note_address[1] == len(self.input_sequences[note_address[0]]) - 1

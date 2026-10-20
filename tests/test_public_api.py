@@ -11,7 +11,7 @@ def test_default_facade_and_generation_signatures():
     for method, names in (
         (Continuator2, ['midi_file', 'kmax', 'transposition', 'seed']),
         (Continuator2.sample_sequence, ['prefix', 'length', 'constraints', 'start_vp',
-                                      'relax_prefix_on_fail', 'relax_pos0_on_fail', 'raise_on_fail']),
+                                      'raise_on_fail']),
         (Continuator2.continue_until_end, ['prefix', 'min_length', 'max_length', 'end_vp']),
     ):
         assert set(names) <= set(inspect.signature(method).parameters)

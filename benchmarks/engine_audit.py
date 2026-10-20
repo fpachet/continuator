@@ -43,7 +43,7 @@ PITCH_PHRASES = (
     (60, 65, 64, 62, 60, 67, 65, 64, 60),
     (60, 62, 60, 64, 60, 65, 60, 67, 60),
 )
-STRICT = dict(relax_prefix_on_fail=False, relax_pos0_on_fail=False, raise_on_fail=True)
+STRICT = dict(raise_on_fail=True)
 
 
 def phrase(pitches):
@@ -155,13 +155,16 @@ def compatibility_probes():
             "unknown_prefix_default": lambda: engine.continue_sequence(phrase([99]), length=2, constraints={1: last}),
             "viewpoint_prefix": lambda: engine.continue_sequence([first], length=2, **STRICT),
             "unknown_constraint_default": lambda: engine.sample_sequence(length=2, constraints={1: (99, 1, False, False)}),
-            "impossible_transition_default": lambda: engine.continue_sequence(notes[:1], length=2, constraints={1: first}, relax_prefix_on_fail=False, relax_pos0_on_fail=False),
+            "impossible_transition_default": lambda: engine.continue_sequence(notes[:1], length=2, constraints={1: first}),
             "unreachable_end_window": lambda: engine.continue_until_end(notes[:1], min_length=1, max_length=1),
         }
         for name, generate in probes.items():
             try:
                 with redirect_stdout(io.StringIO()):
                     seq = generate()
+                infeasible = name in {"unknown_prefix_default", "unknown_constraint_default",
+                                      "impossible_transition_default", "unreachable_end_window"}
+                assert (seq is None) == infeasible, f"unexpected feasibility: {name}"
                 value = None if seq is None else ["END" if v is end else "START" if v is start else v[0] for v in seq]
                 rows.append(dict(engine=kind, probe=name, result=value))
             except Exception as exc:
@@ -283,6 +286,31 @@ def diverse_corpus_scaling(repeats):
     return rows
 
 
+def cold_generation(midi_path, repeats):
+    """Separate cache reuse from the first request after each learning event."""
+    engine = VORegularBPContinuator(str(midi_path), kmax=4)
+    material = engine.get_phrase(0)
+    prefix, target = material[:4], engine.get_viewpoint(material[-1])
+
+    def generate():
+        sequence = engine.continue_sequence(prefix, length=64, constraints={63: target}, **STRICT)
+        assert len(sequence) == 64 and sequence[-1] == target
+        return sequence
+
+    first, _ = measure(generate, 1)
+    cached, _ = measure(generate, repeats)
+    learned_times = []
+    added = phrase([60, 62, 64, 65] * 4)
+    for _ in range(repeats):
+        engine.learn_phrase(added, False)
+        assert engine.get_last_generation_diagnostics()['cache_entries'] == 0
+        start = time.perf_counter()
+        generate()
+        learned_times.append(time.perf_counter() - start)
+    return dict(base_notes=len(material), length=64, kmax=4,
+                first=first, cached=cached, after_learning=summarize_ms(learned_times))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -295,7 +323,11 @@ def main():
         parser.error("samples and repeats must be positive")
     dependency_root = Path(vo_regular_bp.__file__).resolve().parent.parent
     revision = subprocess.run(["git", "-C", str(dependency_root), "rev-parse", "HEAD"], capture_output=True, text=True)
-    result = dict(environment=dict(python=sys.version, platform=platform.platform(),
+    source_hash = hashlib.sha256()
+    for source in sorted(Path(vo_regular_bp.__file__).parent.rglob('*.py')):
+        source_hash.update(str(source.relative_to(Path(vo_regular_bp.__file__).parent)).encode())
+        source_hash.update(source.read_bytes())
+    result = dict(environment=dict(backend_source_sha256=source_hash.hexdigest(),python=sys.version, platform=platform.platform(),
                                   backend_path=vo_regular_bp.__file__, backend_git_head=revision.stdout.strip() or None,
                                   midi=str(args.midi), midi_sha256=hashlib.sha256(args.midi.read_bytes()).hexdigest()))
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -306,12 +338,14 @@ def main():
         "benchmarks": lambda: benchmarks(args.midi, args.repeats, args.long_until),
         "vo_scaling": lambda: vo_scaling(args.midi, args.repeats),
         "diverse_corpus_scaling": lambda: diverse_corpus_scaling(args.repeats),
+        "cold_generation": lambda: cold_generation(args.midi, args.repeats),
     }
     for name, run in stages.items():
         result[name] = run()
         args.output.write_text(json.dumps(json_safe(result), indent=2, allow_nan=False) + "\n")
-    if any(row["failures"] for row in result["acceptance"]):
-        raise SystemExit("Acceptance failures recorded; inspect output JSON")
+    if (any(row["failures"] for row in result["acceptance"])
+            or any("error" in row for row in result["compatibility_probes"])):
+        raise SystemExit("Acceptance/probe failures recorded; inspect output JSON")
 
 
 if __name__ == "__main__":

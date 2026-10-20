@@ -24,13 +24,14 @@ flowchart LR
   backend preparation, inference cache, traces and lazy diagnostics. It delegates
   all BP, regular-constraint compilation and order policy to `vo_regular_bp`.
 - `ctor/vo_regular_bp/continuator.py`: Note/viewpoint conversion, phrase memory,
-  transposition and MIDI-facing compatibility methods. It composes SequenceModel.
+  transposition and MIDI-facing generation/memory controls. It composes SequenceModel.
 - `ctor/midi/realization_store.py`: original notes and viewpoint-to-address indexes.
   Exact duplicate phrases retain their learning weights and memory entries but
   share equivalent address domains during realization.
 - `ctor/vo_regular_bp/realization_store.py`: transform-aware addresses for optional
   virtual transposition; concrete transposed notes are realized lazily.
-- `ctor/midi/base.py`: MIDI parsing/writing, timing and dynamic-programming
+- `ctor/midi/parsing.py`: shared, non-mutating channel/pitch note pairing.
+- `ctor/midi/base.py`: MIDI import/export, timing and dynamic-programming
   realization. Source address continuity and overlap compatibility determine cost.
 - `ctor/constraints.py`: positional equality/one-of builder. The external
   `ConstraintSet` additionally supports forbidden motifs and regular acceptors.
@@ -65,6 +66,12 @@ explicit `order_model` inspection. Thus learning a folder builds the complete
 symbolic memory once at first use. Deletion rebuilds realization indexes from
 retained phrases so canonical duplicate addresses remain valid.
 
+The [planned online snapshot integration](todo.md#next-step-integrate-online-snapshots)
+will retain reusable source models for append-only learning through the upstream
+`with_sequences` API while still invalidating prepared inference. This is not yet
+implemented; the current behavior and dependency pin below remain in effect.
+
+
 Fixed-length caches hold prefix-independent backend plans. Different prefixes
 bind to the same backward tables. Until caches hold backends keyed by prefix,
 stop symbol/set, length window and policy. Callback predicates, regular product
@@ -82,11 +89,17 @@ expensive per-length diagnostic enumeration off the generation path.
 ## Dependency and release
 
 The dependency is pinned to immutable backend commit
-`ae05b8799a9698d986afbe2b010194b32aa2c678`, which includes shared first-hit backward
-messages. This replaces v0.1.1's separate inference pass for every candidate
-length. The full upstream tests and the Continuator contract are checked against
+`5e8526473af13ee1106d616410284fa01f2c6d54`, which includes shared first-hit backward
+messages and optimized positional messages. Repeated masks share numeric
+transition rows within a preparation; underflow checks use the numeric pass.
+This replaces v0.1.1's separate inference pass for every candidate length. The full upstream tests and the Continuator contract are checked against
 that revision. Continuator 2.0 makes the removal of older engine APIs explicit.
 
 Run `python -m pytest -q` for active coverage and
 `python -m benchmarks.engine_audit --samples 100 --repeats 5 --long-until --output /tmp/audit.json`
 for the reproducible workload and performance report.
+
+CI runs the tests on Python 3.11 and 3.13, builds wheel and source distribution,
+then tests the installed wheel in a fresh environment with no checkout package
+to shadow it. A smaller acceptance/performance workload uploads JSON evidence;
+timings are recorded without machine-specific pass/fail thresholds.

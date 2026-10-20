@@ -1,136 +1,186 @@
 # Continuator simplification results
 
-The migration is implemented. The active project has one generation engine,
-VO-Regular-BP, behind the stable Continuator2 MIDI facade and the new generic
-SequenceModel. The classic/context-BP source and comparison audit are preserved
-in `codex/archive-three-engines-2026-10-19`; recovery instructions are in
-[migration.md](migration.md).
+The maintained project has one engine: external `vo_regular_bp`, accessed through
+`Continuator2` for MIDI and `SequenceModel` for generic symbols. Historical classic
+and context-BP code and comparison audits remain recoverable from the archive tag
+in [migration.md](migration.md).
 
-## Completed work
+## Completed follow-up cleanup, October 20
 
-- Fixed all three audited VO gaps: free-initial generation, emitted START at
-  position zero, and a final note/END union. The regressions now pass normally.
-- Added a generic symbolic adapter and migrated integer, character, word and
-  chord examples. The temporary Variable_order_Markov adapter has since
-  been removed; generic clients use SequenceModel directly.
-- Removed the two obsolete implementations, chain solver, engine selector,
-  context-BP wrappers, comparison examples and engine-specific tests from the
-  maintained package. The archive includes their full runnable source.
-- Pinned backend commit `ae05b8799a9698d986afbe2b010194b32aa2c678`, including
-  shared first-hit inference. Its 169 upstream tests pass. A fresh remote fetch
-  before the migration commit confirmed this is still the latest backend main
-  revision; no newer dependency update was available.
-- Added reusable prefix-independent fixed plans, prefix-aware until backends,
-  bounded LRU admission and lazy diagnostics. Mutable constraint containers are
-  snapshotted; callbacks and regular products bypass caching. Learning,
-  deleting, clearing and transposition-setting changes invalidate inference.
-- Deferred symbolic rebuilding until generation/inspection. Folder learning
-  and generic learn_sequences therefore avoid rebuilding prior phrases after
-  every input.
-- Reduced equivalent realization domains for exact duplicate note phrases,
-  preserving separate memory entries, counts, note attributes and timing.
-- Kept Gradio/realtime MIDI support, removed the inactive decay control, and
-  bounded the default chord example to 256 phrases. Full-corpus learning is an
-  explicit `--limit 0` option.
-- Updated architecture/API/migration documentation, agent orientation, release
-  metadata and packaging. The source distribution explicitly includes the
-  tracked Bach MIDI fixture despite the general MIDI ignore rule.
+- Shared non-mutating MIDI parsing now merges synchronous tracks, matches notes
+  by channel/pitch, handles overlapping repetitions with FIFO pairing and returns
+  onset order. Incomplete notes and unmatched offs are ignored. File times use
+  musical beats; realtime seconds are normalized to 120 BPM. See the explicit
+  timing contract in [public_api.md](public_api.md).
+- MIDI export honors the requested BPM and rounds absolute ticks before delta
+  conversion. Hardware output skips metadata; recording callbacks copy messages.
+  Type 2 MIDI files are rejected because their tracks have independent timelines.
+- Removed unused legacy constraint converters, profiler package, Note comparison
+  helpers, duplicate memory deletion methods, retired decay/zero-order forwarding
+  methods and ignored relaxation keywords. The sibling frontend no longer uses
+  those controls. The stable `ctor.continuator.Continuator2` import is preserved.
+- The MIDI facade owns phrase deletion/reindexing and invalidates the symbolic
+  owner. Generation traces and diagnostics have one owner, SequenceModel; the
+  facade formats traces on demand. Lazy learning, bounded inference caches,
+  virtual transposition and canonical duplicate realization domains remain.
+- Published the upstream inference improvement as
+  [vo-regular-bp PR #1](https://github.com/fpachet/vo-regular-bp/pull/1), pinning
+  immutable commit `5e8526473af13ee1106d616410284fa01f2c6d54`. Repeated positional
+  masks share numeric transition rows during preparation, with at most eight
+  cached masks. Underflow detection uses the numeric pass, retaining log-space
+  fallback. No BP/automaton implementation or extra dependency was added here.
+- Added CI for Python 3.11 and 3.13: source tests, wheel/sdist builds, isolated
+  installed-wheel tests and a smaller audit with JSON artifacts. The distribution
+  checker copies only tests/data/benchmarks into its working directory, so source
+  packages cannot shadow the installed wheel. The audit now fails on unexpected
+  feasibility/probe errors and separately measures requests after learning.
 
 ## Verification
 
-The active suite has 70 passing tests and no skips or expected failures in the
-local development environment. It covers fixed/variable lengths, one-of and
-regular constraints, markers, unknown/infeasible requests, RNG reproducibility,
-cache reuse/invalidation/limits, lazy learning, repeated viewpoint mapping,
-memory deletion, transposition,
-duplicate realization domains and MIDI file roundtrips.
+The local source suite passes **84 tests**, including the real sibling frontend's
+single-engine contract, handoff, END, graph rendering and successive continuations.
+The upstream suite passes **178 tests**. New upstream coverage compares messages
+against exhaustive path enumeration, checks forbidden-symbol overrides and
+preserves finite log mass for a single edge product that underflows to zero.
 
-The optional sibling-frontend contract test exercises its single-engine
-adapter, memory generation, prefix conditioning, hidden handoff, constrained
-ending, traces, graph rendering and 20 successive continuation requests
-using returned handoff viewpoints. The frontend now has no engine selector.
+Fresh Python 3.11 and 3.13 environments installed the actual wheel and pinned
+backend from GitHub: **83 tests pass, one skips** in each because the optional
+sibling frontend is absent.
+The wheel contains no retired engine or profiler packages. The source distribution
+contains the MIDI fixture, tests, benchmarks and distribution checker.
 
-The October 20 cleanup removed four compatibility-only modules and moved
-the local MIDI listener under `ctor.ui`. It also updated this contract test,
-which still imported the frontend's already removed engine selector. Engine
-algorithms, inference caches and realization behavior were unchanged.
+The required full workload uses 100 samples, five repeats and long until windows.
+All **800 generation requests** satisfy their constraints, all eight contract
+probes pass, and rolling continuations produce **1,600 notes in 100 distinct
+chunks**. Fixed-length scenarios have 99–100 distinct outputs per 100 draws;
+until scenarios have 81–87. The before/after runs retain the same seeded
+acceptance outputs. These checks measure variety and correctness, not subjective
+musical quality. Physical MIDI hardware and hosted deployment were not exercised.
 
-The final wheel is checked in a fresh virtual environment using its actual
-pinned dependency, outside this source checkout. The optional sibling frontend
-check is skipped there because that checkout is absent; the remaining tests
-pass. The wheel contains no classic/context-BP/core packages or chain solver.
-The source distribution includes tests, benchmarks and example datasets.
+## Measured performance
 
-All integer, character, word, chord, note and constrained-note examples were
-run successfully. MIDI output was generated and decoded. Hardware playback and
-the external hosted application were not exercised.
+The following compares the previous backend `ae05b879...` with the optimized pin,
+using identical final Continuator source and MIDI parsing, Python 3.13/macOS ARM64,
+549 Bach notes, order four, and five repetitions. There are no CI timing thresholds.
 
-## Performance
+| Request | Previous backend | Optimized backend |
+| --- | ---: | ---: |
+| Fresh fixed plan, 64 notes and constrained final note, median | 43.7 ms | 21.7 ms |
+| First 64-note request after learning 16 notes, median including rebuild | 53.0 ms | 29.6 ms |
+| Repeated cached 64-note request, median | 0.67 ms | 0.69 ms |
+| Until END, window 4–64, first preparation/sample | 50.0 ms | 22.3 ms |
+| Until END, window 4–500, first preparation/sample | 370.8 ms | 166.8 ms |
 
-Raw evidence is in `benchmarks/results/engine_audit_single_engine.json`.
-Historical baselines remain in `engine_audit_v0_1_1.json` and
-`engine_audit_local.json` in the same directory. The complete historical
-three-engine driver is preserved in the archive; the active driver targets VO.
+Raw reports: [previous backend](../benchmarks/results/engine_audit_cleanup_baseline.json)
+and [optimized backend](../benchmarks/results/engine_audit_cleanup_optimized.json).
+They include backend source hashes, commit identifiers, model sizes, allocation
+measurements and separate first/repeated timings. Earlier migration and three-engine
+measurements remain in the other `benchmarks/results/engine_audit_*.json` files.
 
-The final workload makes 800 generation requests across eight scenarios, with
-no constraint failures. Fixed-length batches produce 99–100 distinct sequences
-per 100 draws on the branching synthetic corpus; until-END batches produce
-81–87. A separate rolling check produces 1,600 notes in 100 distinct chunks.
-These are variety/contract checks, not subjective musical-quality scores.
+## Next step: integrate online snapshots
 
-Local results on Python 3.13/macOS ARM64, order 4, 549-note Bach corpus,
-seven repetitions:
+**Status: upstream implementation is available; Continuator integration is pending.**
+Backend commit
+[`66627cb0f1747bf8a4deb6af146e3a9a5d47a3fe`](https://github.com/fpachet/vo-regular-bp/commit/66627cb0f1747bf8a4deb6af146e3a9a5d47a3fe)
+adds the immutable snapshot API:
 
-| Request | Before migration, installed backend | New inference plan | Repeated cached request |
+```python
+model = model.with_sequences([new_symbolic_phrase])
+```
+
+It counts only added independent phrases and reuses unaffected ordinary source
+graph rows. Backward messages and sampling candidates are recomputed. Updates
+can fall back to full graph construction when the topology requires it. Virtual
+augmentation updates base counts but rebuilds transformed graphs. Fully
+incremental BP was deferred because measured probability changes propagate widely
+through the backward tables; substantial virtual-graph reuse was also deferred.
+See the [upstream investigation](https://github.com/fpachet/vo-regular-bp/blob/66627cb0f1747bf8a4deb6af146e3a9a5d47a3fe/reports/online_learning_2026_10_20.md).
+
+Continuator still pins `5e8526473af13ee1106d616410284fa01f2c6d54` and calls
+`from_sequences` after each learning invalidation. Upgrading the dependency alone
+does not activate snapshot reuse. The deployed frontend pins Continuator
+`dfeffa81a3aede834830d4b1c2c17ecbf39b7743`, which uses that older backend pin.
+
+### Continuator prototype measurements
+
+A temporary append-only integration probe used the actual 549-note MIDI fixture,
+order four, eight successive 16-note additions and five isolated workers per
+method. Added phrases included familiar contexts and transposed pitches.
+Methods alternated between workers. Values are medians of worker medians and
+include phrase storage, cache invalidation, model construction/update, graph
+preparation and the first sample. MIDI parsing, realization, network and phrase-end
+silence are excluded. These results describe the prototype, not deployed behavior.
+
+| Request after learning | Full rebuild | Count and graph reuse | Latency reduction |
 | --- | ---: | ---: | ---: |
-| 64 notes with constrained final note | 44 ms | 44 ms | 0.63 ms |
-| Until END, window 4–64 | 54 ms | 51 ms | 0.39 ms |
-| Until END, window 4–500 | 419 ms | 371 ms | 5.3 ms |
+| 64-note continuation with constrained final note | 29.6 ms | 22.7 ms | 23% |
+| Until END, window 4–64 | 29.9 ms | 23.0 ms | 23% |
+| 64-note continuation with a forbidden motif and final constraint | 47.3 ms | 40.7 ms | 14% |
+| Unprompted 64-note generation with final constraint | 46.5 ms | 45.2 ms | 3% |
 
-The older pinned v0.1.1 baseline took about 1,052 ms for the 4–64 until-END
-window and 4,329 ms for 4–128. Shared first-hit tables remove that quadratic
-repetition. At the selected backend revision, cold fixed-length preparation is
-slower than v0.1.1's approximately 21 ms; caching pays off across repeated
-requests and changing prefixes. First use after learning additionally performs
-the deferred symbolic-model build.
+Counts-only updates saved about 1.7–1.8 ms for continuation and until-END;
+ordinary graph reuse supplied most of the additional gain. Repeated cached
+continuation remained about 0.54 ms. Regular constraints bypass Continuator's
+inference cache, so repeated regular requests still prepare fresh inference.
+Unprompted generation builds a separate model for its empirical initial
+symbol distribution; retaining the ordinary model does not reuse that model's
+graphs. Initially preserve this path and make no substantial unprompted or virtual
+speedup claim.
 
-With 12 transpositions, the repeated constrained 64-note request takes about
-0.86 ms explicitly and 0.95 ms virtually once admitted to the cache. First
-use is still expensive: about 468 ms and 712 ms including deferred model/graph
-work. Virtual augmentation is optional and does not eliminate the transformed
-inference state space.
+[Raw measurements and methodology](../benchmarks/results/online_snapshot_integration_probe.json)
+include all five worker medians. The prototype matched fresh model counts,
+alphabet and forbidden markers after every addition; all methods produced the
+same seeded outputs and released previous model objects. Compatibility checks
+against the new backend passed 198 upstream tests, 84 Continuator tests and
+55 frontend backend tests. Both pinned and new backend revisions passed the full
+800-request audit, eight contract probes and 1,600 rolling notes, retaining the
+same seeded acceptance outputs. These checks do not replace integration tests
+for the eventual production adapter.
 
-Sixteen identical Bach phrases previously cost roughly 64 ms to realize 64
-notes; canonical realization domains reduce this to about 3.1 ms. Counts still
-include all sixteen learned phrases.
+### Implementation plan
 
-Lazy ingestion of an 8,192-note diverse corpus takes about 10 ms to queue/index,
-then about 288 ms for the first generation including model construction and
-inference. Repeated generation is about 1.2 ms. The earlier v0.1.1 path spent
-about 1,353 ms in sequential learning alone, plus 158 ms per generation. The
-queued-learning number must not be interpreted as total training cost.
+1. Update the immutable backend pin after validating the selected upstream
+   revision. Keep all count, graph and BP algorithms in the dependency.
+2. In `SequenceModel` and the MIDI facade, retain an already built symbolic
+   snapshot for append-only learning. Queue encoded new phrases, coalesce
+   successive additions, and apply `with_sequences` lazily on next generation.
+   Initial folder/batch learning should still build once on first use.
+3. Clear prepared plans, until backends, free-initial models, traces and
+   diagnostics after learning. Keep only the current reusable source snapshot
+   and pending additions; do not retain old BP tables or a chain of models.
+4. Use full reconstruction for deletion, forgetting, memory reset and changes
+   to order, viewpoint encoding or transform configuration. Preserve START/END
+   padding, duplicate-phrase weights, new viewpoint handling, seeded generation,
+   realization addresses and strict constraint behavior.
+5. Add regressions for repeated and deferred additions, new symbols, cache
+   invalidation, both generic and MIDI clients, forgetting/deletion, explicit
+   and virtual augmentation, and release of obsolete snapshots. Compare counts,
+   graph behavior and seeded samples with an independent full rebuild.
+6. Run the baseline and required full acceptance/performance workload below.
+   Record learn/update, graph preparation, BP preparation, sampling and retained
+   memory separately. Update architecture/API documentation when integration is
+   implemented, then update the frontend pin, run its integration tests and deploy.
 
-## Operational limits
+## Remaining work
 
-- Cache admission has an eight-entry default and an estimated 64 MiB table
-  budget. This is not a total process-memory limit. Backend graph/candidate
-  caches and native allocations also consume memory.
-- Callback/regular-product requests and constrained until requests prepare
-  fresh inference. Large models, long windows and transformed corpora remain
-  expensive on their first request.
-- Until generation is bounded; streaming is repeated finite continuation.
-  Live audio/MIDI latency and hardware behavior require an integration run.
-- The recovery tag accompanies this migration. Fetch it before creating a
-  recovery checkout on another machine. Frontend deployment and upstream
-  backend publication are separate release actions.
+- Complete the required review of [Continuator PR #3](https://github.com/fpachet/continuator/pull/3).
+  Backend PR #1 is merged, and the frontend already deploys the tested Continuator
+  commit. The new snapshot integration described above remains a separate task.
+- Test actual MIDI devices and streaming latency. The mocked output test covers
+  metadata filtering, not hardware timing or device behavior.
+- Implement the online snapshot integration above. Larger corpora, virtual
+  transposition and regular-product constraints still have substantial first-request
+  costs; only pursue further algorithms after profiling the intended workload.
+- The default eight-entry, estimated 64 MiB table cache is not a process-memory
+  limit. Graphs, candidate caches and native allocations consume additional memory.
+  Until generation is bounded; streaming repeatedly requests finite continuations.
 
-Reproduce from the project root:
+Reproduce:
 
 ```bash
 python -m pytest -q
-python -m benchmarks.engine_audit --samples 100 --repeats 7 --long-until \
+python -m benchmarks.engine_audit --samples 100 --repeats 5 --long-until \
   --output /tmp/continuator-audit.json
+python -m build
+python scripts/verify_distribution.py dist/*.whl dist/*.tar.gz
 ```
-
-First-call timing and repeated-call medians are reported separately. Non-finite
-log-mass diagnostics are stored as strings so the new result file is valid JSON.

@@ -32,9 +32,9 @@ learn_phrase_from_mido(messages)
 get_phrase_from_mido(messages)
 
 sample_sequence(prefix=None, length=50, constraints=None, start_vp=None,
-                relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False)
+                raise_on_fail=False)
 continue_sequence(prefix, length=50, constraints=None,
-                  relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False)
+                  raise_on_fail=False)
 continue_until(prefix=None, *, stop, min_length=1, max_length=64,
                constraints=None, raise_on_fail=False)
 continue_until_end(prefix=None, min_length=1, max_length=64, end_vp=None,
@@ -115,19 +115,32 @@ mapping), explicitly map the prefix with get_viewpoint before passing it.
 - Infeasible or unknown-symbol requests return None. `raise_on_fail=True`
   instead raises NoSolutionErrorInBP. Invalid configuration/type errors remain
   ValueError/TypeError rather than being reported as infeasibility.
-- Hard constraints are strict. Legacy `relax_prefix_on_fail` and
-  `relax_pos0_on_fail` arguments remain accepted for frontend compatibility but
-  never drop a prefix or constraint. Callers implement and report retries.
+- Hard constraints are strict. Callers implement and report retries. Retired
+  relaxation keywords are removed; passing them raises TypeError.
 - Seed controls symbolic draws and MIDI pitch-viewpoint selection. Identical
   input order, options and call order reproduce results for the same backend.
 - Learning/forgetting/clearing invalidates inference caches and the last trace.
   Transposition-setting changes also invalidate caches. Public model counts
   should be treated as read-only; mutations must go through learning methods.
 
-`sample_sequence_0` is a deprecated forwarding name for ordinary sampling.
-`set_decay_mode` is retained for frontend compatibility: full is accepted,
-other settings issue DeprecationWarning and have no effect. The local UI no
-longer offers the inactive decay control.
+## MIDI timing
+
+MIDI files use musical quarter-note beats; synchronous tracks are merged before
+note pairing. Tempo changes leave those beat positions unchanged. Type 2 files
+have independent track timelines and are rejected. Realtime messages use delta
+seconds normalized to 120 BPM (one second equals two beats). Parsing never
+modifies messages and returns notes in onset order. Pairing uses channel and
+pitch; overlapping repetitions use FIFO note-offs. Velocity-zero note-ons end
+notes. Unmatched note-offs and unfinished notes are ignored; sustain controls
+do not extend physical key durations. Note realizations do not retain channels.
+
+Export writes the requested positive BPM. `tempo=-1` uses the mean of learned
+tempo messages, defaulting to 120 BPM. It does not restore an original tempo
+map. Absolute ticks are rounded before calculating deltas to avoid accumulated
+truncation. Invalid MIDI pitches/velocities raise ValueError.
+
+`set_keep_last(n)` requires a positive integer. `clear_first_n_phrases(n)`
+requires a non-negative integer; values beyond memory size clear all phrases.
 
 ## Optional UI
 

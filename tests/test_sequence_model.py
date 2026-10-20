@@ -76,10 +76,10 @@ def test_until_end_counts_marker_and_rejects_early_end():
     assert m.continue_until_end([2], min_length=2, max_length=3) is None
 
 
-def test_strict_constraints_even_when_legacy_relaxation_flags_are_true():
+def test_impossible_prefix_constraint_is_strict():
     m = SequenceModel(kmax=2)
     m.learn_sequence([1, 2, 3])
-    assert m.sample_sequence(1, prefix=[1], constraints={0: 1}, relax_prefix_on_fail=True, relax_pos0_on_fail=True) is None
+    assert m.sample_sequence(1, prefix=[1], constraints={0: 1}) is None
     with pytest.raises(NoSolutionErrorInBP):
         m.sample_sequence(1, prefix=[1], constraints={0: 1}, raise_on_fail=True)
     assert m.continue_sequence([99], length=2) is None
