@@ -89,5 +89,7 @@ The backend is pinned to commit `5e8526473af13ee1106d616410284fa01f2c6d54`. This
 `ae05b8799a9698d986afbe2b010194b32aa2c678`'s shared first-hit inference and
 optimizes cold positional inference with repeated-mask transition rows and a
 single numeric pass for underflow detection. BP and automaton code remain in
-the external dependency. The optimization is published on a review branch;
-see [todo.md](todo.md) for its pull request and measured results.
+the external dependency. This optimization was merged through backend PR #1.
+A newer upstream snapshot-update API is available but is not yet used here;
+see [the integration roadmap](todo.md#next-step-integrate-online-snapshots)
+for its measured benefit, implementation plan and validation requirements.

@@ -66,6 +66,12 @@ explicit `order_model` inspection. Thus learning a folder builds the complete
 symbolic memory once at first use. Deletion rebuilds realization indexes from
 retained phrases so canonical duplicate addresses remain valid.
 
+The [planned online snapshot integration](todo.md#next-step-integrate-online-snapshots)
+will retain reusable source models for append-only learning through the upstream
+`with_sequences` API while still invalidating prepared inference. This is not yet
+implemented; the current behavior and dependency pin below remain in effect.
+
+
 Fixed-length caches hold prefix-independent backend plans. Different prefixes
 bind to the same backward tables. Until caches hold backends keyed by prefix,
 stop symbol/set, length window and policy. Callback predicates, regular product
