@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Remove compatibility-only `ctor.continuator_gradio`, `ctor.midi_ports_poll`,
+  `ctor.vo_regular_bp_continuator` and `ctor.variable_order_markov` modules.
+  Use `ctor.ui.gradio_app`, `ctor.ui.midi_ports_poll`, `ctor.vo_regular_bp`
+  and `ctor.sequence_model` directly; migration examples are documented.
+- Move the local MIDI listener to `ctor.ui.phrase_listener`. Keep the stable
+  Continuator2 import and public infeasibility exception.
+- Update the sibling frontend contract test for its single-engine API.
+
 ## 2.0.0
 
 - Maintain only the VO-Regular-BP engine. Archive classic, context-BP, their

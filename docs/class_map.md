@@ -16,11 +16,11 @@
 | `ctor.vo_regular_bp.realization_store.TransformAwareMidiRealizationStore` | Transform-indexed addresses and lazy note transforms. |
 | `midi_stuff.mini_muse.Note` | Pitch, velocity, duration, start time and overlap/timing metadata. |
 | `ctor.ui.gradio_app.Continuator_gradio` | Optional local UI. |
-| `ctor.phrase_listener.MidiPhraseListener` | Optional realtime MIDI recording/playback. |
+| `ctor.ui.phrase_listener.MidiPhraseListener` | Optional realtime MIDI recording/playback. |
 | `ctor.belief_propag.NoSolutionErrorInBP` | Retained public exception name for infeasible generation. |
-| `ctor.variable_order_markov.Variable_order_Markov` | Deprecated generation-only SequenceModel adapter; no classic counters or decay. |
 
-There is one engine. The legacy `ctor.vo_regular_bp_continuator` and
-`ctor.continuator_gradio` files only preserve entry-point imports. See
-[public_api.md](public_api.md) for behavior and [migration.md](migration.md)
-for retired classes and archive recovery.
+There is one engine. Obsolete import/launcher wrappers and the deprecated
+Markov adapter have been removed. `Continuator2` remains the stable frontend
+entry point; `NoSolutionErrorInBP` remains the public infeasibility exception.
+See [public_api.md](public_api.md) for behavior and [migration.md](migration.md)
+for replacement imports and archive recovery.

@@ -34,7 +34,14 @@ flowchart LR
   realization. Source address continuity and overlap compatibility determine cost.
 - `ctor/constraints.py`: positional equality/one-of builder. The external
   `ConstraintSet` additionally supports forbidden motifs and regular acceptors.
-- `ctor/ui/` and `ctor/phrase_listener.py`: optional local Gradio and MIDI I/O.
+- `ctor/ui/`: optional local Gradio, MIDI port polling and phrase recording/playback.
+- `ctor/continuator.py`: stable `Continuator2` entry point. This small facade
+  preserves the frontend import without duplicating engine logic.
+- `ctor/belief_propag.py`: maintained infeasibility exception only; no solver.
+
+Package `__init__.py` files define import boundaries and exports. The old
+top-level UI/polling launchers, VO import alias and deprecated generic
+Markov adapter have been removed; see [migration.md](migration.md).
 
 ## Generation semantics
 

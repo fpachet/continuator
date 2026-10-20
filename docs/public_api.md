@@ -12,8 +12,8 @@ from vo_regular_bp import ConstraintSet
 ```
 
 `Continuator2` remains the stable MIDI entry point. Both MIDI names use the
-same backend. `ctor.vo_regular_bp_continuator.VORegularBPContinuator` also
-remains a wrapper import. Historical engine removals are listed in
+same backend. Import `VORegularBPContinuator` from `ctor.vo_regular_bp`; the
+old top-level wrapper has been removed. Historical engine removals are listed in
 [migration.md](migration.md).
 
 ## MIDI facade
@@ -131,6 +131,7 @@ longer offers the inactive decay control.
 
 ## Optional UI
 
-The existing `python -m ctor.continuator_gradio` launch command and
-`ctor.ui.gradio_app.Continuator_gradio` import remain. Install local MIDI/UI
-extras when needed. The two modes are fixed length and bounded Until end.
+Launch with `python -m ctor.ui.gradio_app`; import the UI class from
+`ctor.ui.gradio_app` and `MidiPhraseListener` from `ctor.ui.phrase_listener`.
+MIDI port polling lives at `python -m ctor.ui.midi_ports_poll`. Install local
+MIDI/UI extras when needed. The two modes are fixed length and bounded Until end.

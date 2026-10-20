@@ -8,7 +8,7 @@ from ctor.vo_regular_bp import VORegularBPContinuator
 
 
 class Continuator2(VORegularBPContinuator):
-    """Compatibility name for the default VO-Regular-BP MIDI Continuator."""
+    """Stable MIDI entry point backed by VO-Regular-BP."""
 
 
 __all__ = ["Continuator2", "VORegularBPContinuator"]

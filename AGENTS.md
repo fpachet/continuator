@@ -14,11 +14,11 @@ and automaton algorithms in that dependency. Preserve the stable MIDI import:
 from ctor.continuator import Continuator2
 ```
 
-Generic code uses `ctor.sequence_model.SequenceModel`.
-`ctor.variable_order_markov.Variable_order_Markov` is a deprecated
-generation-only adapter, not the historical engine. The classic and context-BP
-implementations and their comparison audit live in the archive tag documented
-in `docs/migration.md`.
+Generic code uses `ctor.sequence_model.SequenceModel`. Optional local UI and
+realtime MIDI code live under `ctor.ui`; launch with
+`python -m ctor.ui.gradio_app`. Do not restore removed compatibility modules.
+The classic and context-BP implementations and their comparison audit live
+in the archive tag documented in `docs/migration.md`.
 
 Run the active baseline:
 

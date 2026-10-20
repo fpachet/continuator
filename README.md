@@ -25,10 +25,9 @@ vo-regular-bp. Optional integrations use extras:
 ```bash
 python -m pip install '.[dev]'           # tests
 python -m pip install '.[local-ui]'      # Gradio and realtime MIDI ports
-python -m ctor.continuator_gradio
+python -m ctor.ui.gradio_app
 ```
 
-The alternative UI command `python -m ctor.ui.gradio_app` remains supported.
 Set `GRADIO_SERVER_PORT=8060` if the usual port is occupied.
 
 ## MIDI generation
@@ -133,8 +132,10 @@ for cache admission and memory limitations.
 Version 2.0 removes the active classic and context-BP engines. Their full source,
 tests and comparison audit remain recoverable through the Git tag
 `codex/archive-three-engines-2026-10-19`. The stable Continuator2 import remains.
-Variable_order_Markov is a deprecated generation-only adapter to the new backend;
-its former counter, decay and chain-marginal APIs are retired.
+Obsolete launcher/import wrappers and the deprecated Variable_order_Markov
+adapter have been removed. Use `SequenceModel` for generic symbols and
+`python -m ctor.ui.gradio_app` for the optional local UI. Local MIDI
+recording and playback live in `ctor.ui.phrase_listener`.
 
 Read [docs/migration.md](docs/migration.md) for recovery commands and external
 frontend notes, [docs/public_api.md](docs/public_api.md) for precise semantics,

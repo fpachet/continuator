@@ -33,11 +33,10 @@ Removed APIs include `ClassicContinuator`, `ctor.classic`, `ctor.context_bp`,
 `ctor.engines` selection factory. These are intentional 2.0 removals; they are
 not aliases that pretend the new backend has the same inference semantics.
 
-`from ctor.variable_order_markov import Variable_order_Markov` remains a warned,
-generation-only adapter. Its familiar constructor, learning, viewpoints,
-START/END properties and constrained generation use SequenceModel. Classic
-counter/decay APIs, first-order matrices, chain marginals, zero-order sampling
-and realization-address internals are retired. Use the archived project if
+The deprecated `ctor.variable_order_markov.Variable_order_Markov` adapter
+has now also been removed. Use `SequenceModel` directly. Classic counter/decay
+APIs, first-order matrices, chain marginals, zero-order sampling and
+realization-address internals remain retired. Use the archived project if
 those research APIs are required; there is no equivalent silent replacement.
 
 Migrate generic code explicitly:
@@ -52,16 +51,30 @@ Unprompted sampling is free-initial. Explicit START handoffs request a phrase
 beginning. Hard constraints are never silently relaxed. Read
 [public_api.md](public_api.md) before relying on compatibility keywords.
 
+## Removed wrappers and local UI
+
+The following historical paths have been removed. Their replacements use
+the same maintained engine or local UI implementation:
+
+| Removed path | Maintained replacement |
+| --- | --- |
+| `ctor.continuator_gradio` | `python -m ctor.ui.gradio_app` |
+| `ctor.midi_ports_poll` | `python -m ctor.ui.midi_ports_poll` |
+| `ctor.vo_regular_bp_continuator` | `from ctor.vo_regular_bp import VORegularBPContinuator` |
+| `ctor.variable_order_markov` | `from ctor.sequence_model import SequenceModel` |
+| `ctor.phrase_listener` | `from ctor.ui.phrase_listener import MidiPhraseListener` |
+
+`ctor.continuator.Continuator2`, `ctor.constraints.ConstraintProblem` and
+`ctor.belief_propag.NoSolutionErrorInBP` remain maintained public imports.
+
 ## External frontend
 
-The sibling `continuator_front` adapter was checked without modifying that
-repository. Its classic import falls back to Continuator2 when classic is
-absent, so its current default works with this package. Its VO selection also
-works. Contract tests cover memory learning/generation, hidden handoff,
-constrained ending, traces and graph rendering. The explicit context-BP choice
-is unavailable and should be removed by a separate frontend change before its
-next release. Its published dependency pin still selects an older Continuator;
-updating/deploying that frontend is a separate release action.
+The sibling `continuator_front` now uses only `Continuator2`; its engine
+selector and retired decay controls have been removed. The contract test
+covers memory learning/generation, prefix conditioning, hidden handoff,
+constrained ending, traces, graph rendering and successive continuations.
+The frontend pins an immutable Continuator commit for deployment; after
+updating that pin, run its backend integration tests against that revision.
 
 Legacy decay settings are ignored with a deprecation warning. The local Gradio
 UI no longer advertises them. The maintained package retains optional local

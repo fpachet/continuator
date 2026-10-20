@@ -6,7 +6,6 @@ from vo_regular_bp import ConstraintSet, LongestFeasiblePolicy, OrderStackModel
 from ctor.belief_propag import NoSolutionErrorInBP
 from ctor.constraints import ConstraintProblem
 from ctor.sequence_model import SequenceModel
-from ctor.variable_order_markov import Variable_order_Markov
 
 
 def learned():
@@ -220,11 +219,3 @@ def test_clear_memory_discards_generation_and_caches():
     assert m.sample_sequence(2) is None
     m.learn_sequence([7, 8])
     assert m.sample_sequence(2) == [7, 8]
-
-
-def test_legacy_generic_import_is_a_warned_generation_adapter():
-    with pytest.warns(DeprecationWarning, match='generation only'):
-        m = Variable_order_Markov([1, 2, 3], None, kmax=2)
-    assert isinstance(m, SequenceModel)
-    assert m.continue_sequence([1], length=2) == [2, 3]
-    assert not hasattr(m, 'set_period_mode')

@@ -21,8 +21,6 @@ def test_core_public_imports_and_single_backend():
     from ctor.belief_propag import NoSolutionErrorInBP
     from ctor.constraints import ConstraintProblem
     from ctor.midi import MidiContinuatorBase
-    from ctor.vo_regular_bp_continuator import VORegularBPContinuator as Wrapper
-    assert Wrapper is VORegularBPContinuator
     assert issubclass(Continuator2, MidiContinuatorBase)
     assert issubclass(NoSolutionErrorInBP, Exception)
     assert ConstraintProblem is not None
@@ -34,6 +32,9 @@ def test_core_public_imports_and_single_backend():
 def test_ui_package_does_not_eagerly_import_gradio():
     import ctor.ui
     assert ctor.ui.__all__ == ['Continuator_gradio']
+    assert 'ctor.ui.gradio_app' not in sys.modules
+    from ctor.ui.phrase_listener import MidiPhraseListener
+    assert MidiPhraseListener is not None
 
 
 def test_version_matches_distribution_metadata():

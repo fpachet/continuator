@@ -93,7 +93,7 @@ def test_file_roundtrip_from_public_facade(tmp_path):
     assert [msg.note for track in decoded.tracks for msg in track if msg.type == 'note_on'] == [60, 62, 64]
 
 
-def test_sibling_frontend_default_and_vo_contract():
+def test_sibling_frontend_single_engine_contract():
     backend = Path(__file__).resolve().parents[2] / 'continuator_front' / 'backend'
     if not (backend / 'app' / 'continuator_adapter.py').exists():
         pytest.skip('Optional sibling frontend checkout is not present')
@@ -101,29 +101,27 @@ def test_sibling_frontend_default_and_vo_contract():
     program = '''
 import sys
 sys.path.insert(0, sys.argv[1])
-from app.continuator_adapter import ContinuatorSessionEngine, ContextBPContinuator
+from app.continuator_adapter import ContinuatorSessionEngine
 from app.schemas import MidiEvent
 from ctor.vo_regular_bp import VORegularBPContinuator
-assert ContextBPContinuator is None
 events = []
 for pitch in [60, 62, 64]:
     events.extend([MidiEvent(type='note_on', note=pitch, velocity=80, delta_seconds=0),
                    MidiEvent(type='note_off', note=pitch, velocity=0, delta_seconds=0.5)])
-for kind in ('classic', 'vo_regular_bp'):
-    session = ContinuatorSessionEngine(engine_kind=kind)
-    assert isinstance(session._continuator, VORegularBPContinuator)
-    session.learn_phrase_events(events)
-    payload, status, trace, message = session.generate_phrase(note_count=3)
-    assert payload.note_count == 3 and status.end.applied and trace
-    # The first returned note is after the played C; the hidden handoff is excluded.
-    _, continuation, status, trace, message = session.continue_phrase(
-        events[:2], learn_input=False, continuation_note_count=2)
-    assert [note.pitch for note in continuation.notes] == [62, 64]
-    assert status.start.applied and status.end.applied and trace
-    assert '<svg' in session.render_graph_svg()
+session = ContinuatorSessionEngine()
+assert isinstance(session._continuator, VORegularBPContinuator)
+session.learn_phrase_events(events)
+payload, status, trace, message = session.generate_phrase(note_count=3)
+assert payload.note_count == 3 and status.end.applied and trace
+# The first returned note is after the played C; the hidden handoff is excluded.
+_, continuation, status, trace, message = session.continue_phrase(
+    events[:2], learn_input=False, continuation_note_count=2)
+assert [note.pitch for note in continuation.notes] == [62, 64]
+assert status.start.applied and status.end.applied and trace
+assert '<svg' in session.render_graph_svg()
 # Exercise the same repeated API/handoff pattern used by frontend streaming.
 from benchmarks.engine_audit import PITCH_PHRASES
-session = ContinuatorSessionEngine(engine_kind='vo_regular_bp')
+session = ContinuatorSessionEngine()
 for pitches in PITCH_PHRASES:
     material = []
     for pitch in pitches:
@@ -136,7 +134,7 @@ for _ in range(20):
         payload.events, learn_input=False, continuation_note_count=16,
         enforce_end_constraint=False, handoff_viewpoint=payload.handoff_viewpoint)
     assert payload.note_count == 16 and status.start.applied and trace
-print('Frontend default fallback, VO selection, handoff, END and graph passed')
+print('Frontend single engine, handoff, END and graph passed')
 '''
     result = subprocess.run([sys.executable, '-c', program, str(backend)], text=True, capture_output=True)
     assert result.returncode == 0, result.stdout + result.stderr

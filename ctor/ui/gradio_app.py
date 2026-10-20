@@ -21,7 +21,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from ctor.phrase_listener import MidiPhraseListener
+from ctor.ui.phrase_listener import MidiPhraseListener
 from ctor.continuator import Continuator2
 from io import BytesIO
 from PIL import Image

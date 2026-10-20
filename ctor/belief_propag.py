@@ -1,8 +1,8 @@
 """
-Compatibility exceptions for historical belief-propagation callers.
+Public infeasibility exception shared by MIDI and symbolic generation.
 
-The old generic graph implementation was removed from the current core;
-constrained sequence inference now uses the external vo_regular_bp backend.
+This module defines no solver. The import and exception name remain part
+of the maintained API; inference runs in the external vo_regular_bp backend.
 """
 
 

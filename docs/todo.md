@@ -11,8 +11,8 @@ in `codex/archive-three-engines-2026-10-19`; recovery instructions are in
 - Fixed all three audited VO gaps: free-initial generation, emitted START at
   position zero, and a final note/END union. The regressions now pass normally.
 - Added a generic symbolic adapter and migrated integer, character, word and
-  chord examples. Variable_order_Markov remains a warned generation-only
-  adapter, with classic-specific APIs explicitly retired in version 2.0.
+  chord examples. The temporary Variable_order_Markov adapter has since
+  been removed; generic clients use SequenceModel directly.
 - Removed the two obsolete implementations, chain solver, engine selector,
   context-BP wrappers, comparison examples and engine-specific tests from the
   maintained package. The archive includes their full runnable source.
@@ -38,19 +38,22 @@ in `codex/archive-three-engines-2026-10-19`; recovery instructions are in
 
 ## Verification
 
-The active suite has 71 passing tests and no skips or expected failures in the
+The active suite has 70 passing tests and no skips or expected failures in the
 local development environment. It covers fixed/variable lengths, one-of and
 regular constraints, markers, unknown/infeasible requests, RNG reproducibility,
 cache reuse/invalidation/limits, lazy learning, repeated viewpoint mapping,
 memory deletion, transposition,
 duplicate realization domains and MIDI file roundtrips.
 
-The optional sibling-frontend contract test exercises its default import
-fallback and explicit VO selection, memory generation, hidden handoff,
-constrained ending, traces, graph rendering and 20 successive continuation
-requests using returned handoff viewpoints. The sibling repository was not
-modified or deployed. Its explicit context-BP menu choice is retired and its
-published dependency pin still needs a separate frontend release update.
+The optional sibling-frontend contract test exercises its single-engine
+adapter, memory generation, prefix conditioning, hidden handoff, constrained
+ending, traces, graph rendering and 20 successive continuation requests
+using returned handoff viewpoints. The frontend now has no engine selector.
+
+The October 20 cleanup removed four compatibility-only modules and moved
+the local MIDI listener under `ctor.ui`. It also updated this contract test,
+which still imported the frontend's already removed engine selector. Engine
+algorithms, inference caches and realization behavior were unchanged.
 
 The final wheel is checked in a fresh virtual environment using its actual
 pinned dependency, outside this source checkout. The optional sibling frontend
