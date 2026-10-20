@@ -49,7 +49,7 @@ model.learn_sequence(sequence)
 
 Unprompted sampling is free-initial. Explicit START handoffs request a phrase
 beginning. Hard constraints are never silently relaxed. Read
-[public_api.md](public_api.md) before relying on compatibility keywords.
+[public_api.md](public_api.md) for maintained generation arguments.
 
 ## Removed wrappers and local UI
 
@@ -76,16 +76,18 @@ constrained ending, traces, graph rendering and successive continuations.
 The frontend pins an immutable Continuator commit for deployment; after
 updating that pin, run its backend integration tests against that revision.
 
-Legacy decay settings are ignored with a deprecation warning. The local Gradio
-UI no longer advertises them. The maintained package retains optional local
-MIDI support.
+Unused `sample_sequence_0`, `set_decay_mode`, `relax_prefix_on_fail` and
+`relax_pos0_on_fail` APIs have now been removed. Use ordinary sampling with
+strict constraints; the sibling frontend already uses that contract. Unused
+legacy constraint conversion/shifting helpers, Note comparison helpers and the
+`utils.profiler` package are also removed. The maintained package retains
+optional local MIDI support.
 
 ## Backend pin
 
-The backend is pinned to commit `ae05b8799a9698d986afbe2b010194b32aa2c678` rather
-than an editable checkout or moving branch. That commit contains shared
-first-hit inference; the previous v0.1.1 implementation prepared every candidate
-length separately. Fixed-length cold inference is slower at this backend
-revision, but prefix-independent cached plans make repeated requests inexpensive.
-No algorithm was copied into this repository and no upstream release was
-published as part of this migration.
+The backend is pinned to commit `5e8526473af13ee1106d616410284fa01f2c6d54`. This builds on
+`ae05b8799a9698d986afbe2b010194b32aa2c678`'s shared first-hit inference and
+optimizes cold positional inference with repeated-mask transition rows and a
+single numeric pass for underflow detection. BP and automaton code remain in
+the external dependency. The optimization is published on a review branch;
+see [todo.md](todo.md) for its pull request and measured results.

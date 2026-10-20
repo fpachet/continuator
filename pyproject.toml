@@ -14,7 +14,7 @@ license = { file = "LICENSE" }
 dependencies = [
     "numpy",
     "mido ~= 1.3",
-    "vo-regular-bp @ git+https://github.com/fpachet/vo-regular-bp.git@ae05b8799a9698d986afbe2b010194b32aa2c678",
+    "vo-regular-bp @ git+https://github.com/fpachet/vo-regular-bp.git@5e8526473af13ee1106d616410284fa01f2c6d54",
 ]
 
 [project.optional-dependencies]
@@ -41,19 +41,19 @@ allow-direct-references = true
 include = [
     "/ctor",
     "/midi_stuff",
-    "/utils",
     "/data",
     "/examples",
     "/docs",
     "/tests",
     "/benchmarks",
+    "/scripts",
     "/AGENTS.md",
     "/README.md",
     "/CHANGELOG.md",
     "/LICENSE",
 ]
 [tool.hatch.build.targets.wheel]
-packages = ["ctor", "midi_stuff", "utils"]
+packages = ["ctor", "midi_stuff"]
 
 [tool.hatch.build.targets.sdist.force-include]
 "data/prelude_c.mid" = "data/prelude_c.mid"

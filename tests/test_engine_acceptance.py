@@ -27,7 +27,6 @@ def test_impossible_known_transition_and_unreachable_end_return_none(kind):
     engine.learn_phrase(notes, False)
     assert engine.continue_sequence(
         notes[:1], length=2, constraints={1: engine.get_viewpoint(notes[0])},
-        relax_prefix_on_fail=False, relax_pos0_on_fail=False,
     ) is None
     assert engine.continue_until_end(notes[:1], min_length=1, max_length=1) is None
 

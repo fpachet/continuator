@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-import warnings
 from typing import Any, Hashable, Literal
 
 from vo_regular_bp import (
@@ -13,7 +12,6 @@ from vo_regular_bp import (
     SymbolTransform,
     VirtualAugmentedOrderStackModel,
 )
-from vo_regular_bp.order_stack_bp import OrderSampleStep
 
 from ctor.sequence_model import SequenceModel
 from ctor.constraints import ConstraintProblem
@@ -110,8 +108,6 @@ class VORegularBPContinuator(MidiContinuatorBase):
         self.transposition_offsets = tuple(
             range(-6, 6) if transposition_offsets is None else transposition_offsets
         )
-        self._last_generation_trace: list[dict[str, Any]] = []
-        self._last_generation_diagnostics: dict[str, Any] = {}
 
         self.virtual_transforms = self._make_transforms(
             transposition if self.augmentation_mode == "virtual" else False
@@ -186,20 +182,21 @@ class VORegularBPContinuator(MidiContinuatorBase):
     def rng(self, value):
         self.sequence_model.rng = value
 
-    def _rebuild_order_model(self) -> None:
+    def _invalidate_model(self) -> None:
         self.sequence_model.invalidate()
 
     def _relearn_sequences(self, sequences: list[list[object]]) -> None:
         self.realization_store = self._new_realization_store()
         for sequence in sequences:
             self.realization_store.learn_sequence(sequence)
-        self._rebuild_order_model()
+        self._invalidate_model()
 
     def clear_memory(self):
-        self.realization_store = self._new_realization_store()
-        self._rebuild_order_model()
+        self._relearn_sequences([])
 
     def clear_first_n_phrases(self, n):
+        if not isinstance(n, int) or n < 0:
+            raise ValueError("n must be a non-negative integer")
         self._relearn_sequences([list(sequence) for sequence in self.realization_store.input_sequences[n:]])
 
     def clear_last_phrase(self):
@@ -208,19 +205,10 @@ class VORegularBPContinuator(MidiContinuatorBase):
             return
         self._relearn_sequences([list(sequence) for sequence in self.realization_store.input_sequences[:-1]])
 
-    def set_decay_mode(self, choice):
-        """Compatibility no-op for the classic decay-mode control."""
-        if choice != "full":
-            warnings.warn("Decay modes were retired; VO uses full phrase memory.", DeprecationWarning, stacklevel=2)
-        self.decay_mode = choice
-
     def set_transpose(self, trans):
         if self.transpose != bool(trans):
             self.sequence_model.invalidate()
         self.transpose = bool(trans)
-
-    def sample_sequence_0(self, length=50, constraints=None):
-        return self.sample_sequence(length=length, constraints=constraints)
 
     def learn_phrase(self, note_sequence, transposition):
         if len(note_sequence) == 0:
@@ -232,12 +220,12 @@ class VORegularBPContinuator(MidiContinuatorBase):
 
         if self.augmentation_mode == "virtual" and len(self.virtual_transforms) > 1:
             self.realization_store.learn_sequence(list(note_sequence))
-            self._rebuild_order_model()
+            self._invalidate_model()
             return
         if self.augmentation_mode == "virtual" and transposition:
             self._enable_virtual_transposition()
             self.realization_store.learn_sequence(list(note_sequence))
-            self._rebuild_order_model()
+            self._invalidate_model()
             return
 
         trange = range(0, 1)
@@ -245,7 +233,7 @@ class VORegularBPContinuator(MidiContinuatorBase):
             trange = self.transposition_offsets
         for t in trange:
             self.realization_store.learn_sequence(self.transpose_notes(note_sequence, int(t)))
-        self._rebuild_order_model()
+        self._invalidate_model()
 
     def _enable_virtual_transposition(self) -> None:
         if len(self.virtual_transforms) > 1:
@@ -264,10 +252,8 @@ class VORegularBPContinuator(MidiContinuatorBase):
 
     def sample_sequence(
         self, prefix=None, length=50, constraints=None, start_vp=None,
-        relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False,
+        raise_on_fail=False,
     ):
-        # Relaxation keywords remain accepted for frontend compatibility. All
-        # hard constraints and handoffs are strict; callers retry explicitly.
         if isinstance(constraints, ConstraintProblem) and constraints.length not in (None, length):
             raise ValueError("ConstraintProblem.length must match generation length")
         self.sequence_model.policy = self.policy
@@ -279,7 +265,7 @@ class VORegularBPContinuator(MidiContinuatorBase):
 
     def continue_sequence(
         self, prefix, length=50, constraints=None,
-        relax_prefix_on_fail=True, relax_pos0_on_fail=True, raise_on_fail=False,
+        raise_on_fail=False,
     ):
         return self.sample_sequence(prefix=prefix, length=length, constraints=constraints,
                                     raise_on_fail=raise_on_fail)
@@ -298,8 +284,7 @@ class VORegularBPContinuator(MidiContinuatorBase):
                                    min_length=min_length, max_length=max_length, raise_on_fail=raise_on_fail)
 
     def get_last_generation_trace(self) -> list[dict[str, Any]]:
-        self._record_generation(self.sequence_model.last_trace, {})
-        return list(self._last_generation_trace)
+        return self._format_trace(self.sequence_model.last_trace)
 
     def get_last_generation_diagnostics(self) -> dict[str, Any]:
         return self.sequence_model.get_last_generation_diagnostics()
@@ -358,8 +343,8 @@ class VORegularBPContinuator(MidiContinuatorBase):
             )
         raise TypeError("constraints must be None, ConstraintProblem, ConstraintSet, or a mapping")
 
-    def _record_generation(self, trace: Sequence[OrderSampleStep], diagnostics: dict[str, Any]) -> None:
-        self._last_generation_trace = [
+    def _format_trace(self, trace) -> list[dict[str, Any]]:
+        return [
             {
                 "position": step.position,
                 "symbol": self._trace_value(step.symbol),
@@ -376,7 +361,6 @@ class VORegularBPContinuator(MidiContinuatorBase):
             }
             for step in trace
         ]
-        self._last_generation_diagnostics = diagnostics
 
     @staticmethod
     def _trace_value(value: Any) -> Any:

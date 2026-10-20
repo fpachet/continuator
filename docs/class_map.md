@@ -11,7 +11,7 @@
 | External `SingletonAvoidingBackoffPolicy` | Default practical order/backoff policy. |
 | `ctor.constraints.ConstraintProblem` | Equality and one-of positional constraints. |
 | External `vo_regular_bp.ConstraintSet` | Positional and regular constraints, including forbidden motifs. |
-| `ctor.midi.MidiContinuatorBase` | MIDI parsing/writing, note timing and coherent realization. |
+| `ctor.midi.MidiContinuatorBase` | MIDI import/export, note timing and coherent realization. |
 | `ctor.midi.MidiRealizationStore` | Notes, source addresses and duplicate-phrase representatives. |
 | `ctor.vo_regular_bp.realization_store.TransformAwareMidiRealizationStore` | Transform-indexed addresses and lazy note transforms. |
 | `midi_stuff.mini_muse.Note` | Pitch, velocity, duration, start time and overlap/timing metadata. |

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Fix MIDI parsing mutation, concurrent track timing, channel/pitch pairing and
+  overlapping repeated pitches. Share the parser across files and recordings.
+- Honor export tempo, avoid accumulated tick truncation, and skip metadata on
+  realtime MIDI output. Document beat units and incomplete-note handling.
+- Remove retired relaxation keywords, decay/zero-order forwarding methods,
+  unused constraint/Note helpers and the unused profiler package. Keep MIDI
+  memory deletion in the facade and format traces from the symbolic owner.
+- Pin an upstream cold positional-inference optimization, preserving numerical
+  underflow support. Add explicit post-learning timing to the audit.
+- Add Python 3.11/3.13 CI, wheel/sdist builds and isolated installed-wheel tests.
+
 - Remove compatibility-only `ctor.continuator_gradio`, `ctor.midi_ports_poll`,
   `ctor.vo_regular_bp_continuator` and `ctor.variable_order_markov` modules.
   Use `ctor.ui.gradio_app`, `ctor.ui.midi_ports_poll`, `ctor.vo_regular_bp`

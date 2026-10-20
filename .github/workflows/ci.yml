@@ -1,0 +1,30 @@
+name: Tests and distribution
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install '.[dev]' build
+      - run: python -m pytest -q
+      - run: python -m build
+      - run: python scripts/verify_distribution.py dist/*.whl dist/*.tar.gz
+      - run: python -m benchmarks.engine_audit --samples 20 --repeats 3 --output /tmp/continuator-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-python-${{ matrix.python }}
+          path: /tmp/continuator-audit.json

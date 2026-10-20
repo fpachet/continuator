@@ -123,15 +123,13 @@ class MidiPhraseListener:
         # print("\nPhrase complete\n")
         real_mido = []
         for msg, delta in mido_sequence:
-            msg.time = delta
-            real_mido.append(msg)
+            real_mido.append(msg.copy(time=delta))
         if self.on_phrase_callback:
             self.on_phrase_callback(real_mido)
 
     def play_phrase(self, mido_sequence):
         print(f'playing phrase')
         self.stop_playing = False
-        pending_note_ons_played_sequence = []
         for msg in mido_sequence:
             if self.stop_playing:
                 pending_notes_being_played = [pending[1] for pending in self.pending_notes]
@@ -144,11 +142,8 @@ class MidiPhraseListener:
                         ))
                 return
             time.sleep(msg.time)
-            if msg.type == "note_on":
-                pending_note_ons_played_sequence.append(msg.note)
-            if msg.type == "note_off":
-                if msg.note in pending_note_ons_played_sequence:
-                    pending_note_ons_played_sequence.remove(msg.note)
+            if msg.is_meta:
+                continue
             self.outport.send(msg)
 
     def handle_control_change(self, msg):
